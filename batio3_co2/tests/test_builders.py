@@ -146,3 +146,25 @@ def test_reaction_endpoints_consistent(tmp_path):
         assert txt.count("INTERMEDIATE_IMAGE") == 3
         write_pw(str(tmp_path / f"is_{top}.in"), r1["IS"], spin={"starting_magnetization": {"Ti": 0.3}},
                  hubbard_u={"Ti": 3.0})
+
+
+def test_refresh_levels_after_relaxation():
+    from btoco2 import refresh_levels
+
+    s = make_slab(A, 7, "BaO", (2, 2))
+    top = s.get_tags() == 1
+    s.positions[top, 2] += 0.15  # mimic outward relaxation of the surface layer
+    refresh_levels(s)
+    assert s.info["z_top"] == pytest.approx(s.positions[top, 2].mean())
+    c = surface_configurations(s, surface_sites(s))["top_O__carbonate_x"]
+    assert c.positions[-3:, 2].min() == pytest.approx(s.info["z_top"] + 1.45)
+
+    p = slit_pore_periodic(A, 7, "TiO2", (2, 2), gap=8.0)
+    tags = p.get_tags()
+    p.positions[tags == 1, 2] += 0.2
+    p.positions[tags == tags.max(), 2] -= 0.2
+    refresh_levels(p)
+    assert p.info["gap"] == pytest.approx(8.0 - 0.4)
+    for at in midgap_configurations(p).values():
+        z = at.positions[-3, 2]  # C atom at the new mid-gap
+        assert z == pytest.approx(0.5 * (p.info["z_wall_bottom"] + p.info["z_wall_top"]))

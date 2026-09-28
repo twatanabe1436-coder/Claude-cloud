@@ -13,4 +13,5 @@ from .pores import (  # noqa: F401
     empty_reference,
     wall_sites,
     wedge_gap_at,
+    refresh_levels,
 )

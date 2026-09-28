@@ -446,3 +446,35 @@ def empty_reference(atoms: Atoms) -> Atoms:
     ref.set_constraint(FixAtoms(mask=fixed[keep]) if fixed[keep].any() else None)
     del ref.arrays["adsorbate"]
     return ref
+
+
+# ---------------------------------------------------------------------------
+# relaxed substrates
+# ---------------------------------------------------------------------------
+def refresh_levels(atoms: Atoms) -> Atoms:
+    """Update the stored wall heights of a (relaxed) substrate from its actual positions.
+
+    Surface relaxation / rumpling moves the outer layers by ~0.1 A, so heights
+    stored when the model was built (z_top, z_wall_bottom, z_wall_top) are
+    recomputed as the mean z of the pore-facing layers. Other geometric info
+    (wedge apex, roof heights) is kept: those regions are mostly fixed.
+    """
+    info, tags, z = atoms.info, atoms.get_tags(), atoms.positions[:, 2]
+    sub = np.ones(len(atoms), bool)
+    if "adsorbate" in atoms.arrays:
+        sub = ~atoms.arrays["adsorbate"].astype(bool)
+    layer = lambda t: float(z[(tags == t) & sub].mean())  # noqa: E731
+    kind = info.get("kind")
+    if kind == "slab":
+        info["z_top"] = layer(1)
+    elif kind == "slit_periodic":
+        info["z_wall_bottom"] = layer(1)
+        info["z_wall_top"] = atoms.cell[2, 2] + layer(tags[sub].max())
+        info["gap"] = info["z_wall_top"] - info["z_wall_bottom"]
+    elif kind == "slit_sandwich":
+        info["z_wall_bottom"] = layer(1)
+        info["z_wall_top"] = layer(TOP_WALL + 1)
+        info["gap"] = info["z_wall_top"] - info["z_wall_bottom"]
+    elif kind in ("wedge_plate", "wedge_stepped"):
+        info["z_wall_bottom"] = layer(1)
+    return atoms

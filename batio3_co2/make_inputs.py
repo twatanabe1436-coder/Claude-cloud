@@ -28,6 +28,7 @@ import glob
 import json
 import os
 import re
+import shutil
 import sys
 
 import numpy as np
@@ -39,6 +40,7 @@ from btoco2 import (  # noqa: E402
     gas_molecule,
     make_slab,
     midgap_configurations,
+    refresh_levels,
     slit_pore_periodic,
     slit_pore_sandwich,
     stepped_wedge,
@@ -92,6 +94,10 @@ def emit(args, path, atoms, meta, qe=None, png=None):
     meta = dict(meta)
     meta["qe"] = {k: v for k, v in qe.items() if k in ("spin", "hubbard_u", "calculation", "gamma", "kpts")}
     meta["size"] = estimate_cost(atoms)
+    meta["info"] = _jsonable(atoms.info)  # full model metadata (lists included) for 'from-relaxed'
+    meta["settings"] = {"pseudo_set": args.pseudo_set, "ecutwfc": args.ecutwfc, "ecutrho": args.ecutrho,
+                        "vdw": args.vdw, "kdens": args.kdens,
+                        "pseudo_dir": os.path.abspath(args.pseudo_dir)}
     with open(os.path.join(path, "meta.json"), "w") as f:
         json.dump(meta, f, indent=1, default=str)
     if args.png or png:
@@ -99,6 +105,39 @@ def emit(args, path, atoms, meta, qe=None, png=None):
 
         preview(atoms, os.path.join(path, "preview.png"), title=os.path.basename(path))
     return path
+
+
+def _jsonable(obj):
+    if isinstance(obj, dict):
+        return {k: _jsonable(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple, np.ndarray)):
+        return [_jsonable(v) for v in obj]
+    if isinstance(obj, np.generic):
+        return obj.item()
+    return obj
+
+
+def configurations_for(args, host):
+    """All CO2 starting structures for a substrate / pore, dispatched on host.info['kind']."""
+    kind = host.info["kind"]
+    if kind == "slab":
+        confs = surface_configurations(host, surface_sites(host))
+        if getattr(args, "random", 0):
+            zs = host.info["z_top"]
+            for i, at in enumerate(random_configurations(host, args.random, (zs + 2.6, zs + 4.0), seed=args.seed)):
+                confs[f"random{i:03d}"] = at
+    elif kind in ("slit_periodic", "slit_sandwich"):
+        confs = midgap_configurations(host)
+        confs.update(wall_configurations(host, "bottom"))
+        if host.info["wall_top"] != host.info["wall_bottom"] or tuple(host.info.get("offset", (0, 0))) != (0, 0):
+            confs.update(wall_configurations(host, "top"))
+    elif kind == "wedge_plate":
+        confs = wedge_configurations(host, n=getattr(args, "npos", 5))
+    elif kind == "wedge_stepped":
+        confs = wedge_configurations(host)
+    else:
+        raise ValueError(f"no CO2 configuration generator for kind={kind!r}")
+    return confs
 
 
 def select(args, configs):
@@ -141,11 +180,7 @@ def cmd_refs(args):
 def cmd_surface(args):
     for term in args.term:
         slab = make_slab(args.a, args.nlayers, term, tuple(args.size), args.vacuum)
-        confs = surface_configurations(slab, surface_sites(slab))
-        if args.random:
-            zs = slab.info["z_top"]
-            for i, at in enumerate(random_configurations(slab, args.random, (zs + 2.6, zs + 4.0), seed=args.seed)):
-                confs[f"random{i:03d}"] = at
+        confs = configurations_for(args, slab)
         emit_set(args, os.path.join(args.out, "surface", f"{term}_{args.nlayers}L_{args.size[0]}x{args.size[1]}"),
                  slab, confs)
 
@@ -160,10 +195,7 @@ def cmd_slit(args):
                 else:
                     pore = slit_pore_sandwich(args.a, args.nlayers, term, args.nlayers, args.face_top or term,
                                               tuple(args.size), gap, offset, args.vacuum)
-                confs = midgap_configurations(pore)
-                confs.update(wall_configurations(pore, "bottom"))
-                if pore.info["wall_top"] != pore.info["wall_bottom"] or offset != (0.0, 0.0):
-                    confs.update(wall_configurations(pore, "top"))
+                confs = configurations_for(args, pore)
                 tag = f"{args.mode}_{term}_{args.nlayers}L_g{gap:.1f}" + (f"_off{off:g}" if off else "")
                 emit_set(args, os.path.join(args.out, "slit", tag), pore, confs)
 
@@ -172,16 +204,72 @@ def cmd_wedge_plate(args):
     for ang in args.angles:
         pore = tilted_plate_wedge(args.a, ang, args.apex_gap, args.plate_width, args.plate_layers,
                                   args.plate_face, bottom_face=args.bottom_face, ny=args.ny)
-        confs = wedge_configurations(pore, n=args.npos)
+        confs = configurations_for(args, pore)
         emit_set(args, os.path.join(args.out, "wedge_plate", f"ang{ang:g}_apex{args.apex_gap:g}"), pore, confs)
 
 
 def cmd_wedge_step(args):
     for t in args.terrace:
         pore = stepped_wedge(args.a, args.nx, args.ny, t, args.h0, args.profile, args.floor_face, args.wall)
-        confs = wedge_configurations(pore)
+        confs = configurations_for(args, pore)
         emit_set(args, os.path.join(args.out, "wedge_step", f"{args.profile}_t{t}_h{args.h0}_nx{args.nx}"),
                  pore, confs)
+
+
+def _use_original_settings(args, edir, meta):
+    """Take cutoffs / pseudopotentials / vdW from the original set so the copied reference stays valid."""
+    st = meta.get("settings")
+    if st:
+        for k in ("pseudo_set", "ecutwfc", "ecutrho", "vdw", "kdens", "pseudo_dir"):
+            setattr(args, k, st[k])
+        return
+    # sets made before settings were recorded: read what we can from pw.in and refuse mismatches
+    txt = open(os.path.join(edir, "pw.in")).read()
+    for key in ("ecutwfc", "ecutrho"):
+        m = re.search(rf"{key}\s*=\s*([0-9.eEdD+-]+)", txt)
+        if m and abs(float(m.group(1).replace("d", "e").replace("D", "e")) - getattr(args, key)) > 1e-6:
+            sys.exit(f"{edir}/pw.in has {key} = {m.group(1)} but the current setting is {getattr(args, key)}; "
+                     f"pass the same --{key} / --pseudo-set as the original run")
+    m = re.search(r"pseudo_dir\s*=\s*'([^']*)'", txt)
+    if m:
+        args.pseudo_dir = os.path.normpath(os.path.join(edir, m.group(1)))
+
+
+def cmd_from_relaxed(args):
+    """Rebuild a configuration set on top of its relaxed empty substrate."""
+    if args.dest and len(args.sets) > 1:
+        sys.exit("--dest can only be used with a single set")
+    for set_dir in args.sets:
+        set_dir = os.path.normpath(set_dir)
+        edir = os.path.join(set_dir, "empty")
+        out = os.path.join(edir, "pw.out")
+        if not os.path.exists(out):
+            sys.exit(f"{out} not found: relax {edir} first")
+        e, ok = final_energy(edir)
+        if not ok and not args.allow_unconverged:
+            sys.exit(f"{out}: relaxation not finished/converged (use --allow-unconverged to proceed anyway)")
+        meta = json.load(open(os.path.join(edir, "meta.json")))
+        _use_original_settings(args, edir, meta)
+        tmpl = read(os.path.join(edir, "structure.extxyz"))
+        tmpl.info.update(meta.get("info", {}))  # lists/tuples are not stored in the extxyz
+        host = refresh_levels(load_relaxed(out, tmpl))
+        confs = configurations_for(args, host)
+
+        dest = os.path.normpath(args.dest or set_dir + "_relaxed")
+        if os.path.abspath(dest) == os.path.abspath(set_dir):
+            sys.exit("destination must differ from the source set (existing results would be overwritten)")
+        qe = meta.get("qe", {})
+        emit_set(args, dest, host, confs, qe=qe)
+        # the relaxed empty substrate is the energy reference: reuse its output instead of re-running
+        shutil.copy(out, os.path.join(dest, "empty", "pw.out"))
+        with open(os.path.join(dest, "empty", "meta.json")) as f:
+            m = json.load(f)
+        m["copied_from"] = os.path.relpath(out, os.path.join(dest, "empty"))
+        with open(os.path.join(dest, "empty", "meta.json"), "w") as f:
+            json.dump(m, f, indent=1)
+        dz = np.abs(host.positions - tmpl.positions).max()
+        print(f"  relaxed substrate: E = {e:.4f} eV, max displacement vs. unrelaxed {dz:.3f} A"
+              + ("" if ok else "  (NOT converged)"))
 
 
 def cmd_neb_endpoints(args):
@@ -401,6 +489,18 @@ def main():
     q.add_argument("--floor-face", default="TiO2", choices=["TiO2", "BaO"])
     q.add_argument("--wall", type=int, default=3)
     q.set_defaults(f=cmd_wedge_step)
+
+    q = sub.add_parser("from-relaxed", parents=[common],
+                       help="rebuild CO2 configurations on the relaxed empty substrate of existing sets")
+    q.add_argument("sets", nargs="+", help="set directories containing empty/ (e.g. runs/surface/TiO2_7L_2x2)")
+    q.add_argument("--dest", default=None, help="output set directory (default: <set>_relaxed; one set only)")
+    q.add_argument("--allow-unconverged", action="store_true", help="use the last geometry even if not converged")
+    q.add_argument("--orient", nargs="+", default=None, help="only these CO2 orientations")
+    q.add_argument("--sites", nargs="+", default=None, help="only sites whose name contains one of these")
+    q.add_argument("--random", type=int, default=0, help="open surfaces: add N random placements")
+    q.add_argument("--seed", type=int, default=0)
+    q.add_argument("--npos", type=int, default=5, help="tilted-plate wedge: CO2 positions along the wedge")
+    q.set_defaults(f=cmd_from_relaxed)
 
     q = sub.add_parser("neb-endpoints", parents=[common, slab], help="IS/FS guesses for R1-R5")
     q.add_argument("--u", type=float, default=0.0, help="Hubbard U on Ti-3d for the vacancy path (eV)")

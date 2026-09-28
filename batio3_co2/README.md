@@ -184,11 +184,28 @@ python make_inputs.py wedge-plate --a 4.03 --angles 10 20 30
 python make_inputs.py wedge-step  --a 4.03 --terrace 1 2 --nx 6 --wall 2
 python make_inputs.py neb-endpoints --a 4.03 --term TiO2 BaO
 
-# 各ディレクトリで (例)
-cd runs/surface/TiO2_7L_2x2/top_Ti__flat_x && mpirun -np 32 pw.x -nk 4 -in pw.in > pw.out
+# (推奨) まず空のスラブ / 空の細孔だけを緩和
+cd runs/surface/TiO2_7L_2x2/empty && mpirun -np 32 pw.x -nk 4 -in pw.in > pw.out; cd -
+# 緩和済みの基板の上に CO2 配置を作り直す → runs/surface/TiO2_7L_2x2_relaxed/
+python make_inputs.py from-relaxed runs/surface/TiO2_7L_2x2 runs/slit/periodic_TiO2_7L_g8.0
+
+# 各配置ディレクトリで (例)
+cd runs/surface/TiO2_7L_2x2_relaxed/top_Ti__flat_x && mpirun -np 32 pw.x -nk 4 -in pw.in > pw.out
 
 python make_inputs.py analyze runs                            # E_ads 一覧 + runs/summary.csv
 ```
+
+**緩和済み基板から始める (`from-relaxed`)**:
+切り出したままのスラブは表面層が大きく緩和します (テストでは最表面 Ti に 2.7 eV/Å の力)。
+CO2 を置いた数十通りの配置それぞれでこの表面緩和をやり直すのは無駄なので、
+
+1. `empty/` (CO2 なしの基板) だけを先に緩和し、
+2. `from-relaxed <セットのディレクトリ>` で、`empty/pw.out` の最終構造の上に CO2 配置を作り直します。
+
+- 出力は `<セット>_relaxed/` (元の結果は上書きしません。`--dest` で変更可)。
+- 表面 (`surface`)・スリット・楔形のどのセットにも使えます。CO2 の高さは緩和後の表面層 (平均 z) を基準に置き直し、スリットは緩和後の壁間距離で細孔中央を計算し直します。
+- カットオフ・擬ポテンシャル・vdW は元のセットと同じものを自動で使います。緩和済み `empty/pw.out` を新しいセットにコピーするので、吸着エネルギーの参照を計算し直す必要はありません。
+- `empty` の緩和が収束していないと止まります (`--allow-unconverged` で強制可)。`--orient`, `--sites`, `--random` による絞り込み・追加も使えます。
 
 配置が多すぎる場合は `--orient flat_x carbonate_x` や `--sites top_O hollow` で絞れます。
 効率よく探索したい場合は、低カットオフ・Γ 点で全配置を粗く緩和 → エネルギーの低い数個だけ本番条件で再緩和、が現実的です
