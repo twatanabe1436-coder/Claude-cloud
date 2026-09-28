@@ -254,6 +254,14 @@ def cmd_from_relaxed(args):
         tmpl.info.update(meta.get("info", {}))  # lists/tuples are not stored in the extxyz
         host = refresh_levels(load_relaxed(out, tmpl))
         confs = configurations_for(args, host)
+        if not (args.all or args.orient or args.sites):
+            # default: the same configurations as the original set (its filters are not re-applied)
+            orig = {d for d in os.listdir(set_dir) if d != "empty"
+                    and os.path.exists(os.path.join(set_dir, d, "meta.json"))}
+            missing = sorted(orig - set(confs))
+            confs = {k: v for k, v in confs.items() if k in orig}
+            if missing:
+                print(f"  not regenerated (e.g. random placements; use --random N / --all): {', '.join(missing)}")
 
         dest = os.path.normpath(args.dest or set_dir + "_relaxed")
         if os.path.abspath(dest) == os.path.abspath(set_dir):
@@ -495,6 +503,8 @@ def main():
     q.add_argument("sets", nargs="+", help="set directories containing empty/ (e.g. runs/surface/TiO2_7L_2x2)")
     q.add_argument("--dest", default=None, help="output set directory (default: <set>_relaxed; one set only)")
     q.add_argument("--allow-unconverged", action="store_true", help="use the last geometry even if not converged")
+    q.add_argument("--all", action="store_true",
+                   help="generate every configuration (default: only those present in the original set)")
     q.add_argument("--orient", nargs="+", default=None, help="only these CO2 orientations")
     q.add_argument("--sites", nargs="+", default=None, help="only sites whose name contains one of these")
     q.add_argument("--random", type=int, default=0, help="open surfaces: add N random placements")
