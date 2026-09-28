@@ -16,6 +16,9 @@ Quantum ESPRESSO (pw.x / neb.x) の入力をまとめて生成するための Py
 
 ![surface](docs/img/surface.png)
 
+> 構造を 3D で回して見たい場合は `docs/structure_viewer.html` をブラウザで開いてください
+> (`python docs/make_viewer.py` で再生成。表面・スリット・楔形・NEB 経路の 8 モデル)。
+
 ---
 
 ## 1. 準備
