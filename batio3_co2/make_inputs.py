@@ -70,11 +70,24 @@ RY = 13.605693122994  # eV
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
+def rel_posix(target, start):
+    """Relative path with forward slashes, so inputs made on Windows (e.g. Spyder) also work in WSL.
+
+    If the two paths are on different Windows drives, fall back to the WSL mount path (/mnt/c/...).
+    """
+    target, start = os.path.abspath(target), os.path.abspath(start)
+    try:
+        return os.path.relpath(target, start).replace("\\", "/")
+    except ValueError:  # different drives on Windows
+        drive, rest = os.path.splitdrive(target)
+        return "/mnt/" + drive.rstrip(":").lower() + rest.replace("\\", "/")
+
+
 def emit(args, path, atoms, meta, qe=None, png=None):
     """Write pw.in + structure.extxyz + meta.json (+ preview.png) into ``path``."""
     qe = dict(qe or {})
     os.makedirs(path, exist_ok=True)
-    pseudo_dir = os.path.relpath(os.path.abspath(args.pseudo_dir), os.path.abspath(path))
+    pseudo_dir = rel_posix(args.pseudo_dir, path)
     prefix = re.sub(r"[^A-Za-z0-9_]", "_", os.path.basename(os.path.normpath(path)))[:40] or "pwscf"
     kw = dict(ecutwfc=args.ecutwfc, ecutrho=args.ecutrho, vdw=args.vdw)
     kw.update(qe)
@@ -219,20 +232,20 @@ def cmd_wedge_step(args):
 def _use_original_settings(args, edir, meta):
     """Take cutoffs / pseudopotentials / vdW from the original set so the copied reference stays valid."""
     st = meta.get("settings")
+    txt = open(os.path.join(edir, "pw.in")).read()
+    m = re.search(r"pseudo_dir\s*=\s*'([^']*)'", txt)
+    if m:  # the relative path written into pw.in works on both Windows and WSL
+        args.pseudo_dir = os.path.normpath(os.path.join(edir, m.group(1)))
     if st:
-        for k in ("pseudo_set", "ecutwfc", "ecutrho", "vdw", "kdens", "pseudo_dir"):
+        for k in ("pseudo_set", "ecutwfc", "ecutrho", "vdw", "kdens"):
             setattr(args, k, st[k])
         return
-    # sets made before settings were recorded: read what we can from pw.in and refuse mismatches
-    txt = open(os.path.join(edir, "pw.in")).read()
+    # sets made before settings were recorded: refuse cutoff mismatches
     for key in ("ecutwfc", "ecutrho"):
         m = re.search(rf"{key}\s*=\s*([0-9.eEdD+-]+)", txt)
         if m and abs(float(m.group(1).replace("d", "e").replace("D", "e")) - getattr(args, key)) > 1e-6:
             sys.exit(f"{edir}/pw.in has {key} = {m.group(1)} but the current setting is {getattr(args, key)}; "
                      f"pass the same --{key} / --pseudo-set as the original run")
-    m = re.search(r"pseudo_dir\s*=\s*'([^']*)'", txt)
-    if m:
-        args.pseudo_dir = os.path.normpath(os.path.join(edir, m.group(1)))
 
 
 def cmd_from_relaxed(args):
@@ -343,7 +356,7 @@ def cmd_neb(args):
     os.makedirs(out, exist_ok=True)
     qe = dict(meta.get("qe", {}))
     qe.pop("calculation", None)
-    pseudo_dir = os.path.relpath(os.path.abspath(args.pseudo_dir), os.path.abspath(out))
+    pseudo_dir = rel_posix(args.pseudo_dir, out)
     kpts = qe.pop("kpts", None) or auto_kpts(images[0], args.kdens, (2,))
     write_neb(os.path.join(out, "neb.in"), images, pseudos=PSEUDO_SETS[args.pseudo_set], kpts=kpts,
               pseudo_dir=pseudo_dir, prefix="neb", ecutwfc=args.ecutwfc, ecutrho=args.ecutrho, vdw=args.vdw,

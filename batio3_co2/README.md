@@ -41,6 +41,17 @@ python make_inputs.py ... --pseudo-set psl    # この場合カットオフ既�
 > 注意: pslibrary 1.0.0 の Ti.spn は ecutrho ≈ 575 Ry が必要です。ecutrho が低すぎると
 > "negative rho" が ~1 電子出て SCF が収束しません (実際にテストで確認しました)。
 
+### Windows (Spyder) + WSL (QE) で使う場合
+
+- **入力の生成**は Windows の Python (Spyder) でも WSL の Python でもかまいません。生成される `pw.in` は
+  改行が LF、`pseudo_dir` はスラッシュ区切りの相対パスなので、Windows で作ったものを WSL の pw.x でそのまま読めます
+  (別ドライブの場合は `/mnt/d/...` 形式に変換します)。
+- Spyder からは `runfile('make_inputs.py', args='surface --term TiO2 BaO', wdir=r'C:\...\batio3_co2')` のように実行します。
+- **計算の実行**は WSL で `bash tools/run_all.sh <ディレクトリ> <並列数>`。`pw.in` のある全ディレクトリを順番に計算し、
+  終わったものは飛ばすので、中断しても同じコマンドで再開できます。
+- 作業ディレクトリは Windows 側 (`C:\...` = WSL では `/mnt/c/...`) に置けば両方から見えます。
+  ただし `/mnt/c` 上の読み書きは遅いので、計算が重い場合は WSL 側 (`~/...`) に置き、結果の解析も WSL で行うと速いです。
+
 ---
 
 ## 2. 構造モデル

@@ -259,7 +259,7 @@ def write_pw(
         parts.append(hubbard_block(hub))
     text = "\n".join(parts) + "\n"
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-    with open(path, "w") as f:
+    with open(path, "w", newline="\n") as f:
         f.write(text)
     return text
 
@@ -325,7 +325,7 @@ def write_neb(
          "BEGIN_ENGINE_INPUT"] + engine + ["END_ENGINE_INPUT", "END"]
     ) + "\n"
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-    with open(path, "w") as f:
+    with open(path, "w", newline="\n") as f:
         f.write(text)
     return text
 
