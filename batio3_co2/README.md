@@ -219,7 +219,10 @@ for name, atoms in wedge_configurations(wedge, n=4).items():
   楔モデルの局所ギャップ、NEB 端点の原子順序の一致 → `python -m pytest tests` (16 テスト)。
 - Quantum ESPRESSO 7.5 (conda-forge) + pslibrary 1.0.0 PAW で:
   - 気相 CO2 の緩和、O2 (三重項, `tot_magnetization=2`) の緩和が収束。
-  - 2×2 TiO2 終端スラブ + CO2 で D3 と双極子補正が有効になり SCF が回ることを確認。
+  - バルク BaTiO3 (立方晶, a = 4.00 Å): バンドギャップ 1.77 eV (PBE として妥当)。
+  - 5 層 2×2 TiO2 終端スラブ + CO2 (55 atoms, D3 + 双極子補正, 2×2×1 k 点, 55/600 Ry) の relax:
+    最初の SCF が 27 反復で収束 (双極子 0.24 D)、力が計算され BFGS が進むことを確認。
+    SCF 混合は `local-TF` だと同じ系で収束が大幅に遅れた/停滞したので、既定を `plain` にしています (4 章)。
   - `neb.x` が 5 像の入力 (スピン分極 + DFT+U `HUBBARD {ortho-atomic}` + 双極子補正) を読み込み、初期経路長を計算して反復を開始することを確認。
 
 ---
