@@ -8,7 +8,9 @@ that matter for this system:
 * Dipole correction for slabs with vacuum (``tefield``/``dipfield``); the
   sawtooth is placed automatically in the middle of the largest vacuum gap.
   Fully periodic pores (no vacuum) must NOT use it.
-* ``mixing_mode='local-TF'`` helps SCF convergence of slabs / pores.
+* SCF mixing: plain Broyden, beta = 0.3. In tests on a 5-layer TiO2-terminated
+  slab (QE 7.5, pslibrary PAW) plain mixing converged in 25 iterations while
+  ``local-TF`` needed 65 or more (or stalled), so local-TF is not the default.
 * Fixed atoms are written as ``0 0 0`` from ASE ``FixAtoms`` constraints.
 """
 
@@ -208,7 +210,7 @@ def build_namelists(
     electrons = {
         "conv_thr": conv_thr,
         "mixing_beta": 0.3,
-        "mixing_mode": "local-TF" if atoms.info.get("kind", "molecule") != "molecule" else "plain",
+        "mixing_mode": "plain",
         "electron_maxstep": 200,
     }
     nl = {"CONTROL": control, "SYSTEM": system, "ELECTRONS": electrons}
