@@ -1,0 +1,5 @@
+ase>=3.23
+numpy
+scipy
+matplotlib
+pytest  # tests only
