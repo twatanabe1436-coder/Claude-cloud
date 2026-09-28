@@ -251,6 +251,6 @@ def interpolate_path(IS: Atoms, FS: Atoms, n_images: int = 7, method: str = "idp
     images = [IS.copy()] + [IS.copy() for _ in range(n_images - 2)] + [FS.copy()]
     for im in images:
         im.set_constraint(IS.constraints)
-    neb = NEB(images)
+    neb = NEB(images, method="improvedtangent")  # only used for the interpolation
     neb.interpolate(method=method, mic=True)
     return images
