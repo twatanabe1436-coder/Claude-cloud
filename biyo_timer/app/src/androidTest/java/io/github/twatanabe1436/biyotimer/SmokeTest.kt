@@ -3,6 +3,8 @@ package io.github.twatanabe1436.biyotimer
 import android.Manifest
 import android.app.Notification
 import android.app.NotificationManager
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.os.Build
 import android.os.ParcelFileDescriptor
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
@@ -156,6 +158,16 @@ class SmokeTest {
         compose.onNodeWithText("読み上げ：残り10分・5分・3分・1分").assertExists()
     }
 
+    @Test
+    fun landscapeLayout() {
+        scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE }
+        waitUntil("横向きにならない", 5_000) { activityOrientation() == Configuration.ORIENTATION_LANDSCAPE }
+        compose.onNodeWithText("20:00").assertExists()
+        compose.onNodeWithText("スタート").assertExists()
+        screenshot("10_landscape")
+        scenario.onActivity { it.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED }
+    }
+
     private fun waitForText(text: String, timeoutMs: Long = 3_000) {
         compose.waitUntil(timeoutMs) {
             compose.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
@@ -180,6 +192,12 @@ class SmokeTest {
 
     private fun timerNotificationTitle(): String? =
         timerNotification()?.extras?.getCharSequence(Notification.EXTRA_TITLE)?.toString()
+
+    private fun activityOrientation(): Int {
+        var orientation = Configuration.ORIENTATION_UNDEFINED
+        scenario.onActivity { orientation = it.resources.configuration.orientation }
+        return orientation
+    }
 
     private fun onMain(block: () -> Unit) = instrumentation.runOnMainSync(block)
 
