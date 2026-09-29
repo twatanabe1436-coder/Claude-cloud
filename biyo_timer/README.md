@@ -26,18 +26,26 @@
 
 ## インストール
 
-1. GitHub の [Actions タブ](https://github.com/twatanabe1436-coder/Claude-cloud/actions/workflows/biyo-timer-android.yml)
-   を開き、緑のチェックが付いた最新の実行を選びます。
-2. ページ下部の **Artifacts** にある `biyo-timer-apk` をダウンロードし、zip を展開して `biyo-timer.apk` を取り出します
-   （GitHub へのログインが必要です）。
-3. APK を Android 端末に送ってタップします。「提供元不明のアプリ」の確認が出たら、そのアプリからのインストールを許可してください。
-4. 初回起動時に「通知の許可」を求められたら **許可** を選びます（画面を消しているときに残り時間を通知に表示するため）。
+1. **Android 端末のブラウザ**で次のリンクを開くと、APK が直接ダウンロードされます（GitHub へのログインは不要です）。
 
-`biyo-timer-v1.0.0` のような名前のタグを push すると、APK を添付した GitHub Release も自動で作られます
-（Release のページからは zip ではなく APK を直接ダウンロードできます）。
+   **https://github.com/twatanabe1436-coder/Claude-cloud/releases/latest/download/biyo-timer.apk**
 
-> 同じ端末に上書きインストールできるのは、同じビルド環境で署名された APK だけです。
-> 「アプリをインストールできませんでした」と出た場合は、古いほうをアンインストールしてから入れ直してください。
+   （[Releases ページ](https://github.com/twatanabe1436-coder/Claude-cloud/releases) の `biyo-timer.apk` からも同じものを入手できます）
+2. ダウンロードした `biyo-timer.apk` をタップします。「提供元不明のアプリ」の確認が出たら、
+   そのブラウザ（またはファイルアプリ）からのインストールを許可してください。
+3. 初回起動時に「通知の許可」を求められたら **許可** を選びます（画面を消しているときに残り時間を通知に表示するため）。
+
+APK は Android 専用です（iPhone にはインストールできません）。
+
+> 同じ端末に上書きインストールできるのは、同じ鍵で署名された APK だけです。
+> 新しい版を入れるときに「アプリをインストールできませんでした」と出た場合は、古いほうをアンインストールしてから入れ直してください。
+
+### 新しい版を公開するには（開発者向け）
+
+`biyo-timer-v1.0.1` のような名前のタグを push すると、GitHub Actions が APK をビルドして Release を自動で作ります。
+上のダウンロードリンクは常に最新の Release を指します。
+push ごとのビルド結果は [Actions](https://github.com/twatanabe1436-coder/Claude-cloud/actions/workflows/biyo-timer-android.yml)
+の Artifacts（zip、要ログイン）にも残ります。
 
 ## 日本語の読み上げ音声を用意する
 
