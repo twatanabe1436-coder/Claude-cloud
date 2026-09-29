@@ -4,6 +4,7 @@ on:
   push:
     branches: ['**']
     # biyo-timer-v1.0.0 のようなタグを push すると APK 付きの Release を作る
+    # (手動実行で release_version を指定しても作れる)
     tags: ['biyo-timer-v*']
     paths:
       - 'biyo_timer/**'
@@ -22,6 +23,10 @@ on:
         description: 'スクリーンショットを縮小してログに出力する (デバッグ用)'
         type: boolean
         default: false
+      release_version:
+        description: 'APK 付きの Release として公開するバージョン (例: 1.0.1)。空欄なら公開しない'
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -76,7 +81,9 @@ jobs:
   release:
     name: Release を作成
     needs: build
-    if: startsWith(github.ref, 'refs/tags/biyo-timer-v')
+    if: >-
+      startsWith(github.ref, 'refs/tags/biyo-timer-v') ||
+      (github.event_name == 'workflow_dispatch' && inputs.release_version != '')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -88,11 +95,16 @@ jobs:
         working-directory: .
         env:
           GH_TOKEN: ${{ github.token }}
+          # タグの push ならそのタグ、手動実行なら biyo-timer-v<release_version> (無ければこのコミットに作る)
+          TAG: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || format('biyo-timer-v{0}', inputs.release_version) }}
         run: |
-          gh release create "$GITHUB_REF_NAME" biyo-timer.apk \
+          gh release create "$TAG" biyo-timer.apk \
             --repo "$GITHUB_REPOSITORY" \
-            --title "実技タイマー ${GITHUB_REF_NAME#biyo-timer-}" \
-            --notes "Android 用のアプリです。biyo-timer.apk をダウンロードしてインストールしてください。"
+            --target "$GITHUB_SHA" \
+            --latest \
+            --title "実技タイマー ${TAG#biyo-timer-}" \
+            --notes "美容師国家試験の実技練習用タイマー (Android 8.0 以降)。
+          Android 端末で下の biyo-timer.apk をダウンロードしてタップするとインストールできます。"
 
   emulator:
     name: エミュレータで動作確認 (API ${{ matrix.api-level }})

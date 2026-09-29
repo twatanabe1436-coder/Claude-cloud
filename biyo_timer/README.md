@@ -42,7 +42,9 @@ APK は Android 専用です（iPhone にはインストールできません）
 
 ### 新しい版を公開するには（開発者向け）
 
-`biyo-timer-v1.0.1` のような名前のタグを push すると、GitHub Actions が APK をビルドして Release を自動で作ります。
+[Actions](https://github.com/twatanabe1436-coder/Claude-cloud/actions/workflows/biyo-timer-android.yml) から
+ワークフローを手動実行 (Run workflow) して `release_version` に `1.0.1` のようなバージョンを入れるか、
+`biyo-timer-v1.0.1` のような名前のタグを push すると、APK をビルドして Release を自動で作ります。
 上のダウンロードリンクは常に最新の Release を指します。
 push ごとのビルド結果は [Actions](https://github.com/twatanabe1436-coder/Claude-cloud/actions/workflows/biyo-timer-android.yml)
 の Artifacts（zip、要ログイン）にも残ります。
