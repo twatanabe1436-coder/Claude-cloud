@@ -77,6 +77,9 @@ class SmokeTest {
         waitUntil("通知が出ていない", 5_000) { timerNotificationShown() }
         compose.onNodeWithText("一時停止").assertExists()
         screenshot("03_running")
+        shell("cmd statusbar expand-notifications")
+        screenshot("03b_notification")
+        shell("cmd statusbar collapse")
 
         compose.onNodeWithText("一時停止").performClick()
         waitForText("一時停止中")
@@ -172,6 +175,8 @@ class SmokeTest {
 
     private fun screenshot(name: String) {
         compose.waitForIdle()
+        // 画面遷移や通知シェードの描画が終わるのを待つ
+        Thread.sleep(800)
         shell("screencap -p $SHOT_DIR/$name.png")
     }
 

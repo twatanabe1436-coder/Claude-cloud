@@ -51,7 +51,9 @@ jobs:
         run: ./gradlew --no-daemon testDebugUnitTest
 
       - name: lint
-        run: ./gradlew --no-daemon lintDebug
+        run: |
+          ./gradlew --no-daemon lintDebug || { cat app/build/reports/lint-results-debug.txt; exit 1; }
+          cat app/build/reports/lint-results-debug.txt
 
       - name: APK をビルド
         run: |
@@ -130,6 +132,8 @@ jobs:
           working-directory: biyo_timer
           # 各行は別々のシェルで実行される
           script: |
+            adb shell settings put global hide_error_dialogs 1 || true
+            adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS || true
             ./gradlew --no-daemon connectedDebugAndroidTest || touch ../ui-test-failed
             mkdir -p ../screenshots
             adb pull /data/local/tmp/biyo_timer_shots/. ../screenshots/ || true

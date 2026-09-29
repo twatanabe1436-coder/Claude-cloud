@@ -32,9 +32,8 @@ android {
     }
 
     lint {
-        // CI のログで指摘内容を確認できるようにする
+        // CI のログに出せるようテキスト版のレポートも作る (build/reports/lint-results-debug.txt)
         textReport = true
-        textOutput = file("stdout")
     }
 
     packaging {
