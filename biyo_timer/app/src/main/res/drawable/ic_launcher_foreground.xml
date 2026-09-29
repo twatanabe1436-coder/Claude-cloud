@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ストップウォッチ。セーフゾーン (中心 54,54 半径 33) に収まるように配置している。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,27h12a2,2 0,0 1,0 4h-12a2,2 0,0 1,0 -4z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M52,30h4v6h-4z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M72.2,37.4l2.8,-2.8a2,2 0,0 1,2.8 2.8l-2.8,2.8z" />
+    <path
+        android:fillColor="#FFD9E3"
+        android:pathData="M54,58L54,43A15,15 0,0 1,67 65.5Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:pathData="M54,37a21,21 0,1 1,0 42a21,21 0,1 1,0 -42z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeWidth="3.5"
+        android:pathData="M54,58L54,45" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,55a3,3 0,1 1,0 6a3,3 0,1 1,0 -6z" />
+</vector>
