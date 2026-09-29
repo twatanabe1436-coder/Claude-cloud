@@ -127,7 +127,10 @@ fun TimerScreen(
                 .fillMaxSize()
                 .padding(padding),
         ) {
-            val landscape = maxWidth > maxHeight
+            // Row/Column の中からは BoxWithConstraints のスコープを暗黙に参照できないので取り出しておく
+            val width = maxWidth
+            val height = maxHeight
+            val landscape = width > height
             val info: @Composable () -> Unit = {
                 VoiceWarning(voiceStatus, onClick = onOpenSettings)
                 StatusRow(snapshot, settings, accent)
@@ -154,7 +157,7 @@ fun TimerScreen(
                     TimerDial(
                         snapshot = snapshot,
                         accent = accent,
-                        size = min(maxHeight - 16.dp, 360.dp),
+                        size = min(height - 16.dp, 360.dp),
                         onClick = if (editable) openDurationDialog else null,
                     )
                     Column(
@@ -187,7 +190,7 @@ fun TimerScreen(
                         TimerDial(
                             snapshot = snapshot,
                             accent = accent,
-                            size = min(min(maxWidth - 48.dp, maxHeight * 0.5f), 360.dp),
+                            size = min(min(width - 48.dp, height * 0.5f), 360.dp),
                             onClick = if (editable) openDurationDialog else null,
                         )
                         AnnouncementLine(snapshot, settings)
