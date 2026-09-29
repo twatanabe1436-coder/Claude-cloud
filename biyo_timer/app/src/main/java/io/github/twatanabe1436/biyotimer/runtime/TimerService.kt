@@ -47,9 +47,10 @@ class TimerService : Service() {
         super.onCreate()
         createChannel()
         scope.launch {
-            controller.state.map { it.phase }.distinctUntilChanged().collect { phase ->
+            // 状態が変わったときと、次の読み上げが進んだときだけ通知を更新する
+            controller.state.map { it.phase to it.nextAnnouncementSec }.distinctUntilChanged().collect { (phase, _) ->
                 // startForeground より前に止めるとクラッシュするので、前面化してから反応する
-                if (inForeground) onPhaseChanged(phase)
+                if (inForeground) onStateChanged(phase)
             }
         }
     }
@@ -61,7 +62,7 @@ class TimerService : Service() {
             ACTION_RESUME -> controller.resume()
             ACTION_RESET -> controller.reset()
         }
-        onPhaseChanged(controller.state.value.phase)
+        onStateChanged(controller.state.value.phase)
         return START_NOT_STICKY
     }
 
@@ -73,7 +74,7 @@ class TimerService : Service() {
         super.onDestroy()
     }
 
-    private fun onPhaseChanged(phase: Phase) {
+    private fun onStateChanged(phase: Phase) {
         stopJob?.cancel()
         stopJob = null
         when (phase) {
@@ -141,25 +142,27 @@ class TimerService : Service() {
             .setShowWhen(false)
 
         val remaining = Phrases.clock(snapshot.remainingDisplaySec)
+        val next = snapshot.nextAnnouncementSec?.let { "次の読み上げ：残り${Phrases.duration(it)}" } ?: "次の合図：終了"
         when (snapshot.phase) {
             Phase.COUNTDOWN -> builder
-                .setContentTitle("まもなく開始")
+                .setContentTitle(title("まもなく開始"))
                 .setContentText("作業時間 $remaining")
             Phase.RUNNING -> builder
-                .setContentTitle("作業中")
-                .setContentText("残り時間")
+                .setContentTitle(title("作業中"))
+                .setContentText(next)
+                // 残り時間は通知のヘッダーにカウントダウン表示される
                 .setUsesChronometer(true)
                 .setChronometerCountDown(true)
                 .setShowWhen(true)
                 .setWhen(System.currentTimeMillis() + snapshot.remainingMs)
                 .addAction(0, "一時停止", serviceIntent(ACTION_PAUSE))
             Phase.PAUSED -> builder
-                .setContentTitle("一時停止中")
+                .setContentTitle(title("一時停止中"))
                 .setContentText("残り $remaining")
                 .addAction(0, "再開", serviceIntent(ACTION_RESUME))
                 .addAction(0, "リセット", serviceIntent(ACTION_RESET))
             Phase.FINISHED -> builder
-                .setContentTitle("終了")
+                .setContentTitle(title("終了"))
                 .setContentText("時間になりました")
             Phase.IDLE -> builder
                 .setContentTitle("待機中")
@@ -167,6 +170,10 @@ class TimerService : Service() {
         }
         return builder.build()
     }
+
+    /** 例: "作業中 · カッティング" */
+    private fun title(state: String): String =
+        app.settingsStore.current.activePreset?.let { "$state · ${it.name}" } ?: state
 
     private fun openAppIntent(): PendingIntent = PendingIntent.getActivity(
         this,

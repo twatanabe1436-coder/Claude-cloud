@@ -1,6 +1,7 @@
 package io.github.twatanabe1436.biyotimer
 
 import android.Manifest
+import android.app.Notification
 import android.app.NotificationManager
 import android.os.Build
 import android.os.ParcelFileDescriptor
@@ -75,6 +76,9 @@ class SmokeTest {
 
         waitForText("作業中", timeoutMs = 6_000)
         waitUntil("通知が出ていない", 5_000) { timerNotificationShown() }
+        waitUntil("通知のタイトルが違う: ${timerNotificationTitle()}", 5_000) {
+            timerNotificationTitle() == "作業中 · カッティング"
+        }
         compose.onNodeWithText("一時停止").assertExists()
         screenshot("03_running")
         shell("cmd statusbar expand-notifications")
@@ -166,10 +170,16 @@ class SmokeTest {
         }
     }
 
-    private fun timerNotificationShown(): Boolean =
+    private fun timerNotification(): Notification? =
         app.getSystemService(NotificationManager::class.java)
             ?.activeNotifications
-            ?.any { it.id == TimerService.NOTIFICATION_ID } == true
+            ?.firstOrNull { it.id == TimerService.NOTIFICATION_ID }
+            ?.notification
+
+    private fun timerNotificationShown(): Boolean = timerNotification() != null
+
+    private fun timerNotificationTitle(): String? =
+        timerNotification()?.extras?.getCharSequence(Notification.EXTRA_TITLE)?.toString()
 
     private fun onMain(block: () -> Unit) = instrumentation.runOnMainSync(block)
 

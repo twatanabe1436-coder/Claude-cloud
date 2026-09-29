@@ -51,9 +51,8 @@ jobs:
         run: ./gradlew --no-daemon testDebugUnitTest
 
       - name: lint
-        run: |
-          ./gradlew --no-daemon lintDebug || { cat app/build/reports/lint-results-debug.txt; exit 1; }
-          cat app/build/reports/lint-results-debug.txt
+        # textReport = true なので指摘内容はこのログに出る
+        run: ./gradlew --no-daemon lintDebug
 
       - name: APK をビルド
         run: |

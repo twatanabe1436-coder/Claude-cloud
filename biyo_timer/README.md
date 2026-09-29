@@ -6,6 +6,12 @@
 
 > 学校法人山野学苑および「山野タイマー」とは関係のない、個人が作った練習用アプリです。
 
+| 待機中 | 作業中 | 一時停止中 | 通知 (画面オフでも動作) | 設定 |
+|:---:|:---:|:---:|:---:|:---:|
+| ![待機中](docs/screenshots/idle.jpg) | ![作業中](docs/screenshots/running.jpg) | ![一時停止中](docs/screenshots/paused.jpg) | ![通知](docs/screenshots/notification.jpg) | ![設定](docs/screenshots/settings.jpg) |
+
+（Android 15 エミュレータでの画面）
+
 ## 主な機能
 
 - **開始前の 3 秒カウントダウン**（ピッ・ピッ・ピッ → 「作業はじめ」）。なし / 3 / 5 / 10 秒から選べます
