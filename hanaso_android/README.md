@@ -4,6 +4,12 @@
 単語やクイズが中心のアプリ（Epop など）で覚えた表現を、**実際の会話で口から出す練習**に使うことを想定しています。
 AI には Claude API を使い、スマホから直接呼び出します（サーバーは不要）。
 
+| ホーム | 会話と添削 | ヒント | 振り返り | ハンズフリー |
+|:---:|:---:|:---:|:---:|:---:|
+| ![ホーム](docs/home.jpg) | ![会話と添削](docs/talk.jpg) | ![ヒント](docs/hint.jpg) | ![振り返り](docs/summary.jpg) | ![ハンズフリー](docs/handsfree.jpg) |
+
+（Android 15 エミュレータ・デモモードでの画面）
+
 ## できること
 
 | 機能 | 内容 |
@@ -24,13 +30,18 @@ Android 8.0 以降で動きます。ダークモード対応。
 
 ## インストール
 
-1. **Android 端末のブラウザ**で [Releases ページ](https://github.com/twatanabe1436-coder/Claude-cloud/releases) を開き、
-   「Hanaso 英会話」の Release にある **`hanaso.apk`** をダウンロードします（GitHub へのログインは不要です）。
+1. **Android 端末のブラウザ**で次のリンクを開くと、APK が直接ダウンロードされます（GitHub へのログインは不要です）。
+
+   **https://github.com/twatanabe1436-coder/Claude-cloud/releases/download/hanaso-v0.1.0/hanaso.apk**
+
+   （[Releases ページ](https://github.com/twatanabe1436-coder/Claude-cloud/releases) の「Hanaso 英会話」からも入手できます）
 2. ダウンロードした `hanaso.apk` をタップします。「提供元不明のアプリ」の確認が出たら、
    そのブラウザ（またはファイルアプリ）からのインストールを許可してください。
 3. アプリを開き、最初に会話を始めるときに **マイクの使用を許可** してください。
 
-> 実技タイマーと同じリポジトリですが、「最新版 (latest)」のリンクはタイマーのものです。Hanaso は Releases 一覧から選んでください。
+> 実技タイマーと同じリポジトリなので、`releases/latest` のリンクはタイマーのままにしてあります。
+> Hanaso は上のリンク（またはReleases 一覧）から入手してください。
+> 新しい版を入れるときに「アプリをインストールできませんでした」と出た場合は、古いほうをアンインストールしてから入れ直してください。
 
 ## Claude の API キーを設定する
 
