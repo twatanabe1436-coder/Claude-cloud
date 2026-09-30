@@ -28,3 +28,5 @@
 -keep class com.anthropic.** { *; }
 -keep class com.fasterxml.jackson.** { *; }
 -keep class kotlin.reflect.jvm.internal.** { *; }
+# SDK のクラス指定の構造化出力 (このアプリでは未使用) が参照する、Android にない Java の API
+-dontwarn java.lang.reflect.AnnotatedType
