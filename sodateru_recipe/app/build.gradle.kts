@@ -46,6 +46,17 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // 端末内 OCR (ML Kit) のネイティブライブラリが CPU の種類ごとに入って APK が大きくなるので、
+    // 配布用はほぼすべての現行スマホに合う arm64-v8a 版を分けて作る (universal 版はすべての CPU 向け)。
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a", "x86_64")
+            isUniversalApk = true
+        }
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true

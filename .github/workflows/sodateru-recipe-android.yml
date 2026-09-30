@@ -19,8 +19,8 @@ on:
         description: 'エミュレータで UI テストとリリース版の動作確認を行う'
         type: boolean
         default: true
-      print_screenshots:
-        description: 'スクリーンショットを縮小してログに出力する (デバッグ用)'
+      commit_screenshots:
+        description: 'エミュレータ (Android 15) のスクリーンショットを sodateru_recipe/docs/screenshots に commit する'
         type: boolean
         default: false
       release_version:
@@ -81,13 +81,16 @@ jobs:
       - name: APK をビルド
         run: |
           ./gradlew --no-daemon assembleRelease
-          cp app/build/outputs/apk/release/app-release.apk ../sodateru-recipe.apk
-          ls -la ../sodateru-recipe.apk
+          ls -la app/build/outputs/apk/release/
+          cp app/build/outputs/apk/release/app-arm64-v8a-release.apk ../sodateru-recipe.apk
+          cp app/build/outputs/apk/release/app-universal-release.apk ../sodateru-recipe-universal.apk
 
       - uses: actions/upload-artifact@v6
         with:
           name: sodateru-recipe-apk
-          path: sodateru-recipe.apk
+          path: |
+            sodateru-recipe.apk
+            sodateru-recipe-universal.apk
           if-no-files-found: error
 
       - uses: actions/upload-artifact@v6
@@ -122,15 +125,16 @@ jobs:
         # 代わりに sodateru-latest という固定タグの Release を毎回作り直して、ダウンロード用の URL を固定する。
         run: |
           NOTES="レシピを育てるノートアプリ (Android 8.0 以降)。
-          Android 端末で下の sodateru-recipe.apk をダウンロードしてタップするとインストールできます。"
-          gh release create "$TAG" sodateru-recipe.apk \
+          Android 端末で下の sodateru-recipe.apk をダウンロードしてタップするとインストールできます。
+          インストールできない古い機種 (32 ビット) では sodateru-recipe-universal.apk を使ってください。"
+          gh release create "$TAG" sodateru-recipe.apk sodateru-recipe-universal.apk \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --latest=false \
             --title "そだてるレシピ ${TAG#sodateru-}" \
             --notes "$NOTES"
           gh release delete sodateru-latest --repo "$GITHUB_REPOSITORY" --cleanup-tag --yes || true
-          gh release create sodateru-latest sodateru-recipe.apk \
+          gh release create sodateru-latest sodateru-recipe.apk sodateru-recipe-universal.apk \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --latest=false \
@@ -142,6 +146,8 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.emulator_test
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -180,7 +186,7 @@ jobs:
             mkdir -p ../screenshots
             adb pull /data/local/tmp/sodateru_shots/. ../screenshots/ || true
             adb uninstall io.github.twatanabe1436.sodateru || true
-            adb install -r app/build/outputs/apk/release/app-release.apk
+            adb install -r app/build/outputs/apk/release/app-universal-release.apk
             python3 scripts/release_smoke.py ../screenshots || touch ../release-smoke-failed
             adb logcat -d > ../logcat.txt || true
             adb logcat -d -b crash | grep -A30 sodateru | tee ../crash.txt || true
@@ -188,25 +194,28 @@ jobs:
             test ! -f ../ui-test-failed
             test ! -f ../release-smoke-failed
 
-      - name: スクリーンショットをログに出力
-        if: always() && inputs.print_screenshots && matrix.api-level == 35
+      - name: スクリーンショットを commit
+        if: always() && inputs.commit_screenshots && matrix.api-level == 35
         working-directory: .
         run: |
           python3 -m pip install --quiet pillow
+          rm -rf sodateru_recipe/docs/screenshots
+          mkdir -p sodateru_recipe/docs/screenshots
           python3 - <<'PY'
-          import base64, glob, io
+          import glob, os
           from PIL import Image
           for path in sorted(glob.glob('screenshots/*.png')):
               im = Image.open(path).convert('RGB')
-              im.thumbnail((360, 800))
-              buf = io.BytesIO()
-              im.save(buf, 'JPEG', quality=70)
-              data = base64.b64encode(buf.getvalue()).decode()
-              print(f'=== SHOT {path}')
-              for i in range(0, len(data), 1000):
-                  print(data[i:i + 1000])
-              print('=== END')
+              im.thumbnail((432, 960))
+              name = os.path.splitext(os.path.basename(path))[0]
+              im.save(f'sodateru_recipe/docs/screenshots/{name}.jpg', 'JPEG', quality=78)
           PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sodateru_recipe/docs/screenshots
+          git commit -m "Update sodateru_recipe screenshots (emulator API 35)" || exit 0
+          git pull --rebase origin "$GITHUB_REF_NAME"
+          git push origin "HEAD:$GITHUB_REF_NAME"
 
       - uses: actions/upload-artifact@v6
         if: always()
