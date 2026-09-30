@@ -16,7 +16,6 @@ import com.anthropic.models.beta.messages.BetaCacheControlEphemeral
 import com.anthropic.models.beta.messages.BetaOutputConfig
 import com.anthropic.models.beta.messages.BetaStopReason
 import com.anthropic.models.beta.messages.MessageCreateParams
-import com.anthropic.models.beta.messages.StructuredOutputConfig
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +30,7 @@ import java.io.IOException
 
 /**
  * Claude API (公式 Java SDK) を使う AI。
- * 会話の返事はストリーミング、フィードバック等は構造化出力 (Kotlin のクラスから JSON スキーマを自動生成) で受け取る。
+ * 会話の返事はストリーミング、フィードバック等は構造化出力 (JSON スキーマで形を指定) で受け取る。
  */
 class ClaudeEngine(
     private val client: AnthropicClient,
@@ -118,14 +117,15 @@ class ClaudeEngine(
         if (message.stopReason().orElse(null) == BetaStopReason.REFUSAL) throw AiException(AiErrorKind.REFUSAL)
     }.flowOn(io)
 
-    /** 構造化出力 (JSON) で1回呼び出す */
-    private suspend fun <T : Any> structured(
-        type: Class<T>,
+    /** 構造化出力 (JSON スキーマで形を指定) で1回呼び出し、返ってきた JSON を parse で読む */
+    private suspend fun <T> structured(
+        schema: Map<String, Any>,
+        parse: (String) -> T,
         system: String,
         prompt: String,
         effort: BetaOutputConfig.Effort,
     ): T = withContext(io) {
-        val outputConfig = StructuredOutputConfig.builder<T>().format(type)
+        val outputConfig = BetaOutputConfig.builder().format(StructuredJson.format(schema))
         if (supportsEffort(model)) outputConfig.effort(effort)
         val params = baseParams(system).addUserMessage(prompt).outputConfig(outputConfig.build()).build()
         val message = try {
@@ -134,28 +134,31 @@ class ClaudeEngine(
             throw toAiException(e)
         }
         if (message.stopReason().orElse(null) == BetaStopReason.REFUSAL) throw AiException(AiErrorKind.REFUSAL)
+        val text = message.content().mapNotNull { it.text().orElse(null)?.text() }.joinToString("")
+        if (text.isBlank()) throw AiException(AiErrorKind.BAD_OUTPUT)
         try {
-            message.content().firstNotNullOfOrNull { it.text().orElse(null) }?.text()
-                ?: throw AiException(AiErrorKind.BAD_OUTPUT)
-        } catch (e: AiException) {
-            throw e
+            parse(text)
         } catch (e: Exception) {
             throw AiException(AiErrorKind.BAD_OUTPUT, e)
         }
     }
 
-    override suspend fun feedback(conversation: Conversation): Feedback =
-        structured(Feedback::class.java, Prompts.FEEDBACK_SYSTEM, Prompts.feedbackPrompt(conversation), fastEffort)
+    override suspend fun feedback(conversation: Conversation): Feedback = structured(
+        StructuredJson.FEEDBACK, StructuredJson::feedback, Prompts.FEEDBACK_SYSTEM, Prompts.feedbackPrompt(conversation), fastEffort,
+    )
 
-    override suspend fun hint(conversation: Conversation, wantJa: String?): List<HintSuggestion> =
-        structured(Hints::class.java, Prompts.HINT_SYSTEM, Prompts.hintPrompt(conversation, wantJa), fastEffort).suggestions
+    override suspend fun hint(conversation: Conversation, wantJa: String?): List<HintSuggestion> = structured(
+        StructuredJson.HINTS, StructuredJson::hints, Prompts.HINT_SYSTEM, Prompts.hintPrompt(conversation, wantJa), fastEffort,
+    )
 
-    override suspend fun translate(text: String): Translation =
-        structured(Translation::class.java, Prompts.TRANSLATE_SYSTEM, Prompts.translatePrompt(text), fastEffort)
+    override suspend fun translate(text: String): Translation = structured(
+        StructuredJson.TRANSLATION, StructuredJson::translation, Prompts.TRANSLATE_SYSTEM, Prompts.translatePrompt(text), fastEffort,
+    )
 
     override suspend fun summary(conversation: Conversation, completedMissions: Set<String>): Summary {
         val s = structured(
-            Summary::class.java,
+            StructuredJson.SUMMARY,
+            StructuredJson::summary,
             Prompts.SUMMARY_SYSTEM,
             Prompts.summaryPrompt(conversation, completedMissions),
             summaryEffort,

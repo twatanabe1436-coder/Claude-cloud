@@ -144,6 +144,10 @@ class ClaudeEngineTest {
             assertTrue("スキーマに $name がない: $schema", props.has(name))
         }
         assertEquals(listOf("GREAT", "GOOD", "FIX"), props["rating"]["enum"].map { it.asText() })
+        // Claude の構造化出力の条件: すべて required・余分なプロパティなし (入れ子のオブジェクトも)
+        assertEquals(props.fieldNames().asSequence().toSet(), schema["required"].map { it.asText() }.toSet())
+        assertFalse(schema["additionalProperties"].asBoolean())
+        assertFalse(props["mistakes"]["items"]["additionalProperties"].asBoolean())
         assertTrue(body["messages"][0]["content"].asText().contains("<utterance_to_review>\na latte please\n</utterance_to_review>"))
         assertEquals("default", body["fallbacks"].asText())
     }
@@ -170,6 +174,23 @@ class ClaudeEngineTest {
         val body = server.takeRequest().bodyJson()
         assertEquals("medium", body["output_config"]["effort"].asText())
         assertTrue(body["messages"][0]["content"].asText().contains("- [x] ドリンクをサイズ付きで注文する"))
+    }
+
+    @Test
+    fun missingFieldsAndInvalidJson() = runBlocking {
+        server.enqueue(jsonMessage("""{"rating":"great","natural":"Hi!"}"""))
+        val fb = engine().feedback(conversation)
+        assertEquals(Rating.GREAT, fb.rating)
+        assertEquals("", fb.corrected)
+        assertTrue(fb.mistakes.isEmpty())
+
+        server.enqueue(jsonMessage("not json"))
+        try {
+            engine().feedback(conversation)
+            fail("例外になるはず")
+        } catch (e: AiException) {
+            assertEquals(AiErrorKind.BAD_OUTPUT, e.kind)
+        }
     }
 
     @Test

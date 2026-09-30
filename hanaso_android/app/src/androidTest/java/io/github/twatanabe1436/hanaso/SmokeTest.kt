@@ -10,6 +10,7 @@ import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
@@ -48,7 +49,8 @@ class SmokeTest {
 
     @Before
     fun setUp() {
-        instrumentation.uiAutomation.grantRuntimePermission(app.packageName, Manifest.permission.RECORD_AUDIO)
+        // UiAutomation.grantRuntimePermission は Android 9 からなので、どの版でも使える pm grant で許可する
+        shell("pm grant ${app.packageName} ${Manifest.permission.RECORD_AUDIO}")
         shell("mkdir -p $SHOT_DIR")
         input = FakeSpeechInput()
         speaker = FakeSpeaker()
@@ -66,7 +68,7 @@ class SmokeTest {
 
     @After
     fun tearDown() {
-        scenario.close()
+        if (::scenario.isInitialized) scenario.close()
         onMain { app.closeTalk() }
     }
 
@@ -133,7 +135,9 @@ class SmokeTest {
         waitUntil("フレーズが保存されない") { app.store.phrases.value.size >= 4 }
         compose.onNode(hasScrollAction()).performScrollToNode(hasText("ホームへ"))
         compose.onNodeWithText("ホームへ").performClick()
-        waitForText("最近の会話")
+        waitForText("今日のおすすめ")
+        compose.onNodeWithTag("home_list").performScrollToNode(hasText("最近の会話"))
+        compose.onNodeWithText("最近の会話").assertExists()
         assertEquals(3, app.store.sessions.value.single().learnerTurns)
         assertTrue(app.store.sessions.value.single().score != null)
     }

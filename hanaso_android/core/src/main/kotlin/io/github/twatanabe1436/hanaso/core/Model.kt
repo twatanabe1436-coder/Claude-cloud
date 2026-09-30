@@ -74,7 +74,7 @@ data class Conversation(
     val history: List<Line>,
 )
 
-// ---- AI の構造化出力 (JSON スキーマはこのクラスから SDK が自動生成する) ----
+// ---- AI の構造化出力 (JSON スキーマと読み取りは StructuredJson.kt) ----
 
 enum class Rating { GREAT, GOOD, FIX }
 
@@ -90,8 +90,6 @@ data class Feedback(
 )
 
 data class HintSuggestion(val labelJa: String, val en: String, val ja: String)
-
-data class Hints(val suggestions: List<HintSuggestion>)
 
 data class WordNote(val en: String, val ja: String)
 

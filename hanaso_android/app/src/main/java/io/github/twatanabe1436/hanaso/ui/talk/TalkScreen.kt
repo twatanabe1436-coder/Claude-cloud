@@ -613,7 +613,7 @@ private fun HintSheet(hint: HintState, session: TalkSession, mic: MicPermission)
             }
         }
         HorizontalDivider(Modifier.padding(vertical = 12.dp))
-        Text("🇯🇵 言いたいことを日本語で入力すると、英語の言い方を提案します", style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
+        Text("💬 言いたいことを日本語で入力すると、英語の言い方を提案します", style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
         Spacer(Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
