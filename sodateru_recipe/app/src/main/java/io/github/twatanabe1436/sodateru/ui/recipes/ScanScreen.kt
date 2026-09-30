@@ -9,10 +9,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -24,6 +26,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -61,6 +64,7 @@ import io.github.twatanabe1436.sodateru.ui.HomeTab
 import io.github.twatanabe1436.sodateru.ui.Navigator
 import io.github.twatanabe1436.sodateru.ui.Route
 import io.github.twatanabe1436.sodateru.ui.components.BackButton
+import io.github.twatanabe1436.sodateru.ui.components.IconLabel
 import io.github.twatanabe1436.sodateru.ui.components.SectionCard
 import io.github.twatanabe1436.sodateru.ui.components.rememberImagePicker
 import kotlinx.coroutines.Dispatchers
@@ -120,12 +124,10 @@ fun ScanScreen(container: AppContainer, navigator: Navigator, category: Category
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilledTonalButton(onClick = picker.takePhoto, modifier = Modifier.weight(1f), enabled = !busy) {
-                    Icon(Icons.Filled.CameraAlt, contentDescription = null)
-                    Text(" 撮影する")
+                    IconLabel(Icons.Filled.CameraAlt, "撮影する")
                 }
                 FilledTonalButton(onClick = picker.pickFromGallery, modifier = Modifier.weight(1f), enabled = !busy) {
-                    Icon(Icons.Filled.PhotoLibrary, contentDescription = null)
-                    Text(" 写真を選ぶ")
+                    IconLabel(Icons.Filled.PhotoLibrary, "写真を選ぶ")
                 }
             }
             if (uris.isNotEmpty()) {
@@ -180,10 +182,10 @@ fun ScanScreen(container: AppContainer, navigator: Navigator, category: Category
             ) {
                 if (busy) {
                     CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                    Text("  読み取り中…", fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                    Text("読み取り中…", fontWeight = FontWeight.Bold)
                 } else {
-                    Icon(Icons.Filled.AutoAwesome, contentDescription = null)
-                    Text("  読み取る", fontWeight = FontWeight.Bold)
+                    IconLabel(Icons.Filled.AutoAwesome, "読み取る", fontWeight = FontWeight.Bold)
                 }
             }
             TextButton(onClick = { navigator.replace(Route.EditRecipe(category = category)) }) {

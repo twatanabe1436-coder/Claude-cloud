@@ -22,3 +22,9 @@
 -dontwarn com.standardwebhooks.**
 -dontwarn javax.naming.**
 -dontwarn sun.misc.**
+
+# Jackson はリフレクションで SDK のモデル・(デ)シリアライザを生成するため、SDK と Jackson のクラスは名前・メンバーごと残す。
+# (縮小すると「Class xxx has no default (no arg) constructor」で API 呼び出しが失敗した)
+-keep class com.anthropic.** { *; }
+-keep class com.fasterxml.jackson.** { *; }
+-keep class kotlin.reflect.jvm.internal.** { *; }

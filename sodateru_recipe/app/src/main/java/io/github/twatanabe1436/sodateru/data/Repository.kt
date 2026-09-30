@@ -4,6 +4,7 @@ import io.github.twatanabe1436.sodateru.core.DataCodec
 import io.github.twatanabe1436.sodateru.core.model.AppData
 import io.github.twatanabe1436.sodateru.core.model.CookLog
 import io.github.twatanabe1436.sodateru.core.model.Recipe
+import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +14,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import java.util.UUID
 
 /** レシピと記録の読み書き。全件をメモリに持ち、変更は SQLite に書いてから反映する。 */
 class Repository(

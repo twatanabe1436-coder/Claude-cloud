@@ -4,12 +4,12 @@ import android.content.Context
 import android.net.Uri
 import io.github.twatanabe1436.sodateru.core.BackupFormatException
 import io.github.twatanabe1436.sodateru.core.DataCodec
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 data class BackupSummary(val recipes: Int, val logs: Int, val photos: Int)
 

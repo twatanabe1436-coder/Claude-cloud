@@ -28,6 +28,7 @@ import io.github.twatanabe1436.sodateru.core.model.CookLog
 import io.github.twatanabe1436.sodateru.core.model.Recipe
 import io.github.twatanabe1436.sodateru.data.PhotoStore
 import io.github.twatanabe1436.sodateru.ui.components.Fmt
+import io.github.twatanabe1436.sodateru.ui.components.IconLabel
 import io.github.twatanabe1436.sodateru.ui.components.InfoPill
 import io.github.twatanabe1436.sodateru.ui.components.PhotoStrip
 import io.github.twatanabe1436.sodateru.ui.components.PillRow
@@ -103,8 +104,7 @@ fun LogCard(
             when {
                 applied != null -> InfoPill("✓ v${applied}に反映済み", color = MaterialTheme.colorScheme.primaryContainer)
                 onApply != null && log.arrangement.isNotBlank() -> FilledTonalButton(onClick = onApply) {
-                    Icon(Icons.Filled.AutoAwesome, contentDescription = null)
-                    Text(" このアレンジをレシピに反映")
+                    IconLabel(Icons.Filled.AutoAwesome, "このアレンジをレシピに反映")
                 }
             }
         }

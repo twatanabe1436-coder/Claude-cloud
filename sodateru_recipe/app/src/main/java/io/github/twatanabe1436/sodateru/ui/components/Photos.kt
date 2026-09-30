@@ -117,12 +117,10 @@ fun ImageSourceDialog(picker: ImagePicker, onDismiss: () -> Unit, title: String 
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 TextButton(onClick = { onDismiss(); picker.takePhoto() }, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Filled.CameraAlt, contentDescription = null)
-                    Text("  カメラで撮る", modifier = Modifier.weight(1f))
+                    IconLabel(Icons.Filled.CameraAlt, "カメラで撮る", modifier = Modifier.weight(1f))
                 }
                 TextButton(onClick = { onDismiss(); picker.pickFromGallery() }, modifier = Modifier.fillMaxWidth()) {
-                    Icon(Icons.Filled.PhotoLibrary, contentDescription = null)
-                    Text("  アルバムから選ぶ", modifier = Modifier.weight(1f))
+                    IconLabel(Icons.Filled.PhotoLibrary, "アルバムから選ぶ", modifier = Modifier.weight(1f))
                 }
             }
         },

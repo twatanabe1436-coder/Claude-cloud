@@ -68,6 +68,7 @@ import io.github.twatanabe1436.sodateru.ui.Navigator
 import io.github.twatanabe1436.sodateru.ui.Route
 import io.github.twatanabe1436.sodateru.ui.components.EmptyState
 import io.github.twatanabe1436.sodateru.ui.components.Fmt
+import io.github.twatanabe1436.sodateru.ui.components.IconLabel
 import io.github.twatanabe1436.sodateru.ui.components.PhotoThumb
 import io.github.twatanabe1436.sodateru.ui.components.SmallStars
 import kotlinx.coroutines.launch
@@ -144,7 +145,8 @@ fun RecipeListScreen(container: AppContainer, navigator: Navigator, bottomBar: @
             if (data.recipes.isNotEmpty()) {
                 ExtendedFloatingActionButton(
                     onClick = { showAdd = true },
-                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
+                    // ExtendedFloatingActionButton は文字の読み上げ情報を消すので、アイコン側に名前を付ける
+                    icon = { Icon(Icons.Filled.Add, contentDescription = "レシピを追加") },
                     text = { Text("レシピを追加") },
                 )
             }
@@ -168,12 +170,8 @@ fun RecipeListScreen(container: AppContainer, navigator: Navigator, bottomBar: @
             return@Scaffold
         }
         LazyColumn(
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = padding.calculateTopPadding() + 4.dp,
-                bottom = padding.calculateBottomPadding() + 88.dp,
-            ),
+            modifier = Modifier.padding(padding),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 88.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             item(key = "search") {
@@ -307,15 +305,13 @@ private fun AddRecipeDialog(navigator: Navigator, onDismiss: () -> Unit) {
                     onClick = { onDismiss(); navigator.push(Route.EditRecipe()) },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                 ) {
-                    Icon(Icons.Filled.EditNote, contentDescription = null)
-                    Text("  手で入力する", modifier = Modifier.weight(1f))
+                    IconLabel(Icons.Filled.EditNote, "手で入力する", modifier = Modifier.weight(1f))
                 }
                 OutlinedButton(
                     onClick = { onDismiss(); navigator.push(Route.Scan()) },
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                 ) {
-                    Icon(Icons.Filled.DocumentScanner, contentDescription = null)
-                    Text("  写真から読み取る", modifier = Modifier.weight(1f))
+                    IconLabel(Icons.Filled.DocumentScanner, "写真から読み取る", modifier = Modifier.weight(1f))
                 }
                 Text(
                     "本やノートの写真から、材料と作り方を文字に起こします",

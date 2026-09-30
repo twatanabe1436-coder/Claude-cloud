@@ -77,8 +77,7 @@ fun LazyListScope.ingredientEditorItems(
     item(key = "$keyPrefix-add") {
         Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = { onChange(items + Ingredient(name = "")) }) {
-                Icon(Icons.Filled.Add, contentDescription = null)
-                Text(" 材料を追加")
+                IconLabel(Icons.Filled.Add, "材料を追加")
             }
             if (summary != null) BakersSummaryLine(summary)
         }

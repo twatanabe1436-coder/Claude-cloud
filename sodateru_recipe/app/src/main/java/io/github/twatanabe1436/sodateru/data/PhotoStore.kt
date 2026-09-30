@@ -9,8 +9,6 @@ import android.net.Uri
 import android.util.Base64
 import android.util.LruCache
 import androidx.core.content.FileProvider
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
@@ -18,6 +16,8 @@ import java.io.InputStream
 import java.util.UUID
 import kotlin.math.max
 import kotlin.math.roundToInt
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /** アプリ内に保存する写真 (filesDir/photos 以下の JPEG)。取り込むときに縮小・回転補正する。 */
 class PhotoStore(private val context: Context) {
@@ -72,7 +72,9 @@ class PhotoStore(private val context: Context) {
     fun decode(uri: Uri, maxPx: Int, applyExif: Boolean = true): Bitmap? {
         val resolver = context.contentResolver
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) } ?: return null
+        // inJustDecodeBounds のときの decodeStream は常に null を返す (大きさだけ bounds に入る)
+        val stream = resolver.openInputStream(uri) ?: return null
+        stream.use { BitmapFactory.decodeStream(it, null, bounds) }
         if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
         var sample = 1
         while (max(bounds.outWidth, bounds.outHeight) / (sample * 2) >= maxPx) sample *= 2

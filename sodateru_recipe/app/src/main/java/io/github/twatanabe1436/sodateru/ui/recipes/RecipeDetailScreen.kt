@@ -79,6 +79,7 @@ import io.github.twatanabe1436.sodateru.ui.components.BackButton
 import io.github.twatanabe1436.sodateru.ui.components.BakersSummaryLine
 import io.github.twatanabe1436.sodateru.ui.components.ConfirmDialog
 import io.github.twatanabe1436.sodateru.ui.components.Fmt
+import io.github.twatanabe1436.sodateru.ui.components.IconLabel
 import io.github.twatanabe1436.sodateru.ui.components.IngredientList
 import io.github.twatanabe1436.sodateru.ui.components.PhotoStrip
 import io.github.twatanabe1436.sodateru.ui.components.PillRow
@@ -187,7 +188,7 @@ fun RecipeDetailScreen(container: AppContainer, navigator: Navigator, recipeId: 
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { navigator.push(Route.EditLog(recipe.id)) },
-                icon = { Icon(Icons.Filled.EditNote, contentDescription = null) },
+                icon = { Icon(Icons.Filled.EditNote, contentDescription = if (bread) "焼いた！記録する" else "作った！記録する") },
                 text = { Text(if (bread) "焼いた！記録する" else "作った！記録する") },
             )
         },
@@ -221,12 +222,10 @@ fun RecipeDetailScreen(container: AppContainer, navigator: Navigator, recipeId: 
                             navigator.breadRecipeId = recipe.id
                             navigator.goHome(HomeTab.BREAD)
                         }) {
-                            Icon(Icons.Filled.BakeryDining, contentDescription = null)
-                            Text(" 今日の条件で仕込む")
+                            IconLabel(Icons.Filled.BakeryDining, "今日の条件で仕込む")
                         }
                         OutlinedButton(onClick = { navigator.push(Route.Analysis(recipe.id)) }) {
-                            Icon(Icons.Filled.ScatterPlot, contentDescription = null)
-                            Text(" 研究ノート")
+                            IconLabel(Icons.Filled.ScatterPlot, "研究ノート")
                         }
                     }
                 }

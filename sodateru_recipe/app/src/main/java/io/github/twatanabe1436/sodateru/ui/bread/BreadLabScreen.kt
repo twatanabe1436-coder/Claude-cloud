@@ -67,6 +67,7 @@ import io.github.twatanabe1436.sodateru.ui.Route
 import io.github.twatanabe1436.sodateru.ui.components.ChoiceChips
 import io.github.twatanabe1436.sodateru.ui.components.EmptyState
 import io.github.twatanabe1436.sodateru.ui.components.Fmt
+import io.github.twatanabe1436.sodateru.ui.components.IconLabel
 import io.github.twatanabe1436.sodateru.ui.components.InfoPill
 import io.github.twatanabe1436.sodateru.ui.components.NumberField
 import io.github.twatanabe1436.sodateru.ui.components.SectionCard
@@ -136,12 +137,8 @@ fun BreadLabScreen(container: AppContainer, navigator: Navigator, bottomBar: @Co
             return@Scaffold
         }
         LazyColumn(
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = padding.calculateTopPadding() + 4.dp,
-                bottom = padding.calculateBottomPadding() + 24.dp,
-            ),
+            modifier = Modifier.padding(padding),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item(key = "today") {
@@ -208,12 +205,10 @@ fun BreadLabScreen(container: AppContainer, navigator: Navigator, bottomBar: @Co
             item(key = "tools") {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = { navigator.push(Route.Analysis(recipe?.id)) }, modifier = Modifier.weight(1f)) {
-                        Icon(Icons.Filled.ScatterPlot, contentDescription = null)
-                        Text(" 研究ノート")
+                        IconLabel(Icons.Filled.ScatterPlot, "研究ノート")
                     }
                     OutlinedButton(onClick = { navigator.push(Route.Calculator) }, modifier = Modifier.weight(1f)) {
-                        Icon(Icons.Filled.Calculate, contentDescription = null)
-                        Text(" 計算ツール")
+                        IconLabel(Icons.Filled.Calculate, "計算ツール")
                     }
                 }
             }
@@ -343,8 +338,7 @@ private fun AdviceCard(
             },
             modifier = Modifier.fillMaxWidth(),
         ) {
-            Icon(Icons.Filled.EditNote, contentDescription = null)
-            Text(" この内容で焼成ログをつける")
+            IconLabel(Icons.Filled.EditNote, "この内容で焼成ログをつける")
         }
     }
 }

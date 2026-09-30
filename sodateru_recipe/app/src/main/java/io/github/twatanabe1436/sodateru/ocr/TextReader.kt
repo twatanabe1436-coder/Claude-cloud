@@ -16,12 +16,12 @@ import io.github.twatanabe1436.sodateru.data.OcrEngine
 import io.github.twatanabe1436.sodateru.data.PhotoStore
 import io.github.twatanabe1436.sodateru.data.SecretStore
 import io.github.twatanabe1436.sodateru.data.SettingsStore
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
 import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 
 /**
  * 写真の文字起こし。端末内 (ML Kit・日本語モデル同梱) と Claude API (高精度) の 2 通り。

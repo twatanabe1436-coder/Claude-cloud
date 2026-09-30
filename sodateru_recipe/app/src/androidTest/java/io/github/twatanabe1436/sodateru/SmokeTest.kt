@@ -6,6 +6,8 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.net.Uri
 import android.os.ParcelFileDescriptor
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.hasContentDescription
@@ -13,6 +15,7 @@ import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -126,8 +129,8 @@ class SmokeTest {
         waitForText("山型食パン（サンプル）")
         compose.onNodeWithText("パン研究").performClick()
         waitForText("今日の仕込み")
-        scrollTo(hasText(" 研究ノート"))
-        compose.onNodeWithText(" 研究ノート").performClick()
+        scrollTo(hasText("研究ノート"))
+        compose.onNodeWithText("研究ノート").performClick()
         waitForText("湿度 と 加水率")
         screenshot("10_analysis")
         compose.onNodeWithText("室温×一次発酵の時間").performClick()
@@ -138,9 +141,9 @@ class SmokeTest {
     @Test
     fun addRecipeCookAndGrow() {
         launch(withSample = true)
-        waitForText("レシピを追加")
-        compose.onNodeWithText("レシピを追加").performClick()
-        compose.onNodeWithText("  手で入力する").performClick()
+        waitForDescription("レシピを追加")
+        compose.onNodeWithContentDescription("レシピを追加").performClick()
+        compose.onNodeWithText("手で入力する").performClick()
         waitForText("料理名")
         field("料理名").performTextReplacement("テストのカレー")
         field("材料").performTextReplacement("玉ねぎ")
@@ -150,9 +153,9 @@ class SmokeTest {
         field("手順 1").performTextReplacement("玉ねぎを炒める")
         screenshot("12_new_recipe")
         compose.onNodeWithText("保存").performClick()
-        waitForText("作った！記録する")
+        waitForDescription("作った！記録する")
 
-        compose.onNodeWithText("作った！記録する").performClick()
+        compose.onNodeWithContentDescription("作った！記録する").performClick()
         waitForText("アレンジしたこと")
         field("アレンジしたこと").performTextReplacement("玉ねぎを2個にした")
         field("感想・次回へのメモ").performTextReplacement("甘みが増しておいしい")
@@ -193,22 +196,23 @@ class SmokeTest {
     @Test
     fun scanScreenAndCalculator() {
         launch(withSample = true)
-        waitForText("レシピを追加")
-        compose.onNodeWithText("レシピを追加").performClick()
-        compose.onNodeWithText("  写真から読み取る").performClick()
+        waitForDescription("レシピを追加")
+        compose.onNodeWithContentDescription("レシピを追加").performClick()
+        compose.onNodeWithText("写真から読み取る").performClick()
         waitForText("読み取り方")
         screenshot("19_scan")
         compose.onNodeWithContentDescription("戻る").performClick()
         compose.onNodeWithText("パン研究").performClick()
         waitForText("今日の仕込み")
-        scrollTo(hasText(" 計算ツール"))
-        compose.onNodeWithText(" 計算ツール").performClick()
+        scrollTo(hasText("計算ツール"))
+        compose.onNodeWithText("計算ツール").performClick()
         waitForText("仕込み水温")
         field("室温").performTextReplacement("25")
         waitForText("仕込み水", substring = true)
         screenshot("20_calc_water")
         compose.onNodeWithText("配合（ベーカーズ%）").performClick()
-        waitForText("計算結果")
+        waitForText("元の配合")
+        scrollTo(hasText("計算結果"))
         screenshot("21_calc_bakers")
     }
 
@@ -230,6 +234,12 @@ class SmokeTest {
         assertTrue("OCR result: $text", "粉" in text || "砂糖" in text)
     }
 
+    private fun waitForDescription(description: String, timeoutMs: Long = 8_000) {
+        compose.waitUntil(timeoutMs) {
+            compose.onAllNodesWithContentDescription(description).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
     /** 画面の縦スクロール (LazyColumn) を、条件に合う項目が見えるところまで動かす。 */
     private fun scrollTo(matcher: SemanticsMatcher) {
         compose.onAllNodes(hasScrollToIndexAction()).onFirst().performScrollToNode(matcher)
@@ -239,9 +249,19 @@ class SmokeTest {
     private fun field(label: String): SemanticsNodeInteraction =
         compose.onAllNodes(hasText(label) and hasSetTextAction()).onFirst()
 
-    private fun waitForText(text: String, timeoutMs: Long = 5_000, substring: Boolean = false) {
-        compose.waitUntil(timeoutMs) {
-            compose.onAllNodesWithText(text, substring = substring).fetchSemanticsNodes().isNotEmpty()
+    private fun waitForText(text: String, timeoutMs: Long = 8_000, substring: Boolean = false) {
+        try {
+            compose.waitUntil(timeoutMs) {
+                compose.onAllNodesWithText(text, substring = substring).fetchSemanticsNodes().isNotEmpty()
+            }
+        } catch (e: ComposeTimeoutException) {
+            // 失敗したときの画面と、表示されている文字を残す
+            shell("screencap -p $SHOT_DIR/fail_${text.take(12).replace(Regex("[^\\p{L}\\p{N}]"), "_")}.png")
+            val visible = compose.onAllNodes(hasText("", substring = true), useUnmergedTree = true)
+                .fetchSemanticsNodes()
+                .flatMap { it.config.getOrElse(SemanticsProperties.Text) { emptyList() }.map { t -> t.text } }
+                .distinct()
+            throw AssertionError("「$text」が見つかりません。表示中の文字: $visible", e)
         }
     }
 

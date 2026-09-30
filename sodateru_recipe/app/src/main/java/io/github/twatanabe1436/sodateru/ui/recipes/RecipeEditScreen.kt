@@ -59,6 +59,7 @@ import io.github.twatanabe1436.sodateru.ui.Route
 import io.github.twatanabe1436.sodateru.ui.components.BackButton
 import io.github.twatanabe1436.sodateru.ui.components.ChoiceChips
 import io.github.twatanabe1436.sodateru.ui.components.ConfirmDialog
+import io.github.twatanabe1436.sodateru.ui.components.IconLabel
 import io.github.twatanabe1436.sodateru.ui.components.IntField
 import io.github.twatanabe1436.sodateru.ui.components.NumberField
 import io.github.twatanabe1436.sodateru.ui.components.PhotoEditorRow
@@ -451,8 +452,7 @@ private fun LazyListScope.stepEditorItems(steps: List<String>, onChange: (List<S
     }
     item(key = "step-add") {
         OutlinedButton(onClick = { onChange(steps + "") }, modifier = Modifier.padding(horizontal = 16.dp)) {
-            Icon(Icons.Filled.Add, contentDescription = null)
-            Text(" 手順を追加")
+            IconLabel(Icons.Filled.Add, "手順を追加")
         }
     }
 }

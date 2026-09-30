@@ -68,6 +68,7 @@ import io.github.twatanabe1436.sodateru.ui.components.ChoiceChips
 import io.github.twatanabe1436.sodateru.ui.components.ConfirmDialog
 import io.github.twatanabe1436.sodateru.ui.components.DateDialog
 import io.github.twatanabe1436.sodateru.ui.components.Fmt
+import io.github.twatanabe1436.sodateru.ui.components.IconLabel
 import io.github.twatanabe1436.sodateru.ui.components.ImageSourceDialog
 import io.github.twatanabe1436.sodateru.ui.components.IntField
 import io.github.twatanabe1436.sodateru.ui.components.NumberField
@@ -158,10 +159,9 @@ fun LogEditScreen(container: AppContainer, navigator: Navigator, route: Route.Ed
                     Text(recipe.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         OutlinedButton(onClick = { pickDate = true }) {
-                            Icon(Icons.Filled.CalendarMonth, contentDescription = null)
-                            Text(" ${Fmt.date(log.date)}")
+                            IconLabel(Icons.Filled.CalendarMonth, "${Fmt.date(log.date)}")
                         }
-                        Text("  作った版", style = MaterialTheme.typography.bodySmall)
+                        Text("作った版", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 12.dp))
                         recipe.versions.takeLast(4).forEach { v ->
                             TextButton(onClick = { log = log.copy(versionNumber = v.number) }) {
                                 Text(
@@ -417,8 +417,7 @@ fun NoteScanButton(container: AppContainer, onText: (String, NoteTarget) -> Unit
     val picker = rememberImagePicker(container.photos, maxItems = 3) { picked = it }
 
     OutlinedButton(onClick = { chooseSource = true }) {
-        Icon(Icons.Filled.DocumentScanner, contentDescription = null)
-        Text(" ノートの写真から文字起こし")
+        IconLabel(Icons.Filled.DocumentScanner, "ノートの写真から文字起こし")
     }
     if (chooseSource) ImageSourceDialog(picker, onDismiss = { chooseSource = false }, title = "ノートの写真")
 

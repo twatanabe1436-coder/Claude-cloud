@@ -65,10 +65,11 @@ import io.github.twatanabe1436.sodateru.ui.Navigator
 import io.github.twatanabe1436.sodateru.ui.components.ChoiceChips
 import io.github.twatanabe1436.sodateru.ui.components.ConfirmDialog
 import io.github.twatanabe1436.sodateru.ui.components.Fmt
+import io.github.twatanabe1436.sodateru.ui.components.IconLabel
 import io.github.twatanabe1436.sodateru.ui.components.NumberField
 import io.github.twatanabe1436.sodateru.ui.components.SectionCard
-import kotlinx.coroutines.launch
 import java.time.LocalDate
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(container: AppContainer, navigator: Navigator, bottomBar: @Composable () -> Unit) {
@@ -179,12 +180,10 @@ fun SettingsScreen(container: AppContainer, navigator: Navigator, bottomBar: @Co
                     if (busy) CircularProgressIndicator(Modifier.size(28.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(enabled = !busy, onClick = { exportLauncher.launch("sodateru-backup-${LocalDate.now()}.zip") }) {
-                            Icon(Icons.Filled.Backup, contentDescription = null)
-                            Text(" 書き出す")
+                            IconLabel(Icons.Filled.Backup, "書き出す")
                         }
                         OutlinedButton(enabled = !busy, onClick = { importLauncher.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) {
-                            Icon(Icons.Filled.Restore, contentDescription = null)
-                            Text(" 読み込む")
+                            IconLabel(Icons.Filled.Restore, "読み込む")
                         }
                     }
                     Text(

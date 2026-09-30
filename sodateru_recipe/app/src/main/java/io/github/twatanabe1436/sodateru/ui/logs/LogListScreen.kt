@@ -59,12 +59,8 @@ fun LogListScreen(container: AppContainer, navigator: Navigator, bottomBar: @Com
             return@Scaffold
         }
         LazyColumn(
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = padding.calculateTopPadding() + 4.dp,
-                bottom = padding.calculateBottomPadding() + 24.dp,
-            ),
+            modifier = Modifier.padding(padding),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             item(key = "filters") {
