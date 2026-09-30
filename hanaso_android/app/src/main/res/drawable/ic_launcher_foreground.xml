@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 吹き出しとマイク (アダプティブアイコンの前景。中央 66dp が安全領域) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M38,32h32a8,8 0,0 1,8 8v22a8,8 0,0 1,-8 8h-17l-11,9v-9h-4a8,8 0,0 1,-8 -8v-22a8,8 0,0 1,8 -8z" />
+    <path
+        android:fillColor="#FF5B4CF5"
+        android:pathData="M54,38a4,4 0,0 1,4 4v8a4,4 0,0 1,-8 0v-8a4,4 0,0 1,4 -4z" />
+    <path
+        android:pathData="M47,49a7,7 0,0 0,14 0M54,56v5"
+        android:strokeWidth="2.5"
+        android:strokeColor="#FF5B4CF5"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="#FFFF8A3D"
+        android:pathData="M73,35m-5,0a5,5 0,1 1,10 0a5,5 0,1 1,-10 0" />
+</vector>

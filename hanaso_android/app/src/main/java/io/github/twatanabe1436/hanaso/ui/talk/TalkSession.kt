@@ -1,0 +1,469 @@
+package io.github.twatanabe1436.hanaso.ui.talk
+
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.core.content.ContextCompat
+import io.github.twatanabe1436.hanaso.HanasoApp
+import io.github.twatanabe1436.hanaso.core.AiErrorKind
+import io.github.twatanabe1436.hanaso.core.AiException
+import io.github.twatanabe1436.hanaso.core.Conversation
+import io.github.twatanabe1436.hanaso.core.Feedback
+import io.github.twatanabe1436.hanaso.core.HintSuggestion
+import io.github.twatanabe1436.hanaso.core.Level
+import io.github.twatanabe1436.hanaso.core.Line
+import io.github.twatanabe1436.hanaso.core.Rating
+import io.github.twatanabe1436.hanaso.core.Scenario
+import io.github.twatanabe1436.hanaso.core.SentenceChunker
+import io.github.twatanabe1436.hanaso.core.Speaker
+import io.github.twatanabe1436.hanaso.core.Summary
+import io.github.twatanabe1436.hanaso.core.Translation
+import io.github.twatanabe1436.hanaso.core.hasJapanese
+import io.github.twatanabe1436.hanaso.data.SessionRecord
+import io.github.twatanabe1436.hanaso.speech.SpeechInput
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.launch
+import java.util.UUID
+
+/** 画面に出す日本語のエラーメッセージ (API の詳細があれば添える) */
+fun errorText(e: Throwable): String = when (e) {
+    is AiException -> if (e.detail.isNullOrBlank()) e.message.orEmpty() else "${e.message}\n(${e.detail})"
+    else -> AiErrorKind.UNKNOWN.messageJa
+}
+
+sealed interface ChatItem {
+    val id: Long
+}
+
+class AiMessage(override val id: Long, val snapshot: List<Line>) : ChatItem {
+    var text by mutableStateOf("")
+    var streaming by mutableStateOf(true)
+    var error by mutableStateOf<String?>(null)
+    var translation by mutableStateOf<LoadState<Translation>?>(null)
+    var showTranslation by mutableStateOf(false)
+    var revealed by mutableStateOf(false)
+}
+
+class LearnerMessage(override val id: Long, val text: String) : ChatItem {
+    var feedback by mutableStateOf<LoadState<Feedback>>(LoadState.Loading)
+    var expanded by mutableStateOf(false)
+}
+
+class Celebration(override val id: Long) : ChatItem
+
+sealed interface LoadState<out T> {
+    data object Loading : LoadState<Nothing>
+    data class Ready<T>(val value: T) : LoadState<T>
+    data class Failed(val message: String) : LoadState<Nothing>
+}
+
+data class HintState(
+    val want: String,
+    val loading: Boolean = true,
+    val suggestions: List<HintSuggestion> = emptyList(),
+    val error: String? = null,
+)
+
+/** 学習者の1回の発話と、その添削 */
+class Turn(val text: String) {
+    var feedback: Feedback? = null
+}
+
+/** 終えた会話 (振り返り画面用) */
+class FinishedSession(
+    val recordId: String,
+    val scenario: Scenario,
+    val level: Level,
+    val history: List<Line>,
+    val turns: List<Turn>,
+    val completed: Set<String>,
+    val startedAt: Long,
+    val endedAt: Long,
+) {
+    var summary by mutableStateOf<LoadState<Summary>?>(null)
+}
+
+/**
+ * 1回の会話。AI の返事 (ストリーミング + 文ごとの読み上げ)、発話ごとの添削、ミッション、ヒント、
+ * ハンズフリー (読み上げが終わったら自動でマイク) を管理する。状態はすべてメインスレッドで更新する。
+ */
+class TalkSession(
+    val scenario: Scenario,
+    val level: Level,
+    private val app: HanasoApp,
+) {
+    private val engine = app.engine()
+    val isDemo: Boolean = engine.isDemo
+    private val speaker get() = app.speaker
+    private val input get() = app.speechInput
+    private val settings get() = app.store.settings.value
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+    private var nextId = 0L
+    private val history = mutableListOf<Line>()
+    private val turns = mutableListOf<Turn>()
+    private val startedAt = System.currentTimeMillis()
+    private var closed = false
+    private var celebrated = false
+    private var replyJob: Job? = null
+    private var hintJob: Job? = null
+
+    val items = mutableStateListOf<ChatItem>()
+    var busy by mutableStateOf(false)
+        private set
+    var listening by mutableStateOf(false)
+        private set
+    var liveText by mutableStateOf("")
+        private set
+    var micLevel by mutableFloatStateOf(0f)
+        private set
+    var status by mutableStateOf("")
+        private set
+    var muted by mutableStateOf(!settings.autoSpeak)
+        private set
+    var completed by mutableStateOf(emptySet<String>())
+        private set
+    var hint by mutableStateOf<HintState?>(null)
+        private set
+    var cue by mutableStateOf<HintSuggestion?>(null)
+        private set
+    var draft by mutableStateOf("")
+    var showKeyboard by mutableStateOf(!input.available)
+
+    /** マイクの権限があるか (ハンズフリーで自動開始してよいか) */
+    private fun micPermitted(): Boolean =
+        ContextCompat.checkSelfPermission(app, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
+
+    private val _messages = MutableSharedFlow<String>(extraBufferCapacity = 8)
+
+    /** トーストで出す短いお知らせ */
+    val messages: SharedFlow<String> = _messages
+
+    val learnerTurns: Int get() = turns.size
+
+    fun start() {
+        val opener = AiMessage(nextId++, emptyList())
+        opener.text = scenario.opener
+        opener.streaming = false
+        items += opener
+        history += Line(Speaker.AI, scenario.opener)
+        if (settings.autoTranslate) loadTranslation(opener)
+        speakAll(scenario.opener) { afterAiSpoke() }
+    }
+
+    // ---- 音声 ----
+
+    fun play(text: String, rate: Float? = null) {
+        speaker.stop()
+        speaker.say(text, rate)
+    }
+
+    private fun speakAll(text: String, then: () -> Unit) {
+        if (muted) return then()
+        speaker.say(text)
+        speaker.whenIdle(then)
+    }
+
+    fun toggleMute() {
+        muted = !muted
+        app.store.updateSettings { it.copy(autoSpeak = !muted) }
+        if (muted) speaker.stop()
+        _messages.tryEmit(if (muted) "自動読み上げ: オフ" else "自動読み上げ: オン")
+    }
+
+    /** AI が話し終わったあと: ハンズフリーなら自動でマイクを開始 */
+    private fun afterAiSpoke() {
+        if (closed || busy || listening || hint != null) return
+        if (settings.handsFree && input.available && micPermitted()) startListening()
+    }
+
+    // ---- 音声入力 ----
+
+    fun toggleMic() {
+        if (listening) input.stop() else startListening()
+    }
+
+    fun startListening() {
+        if (busy || closed) return
+        if (!input.available) {
+            showKeyboard = true
+            _messages.tryEmit("この端末では音声認識が使えません。キーボードで入力してください。")
+            return
+        }
+        speaker.stop()
+        listening = true
+        liveText = ""
+        status = "聞いています — 話し終わると自動で送信されます"
+        input.start(settings.silenceMs, object : SpeechInput.Callback {
+            override fun onPartial(text: String) {
+                liveText = text
+            }
+
+            override fun onLevel(rmsDb: Float) {
+                micLevel = ((rmsDb + 2f) / 12f).coerceIn(0f, 1f)
+            }
+
+            override fun onError(messageJa: String) {
+                _messages.tryEmit(messageJa)
+            }
+
+            override fun onEnd(text: String) {
+                endListening()
+                if (closed) return
+                when {
+                    text.isBlank() -> status = "聞き取れませんでした。マイクをタップしてもう一度どうぞ"
+                    settings.autoSend -> send(text)
+                    else -> {
+                        draft = text
+                        showKeyboard = true
+                    }
+                }
+            }
+
+            override fun onCancel() = endListening()
+        })
+    }
+
+    private fun endListening() {
+        listening = false
+        micLevel = 0f
+        liveText = ""
+        status = ""
+    }
+
+    fun submitDraft() {
+        val text = draft.trim()
+        if (text.isEmpty()) return
+        draft = ""
+        if (text.hasJapanese()) openHint(text) else send(text)
+    }
+
+    // ---- 送信 → 添削 & AI の返事 ----
+
+    fun send(text: String) {
+        if (busy || closed) return
+        if (text.hasJapanese()) {
+            openHint(text)
+            return
+        }
+        cue = null
+        history += Line(Speaker.LEARNER, text)
+        val turn = Turn(text)
+        turns += turn
+        val message = LearnerMessage(nextId++, text)
+        items += message
+        val snapshot = history.toList()
+
+        // 添削は返事と並行して取得する
+        scope.launch {
+            try {
+                val fb = engine.feedback(Conversation(scenario, level, snapshot))
+                turn.feedback = fb
+                message.feedback = LoadState.Ready(fb)
+                // 修正があるときは自動で開いて気づけるようにする
+                if (fb.rating == Rating.FIX) message.expanded = true
+                val valid = scenario.missions.map { it.id }.toSet()
+                val newly = fb.completedMissions.filter { it in valid }.toSet()
+                if (!completed.containsAll(newly)) {
+                    completed = completed + newly
+                    checkAllMissions()
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                message.feedback = LoadState.Failed(errorText(e))
+            }
+        }
+        requestReply(snapshot)
+    }
+
+    private fun checkAllMissions() {
+        if (celebrated || scenario.missions.isEmpty()) return
+        if (completed.containsAll(scenario.missions.map { it.id })) {
+            celebrated = true
+            items += Celebration(nextId++)
+            _messages.tryEmit("ミッションコンプリート！🎉")
+        }
+    }
+
+    private fun requestReply(snapshot: List<Line>) {
+        busy = true
+        status = "${scenario.aiName} が考え中…"
+        val bubble = AiMessage(nextId++, snapshot)
+        items += bubble
+        speaker.stop()
+        val chunker = SentenceChunker()
+        replyJob = scope.launch {
+            try {
+                engine.reply(Conversation(scenario, level, snapshot)).collect { delta ->
+                    bubble.text += delta
+                    // 文が完成したものから順に読み上げを始める
+                    if (!muted) chunker.push(delta).forEach { speaker.say(it) }
+                }
+                val full = bubble.text.trim()
+                if (full.isEmpty()) throw AiException(AiErrorKind.BAD_OUTPUT)
+                bubble.text = full
+                bubble.streaming = false
+                history += Line(Speaker.AI, full)
+                busy = false
+                status = ""
+                if (!muted) chunker.flush().forEach { speaker.say(it) }
+                if (settings.autoTranslate) loadTranslation(bubble)
+                speaker.whenIdle { afterAiSpoke() }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                speaker.stop()
+                busy = false
+                status = ""
+                bubble.streaming = false
+                bubble.error = errorText(e)
+            }
+        }
+    }
+
+    fun retry(message: AiMessage) {
+        if (busy || closed) return
+        items.remove(message)
+        requestReply(message.snapshot)
+    }
+
+    // ---- 翻訳・フレーズ保存 ----
+
+    fun toggleTranslation(message: AiMessage) {
+        if (message.showTranslation) {
+            message.showTranslation = false
+            return
+        }
+        message.showTranslation = true
+        if (message.translation !is LoadState.Ready) loadTranslation(message)
+    }
+
+    private fun loadTranslation(message: AiMessage) {
+        message.showTranslation = true
+        message.translation = LoadState.Loading
+        scope.launch {
+            message.translation = try {
+                LoadState.Ready(engine.translate(message.text))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                LoadState.Failed(errorText(e))
+            }
+        }
+    }
+
+    fun savePhrase(en: String, ja: String = "") {
+        if (app.savePhrase(en, ja, scenario.titleJa) != null) _messages.tryEmit("フレーズ帳に保存しました ⭐")
+    }
+
+    fun isSaved(en: String): Boolean = app.store.hasPhrase(en)
+
+    // ---- ヒント ----
+
+    fun openHint(want: String = "") {
+        if (busy || closed) return
+        input.cancel()
+        loadHint(want)
+    }
+
+    fun loadHint(want: String) {
+        hintJob?.cancel()
+        hint = HintState(want = want)
+        val snapshot = history.toList()
+        hintJob = scope.launch {
+            try {
+                val suggestions = engine.hint(Conversation(scenario, level, snapshot), want.ifBlank { null })
+                hint = hint?.copy(loading = false, suggestions = suggestions, error = null)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                hint = hint?.copy(loading = false, error = errorText(e))
+            }
+        }
+    }
+
+    fun closeHint() {
+        hintJob?.cancel()
+        hint = null
+    }
+
+    /** ヒントを見ながら自分の声で言う */
+    fun sayHintYourself(suggestion: HintSuggestion) {
+        closeHint()
+        cue = suggestion
+        _messages.tryEmit("ヒントを見ながら、自分の声で言ってみましょう！")
+        startListening()
+    }
+
+    fun sendHint(suggestion: HintSuggestion) {
+        closeHint()
+        send(suggestion.en)
+    }
+
+    fun dismissCue() {
+        cue = null
+    }
+
+    // ---- 終了 ----
+
+    /** アプリが裏に回ったとき: マイクと読み上げを止める */
+    fun pause() {
+        input.cancel()
+        speaker.stop()
+    }
+
+    /** 会話を終えて記録を保存する。まだ話していなければ null */
+    fun finish(): FinishedSession? {
+        replyJob?.cancel()
+        val result = if (turns.isEmpty()) {
+            null
+        } else {
+            val endedAt = System.currentTimeMillis()
+            val record = SessionRecord(
+                id = UUID.randomUUID().toString(),
+                scenarioId = scenario.id,
+                titleJa = scenario.titleJa,
+                emoji = scenario.emoji,
+                level = level,
+                startedAt = startedAt,
+                endedAt = endedAt,
+                learnerTurns = turns.size,
+                missionsDone = completed.size,
+                missionsTotal = scenario.missions.size,
+            )
+            app.store.addSession(record)
+            FinishedSession(
+                recordId = record.id,
+                scenario = scenario,
+                level = level,
+                history = history.toList(),
+                turns = turns.toList(),
+                completed = completed,
+                startedAt = startedAt,
+                endedAt = endedAt,
+            )
+        }
+        close()
+        return result
+    }
+
+    fun close() {
+        if (closed) return
+        closed = true
+        scope.cancel()
+        input.cancel()
+        speaker.stop()
+    }
+}
