@@ -54,6 +54,11 @@ fun ratingColor(rating: Int): Color? {
     return (if (isSystemInDarkTheme()) RatingDark else RatingLight)[rating - 1]
 }
 
+private val PAD_LEFT = 44.dp
+private val PAD_RIGHT = 12.dp
+private val PAD_TOP = 24.dp
+private val PAD_BOTTOM = 36.dp
+
 private fun niceStep(range: Double, targetTicks: Int = 5): Double {
     if (range <= 0) return 1.0
     val raw = range / targetTicks
@@ -103,6 +108,10 @@ fun ScatterChart(
             lo -= 1
             hi += 1
         }
+        // 端の点が枠に重ならないよう、少し余白を取ってから切りのよい目盛りに丸める
+        val pad = (hi - lo) * 0.08
+        lo -= pad
+        hi += pad
         val step = niceStep(hi - lo)
         return Triple(floor(lo / step) * step, ceil(hi / step) * step, step)
     }
@@ -112,14 +121,14 @@ fun ScatterChart(
     Canvas(
         modifier
             .fillMaxWidth()
-            .height(260.dp)
+            .height(280.dp)
             .semantics { contentDescription = "散布図 ${points.size}点" }
             .pointerInput(points) {
                 detectTapGestures { tap ->
-                    val left = 44.dp.toPx()
-                    val bottom = size.height - 28.dp.toPx()
-                    val top = 8.dp.toPx()
-                    val right = size.width - 12.dp.toPx()
+                    val left = PAD_LEFT.toPx()
+                    val bottom = size.height - PAD_BOTTOM.toPx()
+                    val top = PAD_TOP.toPx()
+                    val right = size.width - PAD_RIGHT.toPx()
                     fun px(x: Double) = (left + (x - x0) / (x1 - x0) * (right - left)).toFloat()
                     fun py(y: Double) = (bottom - (y - y0) / (y1 - y0) * (bottom - top)).toFloat()
                     val nearest = points.minByOrNull { p ->
@@ -136,10 +145,10 @@ fun ScatterChart(
                 }
             },
     ) {
-        val left = 44.dp.toPx()
-        val bottom = size.height - 28.dp.toPx()
-        val top = 8.dp.toPx()
-        val right = size.width - 12.dp.toPx()
+        val left = PAD_LEFT.toPx()
+        val bottom = size.height - PAD_BOTTOM.toPx()
+        val top = PAD_TOP.toPx()
+        val right = size.width - PAD_RIGHT.toPx()
         fun px(x: Double) = (left + (x - x0) / (x1 - x0) * (right - left)).toFloat()
         fun py(y: Double) = (bottom - (y - y0) / (y1 - y0) * (bottom - top)).toFloat()
 
@@ -162,8 +171,9 @@ fun ScatterChart(
         }
         val xu = measurer.measure(xUnit, labelStyle)
         drawText(xu, topLeft = Offset(right - xu.size.width, bottom + 4.dp.toPx() + xu.size.height))
+        // 縦軸の単位は、いちばん上の目盛りと重ならないよう描画域の上に置く
         val yu = measurer.measure(yUnit, labelStyle)
-        drawText(yu, topLeft = Offset(left - yu.size.width - 6.dp.toPx(), top - 2.dp.toPx()))
+        drawText(yu, topLeft = Offset(left - yu.size.width - 6.dp.toPx(), 0f))
 
         // 回帰直線
         if (fit != null) {

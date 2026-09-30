@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.net.Uri
 import android.os.ParcelFileDescriptor
+import android.view.inputmethod.InputMethodManager
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ComposeTimeoutException
 import androidx.compose.ui.test.SemanticsMatcher
@@ -113,10 +114,13 @@ class SmokeTest {
         waitForText("今日の仕込み")
         field("室温").performTextReplacement("27")
         field("湿度").performTextReplacement("74")
+        hideKeyboard()
         waitForText("今日の提案")
         screenshot("07_bread_lab")
+        scrollTo(hasText("この内容で焼成ログをつける"))
+        screenshot("08_bread_lab_advice")
         scrollTo(hasText("条件が近かった過去の回"))
-        screenshot("08_bread_lab_refs")
+        screenshot("08b_bread_lab_refs")
         scrollTo(hasText("この内容で焼成ログをつける"))
         compose.onNodeWithText("この内容で焼成ログをつける").performClick()
         waitForText("記録する")
@@ -151,6 +155,7 @@ class SmokeTest {
         field("単位").performTextReplacement("個")
         scrollTo(hasText("手順 1") and hasSetTextAction())
         field("手順 1").performTextReplacement("玉ねぎを炒める")
+        hideKeyboard()
         screenshot("12_new_recipe")
         compose.onNodeWithText("保存").performClick()
         waitForDescription("作った！記録する")
@@ -159,12 +164,14 @@ class SmokeTest {
         waitForText("アレンジしたこと")
         field("アレンジしたこと").performTextReplacement("玉ねぎを2個にした")
         field("感想・次回へのメモ").performTextReplacement("甘みが増しておいしい")
+        hideKeyboard()
         screenshot("13_new_log")
         compose.onNodeWithText("保存").performClick()
         waitForText("レシピに反映しますか？")
         compose.onNodeWithText("反映する").performClick()
         waitForText("v2 に育てる")
         field("量").performTextReplacement("2")
+        hideKeyboard()
         screenshot("14_new_version")
         compose.onNodeWithText("保存").performClick()
         waitForText("v2で変えたこと")
@@ -208,6 +215,7 @@ class SmokeTest {
         compose.onNodeWithText("計算ツール").performClick()
         waitForText("仕込み水温")
         field("室温").performTextReplacement("25")
+        hideKeyboard()
         waitForText("仕込み水", substring = true)
         screenshot("20_calc_water")
         compose.onNodeWithText("配合（ベーカーズ%）").performClick()
@@ -232,6 +240,14 @@ class SmokeTest {
         val text = runBlocking { app.container.textReader.readTextOnDevice(listOf(Uri.fromFile(file))) }
         assertTrue("OCR result: $text", "250" in text)
         assertTrue("OCR result: $text", "粉" in text || "砂糖" in text)
+    }
+
+    private fun hideKeyboard() {
+        scenario?.onActivity { activity ->
+            activity.getSystemService(InputMethodManager::class.java)
+                ?.hideSoftInputFromWindow(activity.window.decorView.windowToken, 0)
+        }
+        compose.waitForIdle()
     }
 
     private fun waitForDescription(description: String, timeoutMs: Long = 8_000) {

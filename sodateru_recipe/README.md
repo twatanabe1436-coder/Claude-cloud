@@ -4,6 +4,14 @@
 という紙のノートでやっていた流れをそのままデジタルにしました。パンについては、室温・湿度などの条件と
 配合・発酵時間・出来栄えを記録していくことで、**その日の条件に合わせた仕込みを提案する「パン研究」**を中心に据えています。
 
+| レシピ一覧 | 詳細（育ち具合・変えたこと） | 育ちの記録 | 版の比較 |
+|:---:|:---:|:---:|:---:|
+| ![レシピ一覧](docs/screenshots/02_recipes.jpg) | ![詳細](docs/screenshots/03_detail_cooking.jpg) | ![育ちの記録](docs/screenshots/04_detail_timeline.jpg) | ![版の比較](docs/screenshots/05_diff.jpg) |
+| **パン研究（今日の提案）** | **提案の続き・傾向** | **研究ノート** | **計算ツール** |
+| ![パン研究](docs/screenshots/07_bread_lab.jpg) | ![提案](docs/screenshots/08_bread_lab_advice.jpg) | ![研究ノート](docs/screenshots/10_analysis.jpg) | ![計算ツール](docs/screenshots/20_calc_water.jpg) |
+
+（Android 15 エミュレータでの画面。サンプルデータを入れた状態）
+
 ## できること
 
 ### レシピを育てる

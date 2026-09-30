@@ -155,7 +155,7 @@ private fun IngredientRow(
             OutlinedTextField(
                 value = ingredient.note,
                 onValueChange = { onChange(ingredient.copy(note = it)) },
-                placeholder = { Text("メモ（切り方など）") },
+                placeholder = { Text("メモ", maxLines = 1) },
                 singleLine = true,
                 textStyle = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.weight(1f),
