@@ -1,0 +1,440 @@
+// ロールプレイ用シナリオとフリートークのトピック定義。
+// ai* / setting / userRole は英語 (プロンプトにそのまま入る)、*Ja は画面表示用。
+
+export const LEVELS = ['beginner', 'intermediate', 'advanced'];
+
+export const CATEGORIES = [
+  { id: 'daily', ja: '日常' },
+  { id: 'travel', ja: '旅行' },
+  { id: 'social', ja: '交流' },
+  { id: 'work', ja: '仕事' },
+];
+
+/** @typedef {{ id: string, ja: string }} Mission */
+/** @typedef {{ en: string, ja: string }} Phrase */
+
+export const SCENARIOS = [
+  {
+    id: 'cafe',
+    category: 'daily',
+    emoji: '☕',
+    titleJa: 'カフェで注文する',
+    titleEn: 'Ordering at a Café',
+    level: 'beginner',
+    descriptionJa: '朝のカフェでドリンクと軽食を注文しましょう。サイズやカスタマイズも伝えてみよう。',
+    setting: 'A busy but friendly coffee shop in Seattle on a weekday morning.',
+    aiName: 'Jamie',
+    aiRole: 'Jamie, a cheerful barista taking orders at the counter.',
+    userRole: 'A customer ordering a drink and something to eat.',
+    userRoleJa: 'お客さん',
+    opener: "Hi there, good morning! What can I get started for you today?",
+    missions: [
+      { id: 'drink', ja: 'ドリンクをサイズ付きで注文する' },
+      { id: 'custom', ja: 'カスタマイズを頼む（ミルク変更・氷少なめなど）' },
+      { id: 'food', ja: '食べ物をひとつ注文する' },
+    ],
+    keyPhrases: [
+      { en: "Can I get a medium latte, please?", ja: 'ラテのMサイズをください。' },
+      { en: "Could you make it with oat milk?", ja: 'オーツミルクに変えてもらえますか？' },
+      { en: "I'll also have a blueberry muffin.", ja: 'ブルーベリーマフィンもお願いします。' },
+      { en: "For here, please.", ja: '店内で食べます。' },
+    ],
+  },
+  {
+    id: 'directions',
+    category: 'daily',
+    emoji: '🗺️',
+    titleJa: '道をたずねる',
+    titleEn: 'Asking for Directions',
+    level: 'beginner',
+    descriptionJa: '旅先で美術館への行き方を地元の人に聞きます。聞き取れなかったら聞き返してみよう。',
+    setting: 'A street corner in downtown Chicago on a sunny afternoon.',
+    aiName: 'Pat',
+    aiRole: 'Pat, a friendly local who is walking by and happy to help. The art museum is about a 10-minute walk: two blocks straight, then turn left at the big bookstore; or take bus 6 for two stops.',
+    userRole: 'A tourist looking for the art museum.',
+    userRoleJa: '観光客',
+    opener: "Oh, hi! You look a little lost. Can I help you find something?",
+    missions: [
+      { id: 'ask', ja: '美術館への行き方をたずねる' },
+      { id: 'time', ja: 'かかる時間や距離を確認する' },
+      { id: 'confirm', ja: '聞いた道順を繰り返して確認する' },
+    ],
+    keyPhrases: [
+      { en: "Excuse me, how do I get to the art museum?", ja: 'すみません、美術館へはどう行けばいいですか？' },
+      { en: "How long does it take to walk there?", ja: '歩いてどのくらいかかりますか？' },
+      { en: "So I go straight and turn left at the bookstore, right?", ja: 'まっすぐ行って本屋を左ですね？' },
+      { en: "Sorry, could you say that again?", ja: 'すみません、もう一度言ってもらえますか？' },
+    ],
+  },
+  {
+    id: 'restaurant',
+    category: 'daily',
+    emoji: '🍝',
+    titleJa: 'レストランで食事',
+    titleEn: 'Dining at a Restaurant',
+    level: 'beginner',
+    descriptionJa: 'イタリアンレストランで、おすすめを聞いたり注文したり、最後にお会計を頼みます。',
+    setting: 'A cozy Italian restaurant in London in the evening.',
+    aiName: 'Marco',
+    aiRole: 'Marco, a warm and chatty server. Today\'s specials are seafood risotto and a mushroom pasta; the tiramisu is famous.',
+    userRole: 'A diner having dinner.',
+    userRoleJa: 'お客さん',
+    opener: "Good evening, welcome! Here are your menus. Can I start you off with something to drink?",
+    missions: [
+      { id: 'recommend', ja: 'おすすめを聞く' },
+      { id: 'order', ja: 'メイン料理を注文する' },
+      { id: 'check', ja: 'お会計を頼む' },
+    ],
+    keyPhrases: [
+      { en: "What do you recommend?", ja: 'おすすめは何ですか？' },
+      { en: "I'd like the mushroom pasta, please.", ja: 'きのこのパスタをお願いします。' },
+      { en: "Does this have any nuts in it?", ja: 'これにナッツは入っていますか？' },
+      { en: "Could we get the check, please?", ja: 'お会計をお願いできますか？' },
+    ],
+  },
+  {
+    id: 'immigration',
+    category: 'travel',
+    emoji: '🛂',
+    titleJa: '入国審査',
+    titleEn: 'Passport Control',
+    level: 'beginner',
+    descriptionJa: '空港の入国審査で、旅の目的や滞在期間を答えます。落ち着いてはっきり答えよう。',
+    setting: 'The passport control counter at San Francisco International Airport.',
+    aiName: 'Officer Reed',
+    aiRole: 'Officer Reed, a calm and professional immigration officer. Ask typical questions one at a time: purpose of visit, length of stay, where they will stay, occupation, return ticket.',
+    userRole: 'A traveler arriving from Japan.',
+    userRoleJa: '旅行者',
+    opener: "Hello. Passport, please. What's the purpose of your visit?",
+    missions: [
+      { id: 'purpose', ja: '渡航目的を答える' },
+      { id: 'stay', ja: '滞在期間と滞在先を答える' },
+      { id: 'job', ja: '職業を答える' },
+    ],
+    keyPhrases: [
+      { en: "I'm here for sightseeing.", ja: '観光で来ました。' },
+      { en: "I'm staying for one week.", ja: '1週間滞在します。' },
+      { en: "I'm staying at the Hilton downtown.", ja: 'ダウンタウンのヒルトンに泊まります。' },
+      { en: "I work as an engineer.", ja: 'エンジニアとして働いています。' },
+    ],
+  },
+  {
+    id: 'hotel',
+    category: 'travel',
+    emoji: '🏨',
+    titleJa: 'ホテルでチェックイン',
+    titleEn: 'Hotel Check-in',
+    level: 'intermediate',
+    descriptionJa: 'チェックインの後、部屋のエアコンが壊れていることを伝えて対応をお願いします。',
+    setting: 'The front desk of a mid-size hotel in Sydney, late afternoon.',
+    aiName: 'Olivia',
+    aiRole: 'Olivia, a polite front desk clerk. The reservation exists. Breakfast is 6:30-10 on the 2nd floor. If the guest reports a problem with the room, apologize and offer to send maintenance or move them to another room.',
+    userRole: 'A guest checking in, who later notices the air conditioner in the room is broken.',
+    userRoleJa: '宿泊客',
+    opener: "Good afternoon, and welcome to the Harbor View Hotel. Are you checking in today?",
+    missions: [
+      { id: 'checkin', ja: '予約名を伝えてチェックインする' },
+      { id: 'breakfast', ja: '朝食の時間や場所を聞く' },
+      { id: 'problem', ja: '部屋のエアコンの故障を伝え、対応を頼む' },
+    ],
+    keyPhrases: [
+      { en: "I have a reservation under the name Tanaka.", ja: '田中の名前で予約しています。' },
+      { en: "What time is breakfast served?", ja: '朝食は何時からですか？' },
+      { en: "The air conditioner in my room isn't working.", ja: '部屋のエアコンが動きません。' },
+      { en: "Would it be possible to change rooms?", ja: '部屋を替えてもらうことはできますか？' },
+    ],
+  },
+  {
+    id: 'shopping',
+    category: 'daily',
+    emoji: '🛍️',
+    titleJa: 'お店で返品・交換',
+    titleEn: 'Returning an Item',
+    level: 'intermediate',
+    descriptionJa: '買ったセーターのサイズが合わなかったので、交換か返金をお願いします。',
+    setting: 'The customer service counter of a clothing store in Toronto.',
+    aiName: 'Sam',
+    aiRole: 'Sam, a helpful store clerk. Returns need a receipt and are accepted within 30 days. A medium in the same color is out of stock, but it is available in navy, or the customer can get a full refund.',
+    userRole: 'A customer who bought a sweater that is too small.',
+    userRoleJa: 'お客さん',
+    opener: "Hi, how can I help you today?",
+    missions: [
+      { id: 'reason', ja: '返品・交換したい理由を説明する' },
+      { id: 'option', ja: '別の色や返金など選択肢について相談する' },
+      { id: 'decide', ja: 'どうするか決めて伝える' },
+    ],
+    keyPhrases: [
+      { en: "I'd like to exchange this sweater. It's too small.", ja: 'このセーターを交換したいです。小さすぎました。' },
+      { en: "Do you have it in a medium?", ja: 'Mサイズはありますか？' },
+      { en: "Here's my receipt.", ja: 'レシートはこちらです。' },
+      { en: "I think I'll just get a refund, then.", ja: 'それなら返金にしてもらいます。' },
+    ],
+  },
+  {
+    id: 'party',
+    category: 'social',
+    emoji: '🥂',
+    titleJa: 'パーティーで初対面の人と話す',
+    titleEn: 'Meeting Someone at a Party',
+    level: 'intermediate',
+    descriptionJa: '友人のホームパーティーで初めて会った人と自己紹介し、共通の話題を見つけよう。',
+    setting: "A friend's casual house party in Los Angeles on a Saturday night.",
+    aiName: 'Chris',
+    aiRole: "Chris, an outgoing graphic designer who loves hiking and trying new restaurants, and knows the host from college. Curious about Japan.",
+    userRole: "A guest at the party who doesn't know many people.",
+    userRoleJa: 'パーティーの参加者',
+    opener: "Hey! I don't think we've met yet. I'm Chris. How do you know Emily?",
+    missions: [
+      { id: 'intro', ja: '自己紹介をする' },
+      { id: 'common', ja: '趣味など共通の話題を見つける' },
+      { id: 'contact', ja: 'また会う約束や連絡先の交換を提案する' },
+    ],
+    keyPhrases: [
+      { en: "Nice to meet you. I'm Ken.", ja: 'はじめまして、ケンです。' },
+      { en: "Emily and I work together.", ja: 'エミリーとは同僚なんです。' },
+      { en: "What do you do for fun?", ja: '休みの日は何をしてるんですか？' },
+      { en: "We should hang out sometime!", ja: '今度一緒に遊びましょう！' },
+    ],
+  },
+  {
+    id: 'weekend',
+    category: 'social',
+    emoji: '🎬',
+    titleJa: '友達と週末の予定を立てる',
+    titleEn: 'Making Weekend Plans',
+    level: 'beginner',
+    descriptionJa: '友達と電話で、週末に何をするか・いつどこで会うかを決めます。',
+    setting: 'A phone call between two friends on a Thursday evening.',
+    aiName: 'Taylor',
+    aiRole: 'Taylor, a relaxed friend of the learner. Taylor is free on Saturday afternoon and Sunday, likes movies and food, and is open to suggestions.',
+    userRole: "Taylor's friend who wants to hang out this weekend.",
+    userRoleJa: 'テイラーの友達',
+    opener: "Hey! What's up? Are you doing anything this weekend?",
+    missions: [
+      { id: 'suggest', ja: 'やりたいことを提案する' },
+      { id: 'when', ja: '日時を決める' },
+      { id: 'where', ja: '待ち合わせ場所を決める' },
+    ],
+    keyPhrases: [
+      { en: "Do you want to see a movie on Saturday?", ja: '土曜日に映画を見に行かない？' },
+      { en: "How about meeting at two?", ja: '2時に会うのはどう？' },
+      { en: "Let's meet in front of the station.", ja: '駅の前で待ち合わせしよう。' },
+      { en: "Sounds good! See you then.", ja: 'いいね！じゃあそのときに。' },
+    ],
+  },
+  {
+    id: 'doctor',
+    category: 'travel',
+    emoji: '🏥',
+    titleJa: '病院で症状を説明する',
+    titleEn: 'Seeing a Doctor',
+    level: 'intermediate',
+    descriptionJa: '旅行中に体調を崩してクリニックへ。いつから・どんな症状かを伝えましょう。',
+    setting: 'A walk-in clinic in New York.',
+    aiName: 'Dr. Lee',
+    aiRole: 'Dr. Lee, a kind and patient doctor. Ask about symptoms, when they started, allergies, and current medication, then explain it looks like a common cold and recommend rest, fluids, and a mild medicine. This is a language-practice role-play, not real medical advice.',
+    userRole: 'A traveler who has had a sore throat and fever since yesterday.',
+    userRoleJa: '患者（旅行者）',
+    opener: "Hi, I'm Dr. Lee. So, what brings you in today?",
+    missions: [
+      { id: 'symptom', ja: '症状を説明する' },
+      { id: 'since', ja: 'いつから症状があるか伝える' },
+      { id: 'question', ja: '薬や注意点について質問する' },
+    ],
+    keyPhrases: [
+      { en: "I have a sore throat and a fever.", ja: '喉が痛くて熱があります。' },
+      { en: "It started yesterday morning.", ja: '昨日の朝からです。' },
+      { en: "I'm allergic to penicillin.", ja: 'ペニシリンにアレルギーがあります。' },
+      { en: "How often should I take this medicine?", ja: 'この薬はどのくらいの頻度で飲めばいいですか？' },
+    ],
+  },
+  {
+    id: 'coworker',
+    category: 'work',
+    emoji: '💬',
+    titleJa: '同僚とスモールトーク',
+    titleEn: 'Small Talk with a Coworker',
+    level: 'intermediate',
+    descriptionJa: '月曜の朝、オフィスのキッチンで同僚と週末の話をします。会話を広げてみよう。',
+    setting: 'The office kitchen on a Monday morning at a tech company.',
+    aiName: 'Jordan',
+    aiRole: 'Jordan, a friendly coworker from the marketing team. Jordan went camping over the weekend and is a bit tired but in a good mood.',
+    userRole: 'A coworker from the engineering team.',
+    userRoleJa: '同僚',
+    opener: "Morning! Ugh, Mondays, right? How was your weekend?",
+    missions: [
+      { id: 'weekend', ja: '自分の週末について話す' },
+      { id: 'follow', ja: '相手の話に質問して会話を広げる' },
+      { id: 'close', ja: '自然に会話を切り上げる' },
+    ],
+    keyPhrases: [
+      { en: "It was pretty relaxing, actually.", ja: '実はけっこうのんびりできたよ。' },
+      { en: "Oh nice, where did you go camping?", ja: 'いいね、どこにキャンプに行ったの？' },
+      { en: "That sounds like fun!", ja: '楽しそう！' },
+      { en: "Anyway, I'd better get back to work. Talk later!", ja: 'さて、そろそろ仕事に戻らなきゃ。またあとで！' },
+    ],
+  },
+  {
+    id: 'meeting',
+    category: 'work',
+    emoji: '📊',
+    titleJa: '会議で意見を言う',
+    titleEn: 'Sharing Opinions in a Meeting',
+    level: 'advanced',
+    descriptionJa: '新機能のリリース時期を議論する会議。賛成・反対を理由付きで述べ、代案を出そう。',
+    setting: 'A video meeting at a software company discussing whether to release a new feature next week or delay it by a month.',
+    aiName: 'Morgan',
+    aiRole: 'Morgan, a product manager leading the meeting who wants to release next week. Morgan is open to other views but will push back politely and ask for reasons and data.',
+    userRole: 'An engineer on the team who has concerns about quality and testing.',
+    userRoleJa: 'チームのエンジニア',
+    opener: "Okay, thanks for joining, everyone. So I'd really like to ship the new search feature next Monday. What do you think? Any concerns?",
+    missions: [
+      { id: 'opinion', ja: '理由を添えて自分の意見を述べる' },
+      { id: 'disagree', ja: '相手の意見に丁寧に反論する' },
+      { id: 'propose', ja: '代案や妥協案を提案する' },
+    ],
+    keyPhrases: [
+      { en: "I see your point, but I'm a bit concerned about testing.", ja: 'おっしゃることはわかりますが、テストが少し心配です。' },
+      { en: "From my perspective, we need at least another week.", ja: '私の見解では、少なくともあと1週間は必要です。' },
+      { en: "What if we released it to a small group of users first?", ja: 'まず一部のユーザーに公開するのはどうでしょう？' },
+      { en: "Could we compromise on a beta release?", ja: 'ベータ版のリリースで折り合えませんか？' },
+    ],
+  },
+  {
+    id: 'interview',
+    category: 'work',
+    emoji: '💼',
+    titleJa: '英語の面接',
+    titleEn: 'Job Interview',
+    level: 'advanced',
+    descriptionJa: '外資系企業の面接。自己紹介・強み・志望動機を具体例を交えて話しましょう。',
+    setting: 'A video job interview for a position at an international company.',
+    aiName: 'Ms. Carter',
+    aiRole: 'Ms. Carter, a professional but friendly hiring manager. Ask common interview questions one at a time (tell me about yourself, strengths, a challenge you overcame, why this company) and ask natural follow-up questions.',
+    userRole: 'A job candidate applying for a position they are interested in.',
+    userRoleJa: '応募者',
+    opener: "Hi, thanks for taking the time to talk with us today. To start, could you tell me a little bit about yourself?",
+    missions: [
+      { id: 'self', ja: '経歴を簡潔に自己紹介する' },
+      { id: 'strength', ja: '具体例を交えて強みを話す' },
+      { id: 'why', ja: '志望動機を伝える' },
+    ],
+    keyPhrases: [
+      { en: "I've been working in sales for five years.", ja: '5年間営業の仕事をしています。' },
+      { en: "One of my strengths is that I'm a quick learner.", ja: '私の強みのひとつは、覚えが早いことです。' },
+      { en: "For example, in my last project, I ...", ja: '例えば、前のプロジェクトでは…' },
+      { en: "I'm really drawn to your company's mission.", ja: '御社のミッションにとても惹かれています。' },
+    ],
+  },
+];
+
+// フリートーク: ミッションなしで、フレンドリーな会話相手と自由に話す
+export const FREE_TALK_TOPICS = [
+  {
+    id: 'free',
+    emoji: '💭',
+    titleJa: '自由に話す',
+    opener: "Hi! I'm Alex. It's great to chat with you. How's your day going so far?",
+    focus: 'Anything the learner wants to talk about. Follow their interests.',
+  },
+  {
+    id: 'today',
+    emoji: '📅',
+    titleJa: '今日の出来事',
+    opener: "Hey, it's Alex! So, tell me, what did you do today?",
+    focus: "The learner's day: what they did, how they felt, anything interesting that happened.",
+  },
+  {
+    id: 'hobbies',
+    emoji: '🎸',
+    titleJa: '趣味・好きなこと',
+    opener: "Hi, I'm Alex! I'm curious, what do you like to do in your free time?",
+    focus: "The learner's hobbies, favorite things, and why they like them.",
+  },
+  {
+    id: 'travel',
+    emoji: '✈️',
+    titleJa: '旅行の思い出',
+    opener: "Hi, I'm Alex! I love hearing travel stories. What's the best trip you've ever taken?",
+    focus: 'Travel memories and dream destinations.',
+  },
+  {
+    id: 'work',
+    emoji: '💻',
+    titleJa: '仕事・勉強',
+    opener: "Hi, I'm Alex! So, what do you do? Are you working or studying?",
+    focus: "The learner's job or studies, what they enjoy and what is challenging.",
+  },
+  {
+    id: 'future',
+    emoji: '🌱',
+    titleJa: '将来の目標',
+    opener: "Hi, I'm Alex! Let's talk about goals. Is there something you really want to do in the next few years?",
+    focus: "The learner's goals and dreams, including why they are learning English.",
+  },
+];
+
+const FREE_TALK_PARTNER = {
+  aiName: 'Alex',
+  aiRole: "Alex, a friendly, curious conversation partner from Portland who works as a travel writer, loves food, music and hearing about other cultures. Alex shares small bits about their own life too, so it feels like a real two-way chat, not an interview.",
+  userRole: 'Themselves, a Japanese person practicing English conversation.',
+};
+
+/**
+ * クライアントから受け取った scenarioId を、プロンプト生成に使う完全なシナリオへ解決する。
+ * フリートークは "free:<topicId>" 形式。
+ * @param {string} scenarioId
+ */
+export function resolveScenario(scenarioId) {
+  if (typeof scenarioId !== 'string') return null;
+  if (scenarioId.startsWith('free:')) {
+    const topic = FREE_TALK_TOPICS.find((t) => t.id === scenarioId.slice(5));
+    if (!topic) return null;
+    return {
+      id: scenarioId,
+      kind: 'free',
+      category: 'free',
+      emoji: topic.emoji,
+      titleJa: `フリートーク: ${topic.titleJa}`,
+      titleEn: 'Free Talk',
+      setting: `A relaxed one-on-one video chat. Topic focus: ${topic.focus}`,
+      ...FREE_TALK_PARTNER,
+      opener: topic.opener,
+      missions: [],
+      keyPhrases: [],
+    };
+  }
+  const s = SCENARIOS.find((x) => x.id === scenarioId);
+  return s ? { ...s, kind: 'roleplay' } : null;
+}
+
+/** クライアントに返す公開用カタログ (プロンプト用の英語設定は含めない) */
+export function publicCatalog() {
+  return {
+    levels: LEVELS,
+    categories: CATEGORIES,
+    scenarios: SCENARIOS.map((s) => ({
+      id: s.id,
+      category: s.category,
+      emoji: s.emoji,
+      titleJa: s.titleJa,
+      titleEn: s.titleEn,
+      level: s.level,
+      descriptionJa: s.descriptionJa,
+      aiName: s.aiName,
+      userRoleJa: s.userRoleJa,
+      opener: s.opener,
+      missions: s.missions,
+      keyPhrases: s.keyPhrases,
+    })),
+    freeTalkTopics: FREE_TALK_TOPICS.map((t) => ({
+      id: `free:${t.id}`,
+      emoji: t.emoji,
+      titleJa: t.titleJa,
+      aiName: FREE_TALK_PARTNER.aiName,
+      opener: t.opener,
+      missions: [],
+      keyPhrases: [],
+    })),
+  };
+}

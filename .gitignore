@@ -7,3 +7,5 @@ batio3_co2/pseudo/
 tmp/
 *.UPF
 *.upf
+node_modules/
+.env
