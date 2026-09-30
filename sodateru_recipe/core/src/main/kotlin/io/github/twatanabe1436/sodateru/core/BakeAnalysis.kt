@@ -74,7 +74,10 @@ data class MetricComparison(
             else -> 1.0
         }
         val delta = f.slope * step
-        val dir = if (delta >= 0) "高い" else "低い"
+        val dir = when {
+            y.unit == "分" -> if (delta >= 0) "長い" else "短い"
+            else -> if (delta >= 0) "高い" else "低い"
+        }
         val xStep = "${Amounts.formatNumber(step)}${x.unit}"
         return "${x.label}が${xStep}上がると、${y.label}は約${Amounts.formatNumber(kotlin.math.abs(delta))}${y.unit}${dir}" +
             "傾向（${Stats.describeCorrelation(f.r)}・r=${"%.2f".format(f.r)}・${f.n}回）"

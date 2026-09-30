@@ -23,8 +23,11 @@ class BakeAdvisorTest {
         // (27 - 3) * 3 - (25 + 25) = 22
         assertEquals(22.0, advice.water.waterTemp, 1e-9)
         assertTrue(advice.rise.isDefault)
-        // レシピの 60 分 (28℃) を 25℃ に補正: 60 * 2^(3/10) ≈ 73.9 → 75 分
-        assertEquals(75.0, advice.firstProof!!.value)
+        // 発酵温度が空ならレシピと同じ 28℃ で発酵させるとみなすので、レシピどおり 60 分
+        assertEquals(60.0, advice.firstProof!!.value)
+        // 25℃ で発酵させるなら補正する: 60 * 2^(3/10) ≈ 73.9 → 75 分
+        val at25 = BakeAdvisor.advise(recipe, emptyList(), emptyList(), TodayConditions(roomTemp = 25.0, firstProofTemp = 25.0))
+        assertEquals(75.0, at25.firstProof!!.value)
         assertEquals(40.0, advice.secondProof!!.value)
         assertTrue(advice.notes.any { "焼成ログがまだありません" in it })
     }
@@ -56,6 +59,16 @@ class BakeAdvisorTest {
         val warm = BakeAdvisor.advise(recipe, s, emptyList(), TodayConditions(roomTemp = 20.0, firstProofTemp = 30.0))
         assertEquals(45.0, warm.firstProof!!.value)
         assertEquals(1, warm.firstProof!!.samples)
+    }
+
+    @Test
+    fun blankProofTempMeansUsualProofTempOfRecipe() {
+        // レシピの一次発酵は 28℃。過去の回も 28℃ で 60 分なら、室温が低くても 28℃ で発酵させる前提で 60 分
+        val s = samples(bakeLog(rating = 5, room = 25.0, firstProof = 60, firstProofTemp = 28.0))
+        val cold = BakeAdvisor.advise(recipe, s, emptyList(), TodayConditions(roomTemp = 18.0))
+        assertEquals(60.0, cold.firstProof!!.value)
+        // 二次発酵は記録がなく、レシピにも温度がないので目安の 40 分のまま
+        assertEquals(40.0, cold.secondProof!!.value)
     }
 
     @Test

@@ -217,7 +217,7 @@ fun RecipeEditScreen(container: AppContainer, navigator: Navigator, route: Route
                     process = form.processOrNull(),
                 )
                 val versions = if (form.overwrite) {
-                    existing.versions.dropLast(1) + edited.copy(changeNote = if (base.number == 1) "" else form.changeNote.trim())
+                    existing.versions.dropLast(1) + edited
                 } else {
                     existing.versions + edited.copy(
                         number = nextNumber,

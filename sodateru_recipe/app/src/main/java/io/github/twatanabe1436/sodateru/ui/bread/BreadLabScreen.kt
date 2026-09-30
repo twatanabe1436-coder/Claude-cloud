@@ -153,7 +153,7 @@ fun BreadLabScreen(container: AppContainer, navigator: Navigator, bottomBar: @Co
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         NumberField(flour, { flour = it }, "粉温", Modifier.weight(1f), "℃", placeholder = "空=室温")
-                        NumberField(proofTemp, { proofTemp = it }, "発酵させる温度", Modifier.weight(1f), "℃", placeholder = "空=室温")
+                        NumberField(proofTemp, { proofTemp = it }, "発酵させる温度", Modifier.weight(1f), "℃", placeholder = "空=いつもの温度")
                     }
                     ChoiceChips(MixingMethod.entries, effectiveMethod, { it.label }, { method = it })
                     if (room == null) {

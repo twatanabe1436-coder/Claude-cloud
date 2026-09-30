@@ -19,7 +19,7 @@ import java.util.UUID
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-/** アプリ内に保存する写真 (filesDir/photos/*.jpg)。取り込むときに縮小・回転補正する。 */
+/** アプリ内に保存する写真 (filesDir/photos 以下の JPEG)。取り込むときに縮小・回転補正する。 */
 class PhotoStore(private val context: Context) {
 
     private val dir: File = File(context.filesDir, "photos").apply { mkdirs() }

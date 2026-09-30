@@ -14,7 +14,7 @@ import java.util.zip.ZipOutputStream
 data class BackupSummary(val recipes: Int, val logs: Int, val photos: Int)
 
 /**
- * 写真も含めたバックアップ (ZIP: data.json + photos/*.jpg) の書き出しと読み込み。
+ * 写真も含めたバックアップ (ZIP: data.json と photos フォルダの JPEG) の書き出しと読み込み。
  * 機種変更のときや、アプリを入れ直すときに使う。
  */
 class BackupManager(

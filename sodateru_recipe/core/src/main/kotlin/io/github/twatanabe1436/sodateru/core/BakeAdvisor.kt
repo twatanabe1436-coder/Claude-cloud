@@ -16,7 +16,7 @@ data class TodayConditions(
     val humidity: Double? = null,
     /** 粉の温度。空なら室温と同じとみなす。 */
     val flourTemp: Double? = null,
-    /** 発酵器・オーブンの発酵機能などを使うときの温度。空なら室温で発酵させる。 */
+    /** 発酵器・オーブンの発酵機能などを使うときの温度。空ならレシピの工程の発酵温度、それもなければ室温。 */
     val firstProofTemp: Double? = null,
     val secondProofTemp: Double? = null,
     val mixingMethod: MixingMethod? = null,
@@ -151,9 +151,9 @@ object BakeAdvisor {
             null
         }
 
-        // 発酵時間
-        val firstTodayTemp = today.firstProofTemp ?: today.roomTemp
-        val secondTodayTemp = today.secondProofTemp ?: today.roomTemp
+        // 発酵時間。今日の発酵温度が空なら、いつもの発酵温度 (レシピの工程) で発酵させるとみなし、それもなければ室温
+        val firstTodayTemp = today.firstProofTemp ?: process?.firstProofTemp ?: today.roomTemp
+        val secondTodayTemp = today.secondProofTemp ?: process?.secondProofTemp ?: today.roomTemp
         val firstProof = proofSuggestion(
             useful.mapNotNull { w ->
                 val m = w.sample.bake.firstProofMinutes ?: return@mapNotNull null
