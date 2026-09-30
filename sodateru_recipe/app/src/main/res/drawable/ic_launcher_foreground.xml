@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 山型の食パンから芽が出ている絵。セーフゾーン (中心 54,54 半径 33) に収まるように配置している。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#F6DDB5"
+        android:strokeColor="#E3A868"
+        android:strokeWidth="3"
+        android:pathData="M32,76L32,58C32,47 41,43 54,43C67,43 76,47 76,58L76,76Z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#E3A868"
+        android:strokeLineCap="round"
+        android:strokeWidth="2"
+        android:pathData="M42,60L42,70M54,58L54,70M66,60L66,70" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#9CCC65"
+        android:strokeLineCap="round"
+        android:strokeWidth="3"
+        android:pathData="M54,43L54,31" />
+    <path
+        android:fillColor="#7CB342"
+        android:pathData="M54,34C48,34 43,30 42,25C48,24 53,28 54,34Z" />
+    <path
+        android:fillColor="#AED581"
+        android:pathData="M54,32C58,27 64,25 69,26C68,32 61,35 54,32Z" />
+</vector>

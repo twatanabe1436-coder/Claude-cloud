@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Google ドライブへの自動バックアップ (Android 12 以降)。
+  レシピと記録 (データベース) は含め、容量の大きい写真と API キーは含めない。
+  写真も含めた完全なバックアップはアプリの「バックアップを書き出す」で行う。
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude
+            domain="file"
+            path="photos/" />
+        <exclude
+            domain="sharedpref"
+            path="secrets.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude
+            domain="sharedpref"
+            path="secrets.xml" />
+    </device-transfer>
+</data-extraction-rules>
