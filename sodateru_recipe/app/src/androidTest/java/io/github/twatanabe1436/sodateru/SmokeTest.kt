@@ -248,6 +248,8 @@ class SmokeTest {
                 ?.hideSoftInputFromWindow(activity.window.decorView.windowToken, 0)
         }
         compose.waitForIdle()
+        // キーボードが閉じるアニメーションを待つ
+        Thread.sleep(700)
     }
 
     private fun waitForDescription(description: String, timeoutMs: Long = 8_000) {
