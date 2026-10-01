@@ -1,0 +1,27 @@
+name: quiz_app
+
+on:
+  push:
+    paths:
+      - "quiz_app/**"
+      - ".github/workflows/quiz-app.yml"
+  pull_request:
+    paths:
+      - "quiz_app/**"
+      - ".github/workflows/quiz-app.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: quiz_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 問題データのチェック
+        run: node tools/validate.js
+      - name: テスト
+        run: node --test

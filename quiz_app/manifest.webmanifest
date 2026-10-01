@@ -1,0 +1,17 @@
+{
+  "name": "クイズ道場",
+  "short_name": "クイズ道場",
+  "description": "○×・四択・連想・並べ替え・文字パネルなど8つの形式で遊べるクイズアプリ",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef3f0",
+  "theme_color": "#14624f",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

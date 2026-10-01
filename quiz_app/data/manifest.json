@@ -1,0 +1,23 @@
+{
+  "updated": "2026-10-01",
+  "genres": [
+    { "id": "anige", "name": "アニメ・ゲーム", "hue": 330 },
+    { "id": "sports", "name": "スポーツ", "hue": 140 },
+    { "id": "geinou", "name": "芸能", "hue": 275 },
+    { "id": "life", "name": "ライフスタイル", "hue": 28 },
+    { "id": "shakai", "name": "社会", "hue": 210 },
+    { "id": "bunkei", "name": "文系学問", "hue": 5 },
+    { "id": "rikei", "name": "理系学問", "hue": 182 },
+    { "id": "nonjan", "name": "ノンジャンル", "hue": 55 }
+  ],
+  "packs": [
+    "questions/anige.json",
+    "questions/sports.json",
+    "questions/geinou.json",
+    "questions/life.json",
+    "questions/shakai.json",
+    "questions/bunkei.json",
+    "questions/rikei.json",
+    "questions/nonjan.json"
+  ]
+}

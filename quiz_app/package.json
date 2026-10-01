@@ -1,0 +1,14 @@
+{
+  "name": "quiz-dojo",
+  "private": true,
+  "type": "module",
+  "description": "スマートフォン向けクイズアプリ（静的サイト / PWA）",
+  "scripts": {
+    "start": "npx --yes serve -l 8080 .",
+    "test": "node --test",
+    "validate": "node tools/validate.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
