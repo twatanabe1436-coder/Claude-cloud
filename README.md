@@ -5,4 +5,3 @@
 - [`hanaso_android/`](hanaso_android/README.md) — **Hanaso 英会話（Android アプリ）**。AI と声で会話して学ぶ
   Speak 風の英会話アプリ（ロールプレイ・フリートーク・発話ごとの添削・ヒント・発音チェック・フレーズ帳）。
   Kotlin + Jetpack Compose、Claude API をスマホから直接呼び出す。
-- [`hanaso/`](hanaso/README.md) — 同じアプリの Web 版（Node.js サーバー + ブラウザ）。Android 版の前に作った試作。
