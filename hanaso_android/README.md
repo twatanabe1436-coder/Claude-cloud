@@ -47,7 +47,7 @@ Android 8.0 以降で動きます。ダークモード対応。
 
 API キーがなくても **デモモード**（決まった返事のみ）で画面や音声の流れを試せます。本物の AI と話すには:
 
-1. PC かスマホで [Anthropic Console](https://console.anthropic.com/settings/keys) を開き、API キー（`sk-ant-…`）を発行します。
+1. PC かスマホで [Claude Console](https://platform.claude.com/settings/keys) を開き、API キー（`sk-ant-…`）を発行します。
    （利用には Anthropic API のクレジットが必要です）
 2. アプリの **設定 → Claude API キー** に貼り付けて「保存」し、「接続テスト」で確認します。
 

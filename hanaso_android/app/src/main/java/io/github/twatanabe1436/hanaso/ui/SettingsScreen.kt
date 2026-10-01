@@ -136,10 +136,10 @@ fun SettingsScreen() {
             }
             testResult?.let { Text(it, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp)) }
             Hint(
-                "API キーは Anthropic Console で発行できます。キーはこの端末の中に暗号化して保存され、" +
+                "API キーは Claude Console で発行できます。キーはこの端末の中に暗号化して保存され、" +
                     "Claude API との通信にだけ使われます。会話 1 往復ごとに料金がかかります。",
             )
-            TextButton(onClick = { openUrl(context, "https://console.anthropic.com/settings/keys") }) { Text("Anthropic Console を開く") }
+            TextButton(onClick = { openUrl(context, "https://platform.claude.com/settings/keys") }) { Text("Claude Console を開く") }
         }
 
         SettingsCard("AI モデル") {
