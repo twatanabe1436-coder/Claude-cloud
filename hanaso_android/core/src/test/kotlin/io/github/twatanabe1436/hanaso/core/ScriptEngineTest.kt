@@ -116,6 +116,13 @@ class ScriptEngineTest {
         assertFalse(empty.passed)
         assertEquals(Rating.FIX, empty.rating)
         // いちばん近いお手本と比べる
+        // 音声認識でよくある、句読点なし・短い言い方
+        val hotel = Scripts.forScenario(Catalog.find("hotel")!!).steps
+        assertTrue(ScriptEngine.judge(hotel[0], "check in please tanaka").passed)
+        assertTrue(ScriptEngine.judge(hotel[3], "the AC is not working").passed)
+        assertTrue(ScriptEngine.judge(Scripts.forScenario(Catalog.find("weekend")!!).steps[1], "2:30").passed)
+        assertFalse(ScriptEngine.judge(drink, "i want coffee").passed) // サイズがない
+
         val close = ScriptEngine.judge(drink, "i'd like a medium latte")
         assertEquals("I'd like a medium latte, please.", close.closest.en)
         assertEquals(Rating.GREAT, close.rating)

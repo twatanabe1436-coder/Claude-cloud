@@ -295,7 +295,7 @@ object Scripts {
                 ScriptStep(
                     taskJa = "田中の名前で予約していると伝えよう",
                     mission = "checkin",
-                    keywords = listOf("reservation|booking|booked|reserved|book"),
+                    keywords = listOf("reservation|booking|booked|reserved|book|check in|checking in|under"),
                     answers = listOf(
                         p("Yes, I have a reservation under the name Tanaka.", "はい、田中の名前で予約しています。"),
                         p("Yes, I booked a room under Tanaka.", "はい、田中で部屋を予約しました。"),
@@ -662,7 +662,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "「ぜひ行きたい！」と答えよう",
-                    keywords = listOf("love|like|sure|yes|definitely|great|count me in|want|would"),
+                    keywords = listOf("love|like|sure|yes|definitely|great|count me in|want|would|of course|absolutely|why not|sounds"),
                     answers = listOf(
                         p("I'd love to!", "ぜひ行きたい！"),
                         p("Sure, count me in!", "いいね、私も入れて！"),
