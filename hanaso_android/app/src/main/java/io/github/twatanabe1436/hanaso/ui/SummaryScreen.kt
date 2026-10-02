@@ -44,7 +44,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.twatanabe1436.hanaso.core.Conversation
+import io.github.twatanabe1436.hanaso.core.EngineMode
 import io.github.twatanabe1436.hanaso.core.Rating
+import io.github.twatanabe1436.hanaso.core.ScriptEngine
 import io.github.twatanabe1436.hanaso.core.Stats
 import io.github.twatanabe1436.hanaso.ui.talk.FinishedSession
 import io.github.twatanabe1436.hanaso.ui.talk.LoadState
@@ -73,7 +75,7 @@ fun SummaryScreen(result: FinishedSession, onAgain: () -> Unit, onHome: () -> Un
         result.summary = LoadState.Loading
         app.scope.launch {
             result.summary = try {
-                val s = app.engine().summary(Conversation(scenario, result.level, result.history), result.completed)
+                val s = result.engine.summary(Conversation(scenario, result.level, result.history), result.completed)
                 app.store.updateSession(result.recordId) { it.copy(score = s.score) }
                 LoadState.Ready(s)
             } catch (e: CancellationException) {
@@ -152,7 +154,8 @@ fun SummaryScreen(result: FinishedSession, onAgain: () -> Unit, onHome: () -> Un
                         Heading("📈 伸ばしたいポイント")
                         s.improvePoints.forEach { p ->
                             Text(p.pointJa, modifier = Modifier.padding(top = 6.dp))
-                            PhraseRow(p.exampleEn, "", onPlay = { play(p.exampleEn) }, saved = Stats.normalizePhrase(p.exampleEn) in savedSet, onSave = { save(p.exampleEn, "") })
+                            val ja = ScriptEngine.lookupJa(p.exampleEn).orEmpty()
+                            PhraseRow(p.exampleEn, ja, onPlay = { play(p.exampleEn) }, saved = Stats.normalizePhrase(p.exampleEn) in savedSet, onSave = { save(p.exampleEn, ja) })
                         }
                     }
                 }
@@ -182,7 +185,10 @@ fun SummaryScreen(result: FinishedSession, onAgain: () -> Unit, onHome: () -> Un
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 12.dp)) {
                         CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                         Spacer(Modifier.width(12.dp))
-                        Text("AI コーチが振り返りを作成中…", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            if (result.engine.mode == EngineMode.AI) "AI コーチが振り返りを作成中…" else "振り返りを作成中…",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 }
             }
@@ -190,11 +196,12 @@ fun SummaryScreen(result: FinishedSession, onAgain: () -> Unit, onHome: () -> Un
         if (corrections.isNotEmpty()) {
             item {
                 Card {
-                    Heading("✏️ 今回の言い直し")
+                    Heading(if (result.engine.mode == EngineMode.SCRIPT) "📖 お手本と比べよう" else "✏️ 今回の言い直し")
                     corrections.forEach { t ->
                         val fb = t.feedback ?: return@forEach
+                        val ja = ScriptEngine.lookupJa(fb.natural).orEmpty()
                         Text("あなた: ${t.text}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 8.dp))
-                        PhraseRow(fb.natural, "", onPlay = { play(fb.natural) }, saved = Stats.normalizePhrase(fb.natural) in savedSet, onSave = { save(fb.natural, "") })
+                        PhraseRow(fb.natural, ja, onPlay = { play(fb.natural) }, saved = Stats.normalizePhrase(fb.natural) in savedSet, onSave = { save(fb.natural, ja) })
                         Text(fb.explanationJa, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }

@@ -111,7 +111,7 @@ fun HanasoRoot(app: HanasoApp) {
                         Screen.Settings -> SettingsScreen()
                         else -> HomeScreen(
                             level = settings.level,
-                            isDemo = app.engineOverride?.isDemo ?: apiKey.isBlank(),
+                            mode = app.modeFor(apiKey, settings),
                             totals = remember(sessions, phrases) { app.store.totals() },
                             recent = sessions,
                             onOpen = { intro = it },
@@ -127,6 +127,7 @@ fun HanasoRoot(app: HanasoApp) {
             ScenarioIntroSheet(
                 scenario = scenario,
                 initialLevel = settings.level,
+                mode = app.modeFor(apiKey, settings),
                 onPlay = { text ->
                     app.speaker.stop()
                     app.speaker.say(text)

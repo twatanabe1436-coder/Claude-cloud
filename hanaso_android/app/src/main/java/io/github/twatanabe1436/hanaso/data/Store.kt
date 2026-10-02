@@ -29,6 +29,8 @@ data class Settings(
     val silenceMs: Long = 2000,
     /** 使う Claude のモデル */
     val model: String = ClaudeEngine.DEFAULT_MODEL,
+    /** API キーがあるとき AI と会話する (オフ、またはキーがなければ台本モード) */
+    val aiConversation: Boolean = true,
 )
 
 data class SavedPhrase(
@@ -91,6 +93,7 @@ class Store(context: Context) {
             put("autoTranslate", s.autoTranslate)
             put("silenceMs", s.silenceMs)
             put("model", s.model)
+            put("aiConversation", s.aiConversation)
         }.toString()).apply()
     }
 
@@ -107,6 +110,7 @@ class Store(context: Context) {
             autoTranslate = o.optBoolean("autoTranslate", d.autoTranslate),
             silenceMs = o.optLong("silenceMs", d.silenceMs),
             model = o.optString("model", d.model).ifBlank { d.model },
+            aiConversation = o.optBoolean("aiConversation", d.aiConversation),
         )
     }
 

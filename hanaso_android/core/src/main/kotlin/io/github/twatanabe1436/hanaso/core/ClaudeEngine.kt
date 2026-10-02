@@ -42,7 +42,7 @@ class ClaudeEngine(
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : AiEngine {
 
-    override val isDemo: Boolean = false
+    override val mode: EngineMode = EngineMode.AI
 
     companion object {
         const val DEFAULT_MODEL = "claude-opus-5-5"

@@ -51,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.twatanabe1436.hanaso.core.ClaudeEngine
+import io.github.twatanabe1436.hanaso.core.EngineMode
 import io.github.twatanabe1436.hanaso.data.Settings
 import io.github.twatanabe1436.hanaso.speech.VoiceStatus
 import io.github.twatanabe1436.hanaso.ui.talk.errorText
@@ -90,9 +91,36 @@ fun SettingsScreen() {
     ) {
         Text("設定", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
 
+        SettingsCard("会話の相手") {
+            val useAi = apiKey.isNotBlank() && settings.aiConversation
+            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                SegmentedButton(
+                    selected = !useAi,
+                    onClick = { update { it.copy(aiConversation = false) } },
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                ) { Text("📖 台本（無料）") }
+                SegmentedButton(
+                    selected = useAi,
+                    onClick = {
+                        update { it.copy(aiConversation = true) }
+                        if (apiKey.isBlank()) context.toast("AI 会話を使うには、下で Claude の API キーを設定してください")
+                    },
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                ) { Text("🤖 AI 会話") }
+            }
+            Hint(
+                if (useAi) {
+                    "Claude と自由に会話します（API の利用料金がかかります）。"
+                } else {
+                    "台本モード：日本語のお題を英語で言うと、相手が台本どおりに返事をします。AI を使わないので無料で、オフラインでも使えます。" +
+                        if (apiKey.isBlank()) "\nAI と自由に会話するには、下で Claude の API キーを設定してください。" else ""
+                },
+            )
+        }
+
         SettingsCard("Claude API キー") {
             Text(
-                if (apiKey.isBlank()) "未設定（デモモードで動作中）" else "設定済み：${maskKey(apiKey)}",
+                if (apiKey.isBlank()) "未設定（台本モードで動作中）" else "設定済み：${maskKey(apiKey)}",
                 fontWeight = FontWeight.SemiBold,
                 color = if (apiKey.isBlank()) LocalGrades.current.good else LocalGrades.current.great,
             )
@@ -117,7 +145,7 @@ fun SettingsScreen() {
                     testResult = "接続を確認しています…"
                     scope.launch {
                         testResult = try {
-                            val tr = app.engine().translate("Nice to meet you!")
+                            val tr = (app.claudeEngine() ?: error("API キーがありません")).translate("Nice to meet you!")
                             "✅ つながりました（Nice to meet you! → ${tr.ja}）"
                         } catch (e: CancellationException) {
                             throw e
@@ -157,7 +185,7 @@ fun SettingsScreen() {
 
         SettingsCard("英語レベル") {
             LevelSelector(settings.level, { level -> update { it.copy(level = level) } })
-            Hint("AI の話す文の長さや語彙が変わります。")
+            Hint("AI 会話で、AI の話す文の長さや語彙が変わります（台本モードの台本は変わりません）。")
         }
 
         SettingsCard("音声") {
@@ -231,7 +259,7 @@ fun SettingsScreen() {
         }
 
         Text(
-            "Hanaso v0.1.0・AI: ${if (apiKey.isBlank()) "デモモード" else settings.model}",
+            "Hanaso v0.2.0・${if (app.modeFor(apiKey, settings) == EngineMode.AI) "AI: ${settings.model}" else "台本モード"}",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,

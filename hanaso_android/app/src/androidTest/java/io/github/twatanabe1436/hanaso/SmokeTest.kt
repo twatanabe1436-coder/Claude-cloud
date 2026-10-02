@@ -32,7 +32,7 @@ import org.junit.runner.RunWith
 
 /**
  * エミュレータで画面を操作して、主要な流れがクラッシュせずに動くことを確かめる。
- * AI はデモモード、音声認識・読み上げは偽物 (Fakes.kt) を使う。
+ * 相手はデモモード (台本モードのテストは API キーなしの本物)、音声認識・読み上げは偽物 (Fakes.kt) を使う。
  * 途中の画面は /data/local/tmp/hanaso_shots に保存し、CI で取り出して確認する。
  */
 @RunWith(AndroidJUnit4::class)
@@ -75,7 +75,7 @@ class SmokeTest {
     @Test
     fun roleplayConversationAndSummary() {
         waitForText("今日のおすすめ")
-        compose.onNodeWithText("🧪 デモモードで動作中").assertExists()
+        compose.onNodeWithText("🧪 デモモード").assertExists()
         screenshot("01_home")
 
         // シナリオ一覧 → カフェ → 説明シート → 開始
@@ -192,6 +192,80 @@ class SmokeTest {
         waitForText("会話をやめますか？")
         compose.onNodeWithText("やめる").performClick()
         waitForText("今日のおすすめ")
+    }
+
+    @Test
+    fun scriptModeConversation() {
+        // API キーなし → 台本モード (AI を使わない本物の相手)
+        onMain { app.engineOverride = null }
+        waitForText("📖 台本モード（AI なし・無料）")
+
+        compose.onNodeWithText("会話").performClick()
+        compose.onNodeWithText("カフェで注文する").performScrollTo().performClick()
+        waitForText("📖 台本のお題（全 5 問）")
+        compose.onNodeWithText("会話をはじめる").performScrollTo().performClick()
+
+        waitForText("📖 お題 1 / 5")
+        waitForText("ラテの M サイズを注文しよう")
+        compose.onNodeWithText("お手本").performClick()
+        waitForText("Can I get a medium latte, please?")
+
+        // お題どおりに言う → 台本の返事が来て次のお題へ、ミッション達成
+        input.queue.add("can I get a medium latte please")
+        compose.onNodeWithContentDescription("話す").performClick()
+        waitForText("Sure! Would you like regular milk, or would you prefer oat or almond milk?")
+        waitForText("Great!")
+        waitForText("📖 お題 2 / 5")
+        waitForText("1 / 3")
+        waitUntil("返事が読み上げられない") { speaker.spoken.any { it.contains("oat or almond milk") } }
+        screenshot("11_script_talk")
+
+        // 関係ないことを言う → 聞き返され、お手本つきで「もう一度」
+        waitUntil("返事が終わらない") { app.talk?.busy == false }
+        input.queue.add("hello")
+        compose.onNodeWithContentDescription("話す").performClick()
+        waitForText("Sorry, could you say that again?")
+        waitForText("もう一度")
+        waitForText("言い直し 1 / 2")
+        waitForText("📖 お手本")
+        screenshot("12_script_retry")
+
+        // ヒント (お手本) をそのまま送る
+        waitUntil("返事が終わらない") { app.talk?.busy == false }
+        compose.onNodeWithContentDescription("ヒント").performClick()
+        waitForText("ヒント：何て言えばいい？")
+        waitForText("Could you make it with oat milk?")
+        compose.onAllNodesWithText("そのまま送る").onFirst().performClick()
+        waitForText("📖 お題 3 / 5")
+
+        // 残りはキーボードで
+        compose.onNodeWithContentDescription("入力").performClick()
+        for (line in listOf("I'll also have a blueberry muffin.", "For here, please.", "I'll pay by card.")) {
+            waitUntil("返事が終わらない") { app.talk?.busy == false }
+            compose.onNode(hasSetTextAction()).performTextInput(line)
+            compose.onNode(hasContentDescription("送信")).performClick()
+            waitForText(line)
+        }
+        waitForText("🎉 台本を最後まで話せました！", timeoutMs = 8_000)
+        waitForText("振り返りを見る")
+        waitForText("3 / 3")
+        screenshot("13_script_done")
+
+        compose.onNodeWithText("振り返りを見る").performClick()
+        waitForText("おつかれさまでした！")
+        waitForText("スコア")
+        waitForText("すばらしい！台本をほぼ完ぺきに話せました")
+        screenshot("14_script_summary")
+        val record = app.store.sessions.value.single()
+        assertEquals(6, record.learnerTurns)
+        assertEquals(3, record.missionsDone)
+        // お題 2 は言い直し (-10)、お題 5 は自分なりの言い方 (85 点) → (100 + 90 + 100 + 100 + 85) / 5
+        assertEquals(95, record.score)
+
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("ホームへ"))
+        compose.onNodeWithText("ホームへ").performClick()
+        waitForText("📖 台本モード（AI なし・無料）")
+        screenshot("15_script_home")
     }
 
     private fun waitForText(text: String, timeoutMs: Long = 5_000) {

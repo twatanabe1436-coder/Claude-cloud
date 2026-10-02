@@ -2,10 +2,24 @@ package io.github.twatanabe1436.hanaso.core
 
 import kotlinx.coroutines.flow.Flow
 
-/** 会話の AI。Claude 版 (ClaudeEngine) と、API キーなしで試せるデモ版 (MockEngine) がある。 */
+/** 会話相手のしくみ。画面の案内や、できること (自由な翻訳など) が変わる。 */
+enum class EngineMode {
+    /** Claude と自由に会話する */
+    AI,
+
+    /** 決まった台本に沿って練習する (AI なし・無料・オフライン) */
+    SCRIPT,
+
+    /** 決まった返事だけを返す動作確認用 */
+    DEMO,
+}
+
+/**
+ * 会話の相手。Claude 版 (ClaudeEngine)、台本モード (ScriptEngine)、
+ * 動作確認用のデモ版 (MockEngine) がある。
+ */
 interface AiEngine {
-    /** デモモードなら true (画面に案内を出す) */
-    val isDemo: Boolean
+    val mode: EngineMode
 
     /** 会話相手の返事を少しずつ流す。最後まで流れたら完了。失敗時は [AiException]。 */
     fun reply(conversation: Conversation): Flow<String>

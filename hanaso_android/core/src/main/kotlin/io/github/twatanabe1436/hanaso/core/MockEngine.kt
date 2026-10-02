@@ -5,12 +5,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 /**
- * API キーなしで画面や音声の流れを試せる「デモモード」の AI。
+ * 画面や音声の流れを試すための「デモモード」の相手 (主にテスト用)。
  * 本物の AI ではなく、決まった返事と簡単なルールで動く。
  */
 class MockEngine(private val delayMs: Long = 35) : AiEngine {
 
-    override val isDemo: Boolean = true
+    override val mode: EngineMode = EngineMode.DEMO
 
     private val partnerLines = listOf(
         "I see! Could you tell me a little more about that?",

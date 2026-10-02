@@ -20,6 +20,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.twatanabe1436.hanaso.core.Catalog
+import io.github.twatanabe1436.hanaso.core.EngineMode
 import io.github.twatanabe1436.hanaso.core.Level
 import io.github.twatanabe1436.hanaso.core.Scenario
 import io.github.twatanabe1436.hanaso.core.Stats
@@ -45,7 +47,7 @@ import java.util.Locale
 @Composable
 fun HomeScreen(
     level: Level,
-    isDemo: Boolean,
+    mode: EngineMode,
     totals: Totals,
     recent: List<SessionRecord>,
     onOpen: (Scenario) -> Unit,
@@ -64,26 +66,12 @@ fun HomeScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Hanaso", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
-                    Text("AIと話して、英語が口から出るように", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("話して、英語が口から出るように", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 SmallChip(text = "レベル: ${level.ja}", onClick = onOpenSettings)
             }
         }
-        if (isDemo) {
-            item {
-                Card(colors = CardDefaults.cardColors(containerColor = LocalGrades.current.goodContainer)) {
-                    Column(Modifier.padding(14.dp)) {
-                        Text("🧪 デモモードで動作中", fontWeight = FontWeight.Bold)
-                        Text(
-                            "いまは決まった返事しかしません。設定で Claude の API キーを入れると、本物の AI と自由に会話できます。",
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
-                        )
-                        Button(onClick = onOpenSettings) { Text("API キーを設定する") }
-                    }
-                }
-            }
-        }
+        item { ModeCard(mode, onOpenSettings) }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 StatTile("🔥 ${totals.streak}", "日連続", Modifier.weight(1f))
@@ -95,7 +83,7 @@ fun HomeScreen(
         item { TodayCard(pick) { onOpen(pick) } }
         item {
             Column {
-                SectionTitle("フリートーク", "AI の Alex と自由に話そう")
+                SectionTitle("フリートーク", if (mode == EngineMode.AI) "AI の Alex と自由に話そう" else "Alex と自分のことを話そう")
                 FreeTalkGrid(onOpen)
             }
         }
@@ -114,6 +102,27 @@ fun HomeScreen(
         if (recent.isNotEmpty()) {
             item { SectionTitle("最近の会話", null) }
             items(recent.take(5), key = { it.id }) { r -> RecentRow(r) { Catalog.find(r.scenarioId)?.let(onOpen) } }
+        }
+    }
+}
+
+/** いまの会話モードの案内 */
+@Composable
+private fun ModeCard(mode: EngineMode, onOpenSettings: () -> Unit) {
+    val (title, body) = when (mode) {
+        EngineMode.SCRIPT -> "📖 台本モード（AI なし・無料）" to
+            "日本語のお題を英語で言うと、相手が台本どおりに返事をします。お手本との一致度で判定し、何度でも無料で練習できます。" +
+            "Claude の API キーを設定すると、AI と自由に会話することもできます。"
+        EngineMode.AI -> "🤖 AI 会話モード" to "Claude と自由に会話します。台本モードには設定から切り替えられます。"
+        EngineMode.DEMO -> "🧪 デモモード" to "決まった返事だけを返す、動作確認用のモードです。"
+    }
+    Card(colors = CardDefaults.cardColors(containerColor = if (mode == EngineMode.AI) MaterialTheme.colorScheme.surfaceContainerLow else LocalGrades.current.goodContainer)) {
+        Column(Modifier.padding(14.dp)) {
+            Text(title, fontWeight = FontWeight.Bold)
+            Text(body, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 4.dp, bottom = 8.dp))
+            if (mode == EngineMode.SCRIPT) {
+                OutlinedButton(onClick = onOpenSettings) { Text("会話モードの設定") }
+            }
         }
     }
 }

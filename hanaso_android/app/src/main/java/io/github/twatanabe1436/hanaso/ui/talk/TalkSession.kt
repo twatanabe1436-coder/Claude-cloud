@@ -9,15 +9,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import io.github.twatanabe1436.hanaso.HanasoApp
+import io.github.twatanabe1436.hanaso.core.AiEngine
 import io.github.twatanabe1436.hanaso.core.AiErrorKind
 import io.github.twatanabe1436.hanaso.core.AiException
 import io.github.twatanabe1436.hanaso.core.Conversation
+import io.github.twatanabe1436.hanaso.core.EngineMode
 import io.github.twatanabe1436.hanaso.core.Feedback
 import io.github.twatanabe1436.hanaso.core.HintSuggestion
 import io.github.twatanabe1436.hanaso.core.Level
 import io.github.twatanabe1436.hanaso.core.Line
 import io.github.twatanabe1436.hanaso.core.Rating
 import io.github.twatanabe1436.hanaso.core.Scenario
+import io.github.twatanabe1436.hanaso.core.ScriptEngine
+import io.github.twatanabe1436.hanaso.core.ScriptTask
 import io.github.twatanabe1436.hanaso.core.SentenceChunker
 import io.github.twatanabe1436.hanaso.core.Speaker
 import io.github.twatanabe1436.hanaso.core.Summary
@@ -60,7 +64,8 @@ class LearnerMessage(override val id: Long, val text: String) : ChatItem {
     var expanded by mutableStateOf(false)
 }
 
-class Celebration(override val id: Long) : ChatItem
+/** ミッションをすべて達成した (AI 会話)、または台本を最後まで終えた (台本モード) */
+class Celebration(override val id: Long, val scriptDone: Boolean = false) : ChatItem
 
 sealed interface LoadState<out T> {
     data object Loading : LoadState<Nothing>
@@ -83,6 +88,8 @@ class Turn(val text: String) {
 /** 終えた会話 (振り返り画面用) */
 class FinishedSession(
     val recordId: String,
+    /** 会話した相手 (振り返りも同じ相手に作ってもらう) */
+    val engine: AiEngine,
     val scenario: Scenario,
     val level: Level,
     val history: List<Line>,
@@ -95,8 +102,8 @@ class FinishedSession(
 }
 
 /**
- * 1回の会話。AI の返事 (ストリーミング + 文ごとの読み上げ)、発話ごとの添削、ミッション、ヒント、
- * ハンズフリー (読み上げが終わったら自動でマイク) を管理する。状態はすべてメインスレッドで更新する。
+ * 1回の会話。相手の返事 (ストリーミング + 文ごとの読み上げ)、発話ごとの添削、ミッション、ヒント、
+ * ハンズフリー (読み上げが終わったら自動でマイク)、台本モードのお題を管理する。状態はすべてメインスレッドで更新する。
  */
 class TalkSession(
     val scenario: Scenario,
@@ -104,7 +111,8 @@ class TalkSession(
     private val app: HanasoApp,
 ) {
     private val engine = app.engine()
-    val isDemo: Boolean = engine.isDemo
+    val mode: EngineMode = engine.mode
+    private val script = engine as? ScriptEngine
     private val speaker get() = app.speaker
     private val input get() = app.speechInput
     private val settings get() = app.store.settings.value
@@ -141,6 +149,16 @@ class TalkSession(
     var draft by mutableStateOf("")
     var showKeyboard by mutableStateOf(!input.available)
 
+    /** 台本モードのいまのお題 (AI 会話では null) */
+    var task by mutableStateOf<ScriptTask?>(null)
+        private set
+
+    /** お題カードでお手本を表示中 */
+    var showExample by mutableStateOf(false)
+
+    /** 台本を最後まで終えた */
+    val scriptDone: Boolean get() = task?.finished == true
+
     /** マイクの権限があるか (ハンズフリーで自動開始してよいか) */
     private fun micPermitted(): Boolean =
         ContextCompat.checkSelfPermission(app, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
@@ -159,7 +177,21 @@ class TalkSession(
         items += opener
         history += Line(Speaker.AI, scenario.opener)
         if (settings.autoTranslate) loadTranslation(opener)
+        refreshTask()
         speakAll(scenario.opener) { afterAiSpoke() }
+    }
+
+    /** 台本モード: 会話の履歴から、いまのお題を求め直す */
+    private fun refreshTask() {
+        val scripted = script ?: return
+        val next = scripted.task(Conversation(scenario, level, history.toList()))
+        if (next.number != task?.number || next.finished != task?.finished) showExample = false
+        task = next
+        if (next.finished && !celebrated) {
+            celebrated = true
+            items += Celebration(nextId++, scriptDone = true)
+            _messages.tryEmit("台本クリア！🎉")
+        }
     }
 
     // ---- 音声 ----
@@ -184,7 +216,7 @@ class TalkSession(
 
     /** AI が話し終わったあと: ハンズフリーなら自動でマイクを開始 */
     private fun afterAiSpoke() {
-        if (closed || busy || listening || hint != null) return
+        if (closed || busy || listening || hint != null || scriptDone) return
         if (settings.handsFree && input.available && micPermitted()) startListening()
     }
 
@@ -277,7 +309,8 @@ class TalkSession(
                 val newly = fb.completedMissions.filter { it in valid }.toSet()
                 if (!completed.containsAll(newly)) {
                     completed = completed + newly
-                    checkAllMissions()
+                    // 台本モードは「最後まで終えた」ときにお祝いする
+                    if (script == null) checkAllMissions()
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -318,6 +351,7 @@ class TalkSession(
                 history += Line(Speaker.AI, full)
                 busy = false
                 status = ""
+                refreshTask()
                 if (!muted) chunker.flush().forEach { speaker.say(it) }
                 if (settings.autoTranslate) loadTranslation(bubble)
                 speaker.whenIdle { afterAiSpoke() }
@@ -446,6 +480,7 @@ class TalkSession(
             app.store.addSession(record)
             FinishedSession(
                 recordId = record.id,
+                engine = engine,
                 scenario = scenario,
                 level = level,
                 history = history.toList(),

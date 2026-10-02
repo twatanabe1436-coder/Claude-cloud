@@ -8,10 +8,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import io.github.twatanabe1436.hanaso.core.AiEngine
 import io.github.twatanabe1436.hanaso.core.ClaudeEngine
+import io.github.twatanabe1436.hanaso.core.EngineMode
 import io.github.twatanabe1436.hanaso.core.Level
-import io.github.twatanabe1436.hanaso.core.MockEngine
 import io.github.twatanabe1436.hanaso.core.Scenario
+import io.github.twatanabe1436.hanaso.core.ScriptEngine
 import io.github.twatanabe1436.hanaso.data.SavedPhrase
+import io.github.twatanabe1436.hanaso.data.Settings
 import io.github.twatanabe1436.hanaso.data.Store
 import io.github.twatanabe1436.hanaso.speech.AndroidSpeechInput
 import io.github.twatanabe1436.hanaso.speech.SpeechInput
@@ -73,8 +75,11 @@ class HanasoApp : Application() {
     /** 音声認識。テストでは偽物に差し替える */
     lateinit var speechInput: SpeechInput
 
-    /** テスト用: 設定すると API キーに関係なくこの AI を使う */
-    var engineOverride: AiEngine? = null
+    /** テスト用: 設定すると API キーや設定に関係なくこの相手を使う */
+    var engineOverride: AiEngine? by mutableStateOf(null)
+
+    /** 台本モード (AI なし) */
+    val scriptEngine = ScriptEngine()
 
     val nav = Navigator()
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -86,7 +91,7 @@ class HanasoApp : Application() {
     /** 直前に終えた会話 (振り返り画面用) */
     var finished: FinishedSession? by mutableStateOf(null)
 
-    private var cachedEngine: Pair<String, AiEngine>? = null
+    private var cachedEngine: Pair<String, ClaudeEngine>? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -96,16 +101,25 @@ class HanasoApp : Application() {
         speechInput = AndroidSpeechInput(this)
     }
 
-    /** API キーがあれば Claude、なければデモモードの AI */
+    /** 会話の相手: API キーがあって「AI と会話」がオンなら Claude、それ以外は台本モード */
     fun engine(): AiEngine {
         engineOverride?.let { return it }
+        return claudeEngine()?.takeIf { store.settings.value.aiConversation } ?: scriptEngine
+    }
+
+    /** API キーがあれば Claude (会話の設定に関係なく。接続テスト用) */
+    fun claudeEngine(): ClaudeEngine? {
         val key = store.apiKey.value
-        if (key.isBlank()) return MockEngine()
+        if (key.isBlank()) return null
         val model = store.settings.value.model
         val cacheKey = "$model|$key"
         cachedEngine?.let { (k, e) -> if (k == cacheKey) return e }
         return ClaudeEngine.create(key, model).also { cachedEngine = cacheKey to it }
     }
+
+    /** 会話を始めたときに使われる相手の種類 (画面の案内用) */
+    fun modeFor(apiKey: String, settings: Settings): EngineMode = engineOverride?.mode
+        ?: if (apiKey.isNotBlank() && settings.aiConversation) EngineMode.AI else EngineMode.SCRIPT
 
     fun startTalk(scenario: Scenario, level: Level) {
         talk?.close()
@@ -131,12 +145,13 @@ class HanasoApp : Application() {
         }
     }
 
-    /** フレーズ帳に保存する。訳がなければ裏で翻訳して埋める */
+    /** フレーズ帳に保存する。訳がなければ台本から探すか、AI 会話中なら裏で翻訳して埋める */
     fun savePhrase(en: String, ja: String, source: String): SavedPhrase? {
-        val p = store.addPhrase(en, ja, source) ?: return null
-        if (p.ja.isBlank()) {
+        val p = store.addPhrase(en, ja.ifBlank { ScriptEngine.lookupJa(en).orEmpty() }, source) ?: return null
+        val engine = engine()
+        if (p.ja.isBlank() && engine.mode == EngineMode.AI) {
             scope.launch {
-                runCatching { engine().translate(en) }.onSuccess { tr ->
+                runCatching { engine.translate(en) }.onSuccess { tr ->
                     store.updatePhrase(p.id) { it.copy(ja = tr.ja) }
                 }
             }

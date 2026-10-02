@@ -44,8 +44,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.twatanabe1436.hanaso.core.Catalog
 import io.github.twatanabe1436.hanaso.core.Category
+import io.github.twatanabe1436.hanaso.core.EngineMode
 import io.github.twatanabe1436.hanaso.core.Level
 import io.github.twatanabe1436.hanaso.core.Scenario
+import io.github.twatanabe1436.hanaso.core.Scripts
 
 /** レベルを選ぶ3択 */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -174,6 +176,7 @@ fun ScenariosScreen(onOpen: (Scenario) -> Unit) {
 fun ScenarioIntroSheet(
     scenario: Scenario,
     initialLevel: Level,
+    mode: EngineMode,
     onPlay: (String) -> Unit,
     onDismiss: () -> Unit,
     onStart: (Level) -> Unit,
@@ -221,8 +224,25 @@ fun ScenarioIntroSheet(
                 SheetHeading("🔑 使えるフレーズ")
                 scenario.keyPhrases.forEach { p -> PhraseRow(p.en, p.ja, onPlay = { onPlay(p.en) }) }
             }
-            SheetHeading("レベル")
-            LevelSelector(level, { level = it })
+            if (mode == EngineMode.SCRIPT) {
+                val steps = Scripts.forScenario(scenario).steps
+                SheetHeading("📖 台本のお題（全 ${steps.size} 問）")
+                steps.forEachIndexed { i, step ->
+                    Row(Modifier.padding(vertical = 3.dp)) {
+                        Text("${i + 1}.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, modifier = Modifier.width(24.dp))
+                        Text(step.taskJa, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                Text(
+                    "台本モード：お題を英語で言うと、相手が台本どおりに返事をします（AI なし・無料）。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+            } else {
+                SheetHeading("レベル")
+                LevelSelector(level, { level = it })
+            }
             Spacer(Modifier.height(20.dp))
             Button(onClick = { onStart(level) }, modifier = Modifier.fillMaxWidth().height(52.dp)) {
                 Icon(AppIcons.Mic, contentDescription = null)

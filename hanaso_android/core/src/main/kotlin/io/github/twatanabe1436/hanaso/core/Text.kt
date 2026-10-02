@@ -80,6 +80,9 @@ object SpeechScorer {
 
     private fun spokenTokens(text: String) = words(text).flatMap { normalizeWord(it) }
 
+    /** 比較用の単語列 (小文字・句読点なし・短縮形は展開・20 以下の数字は英単語) */
+    fun tokens(text: String): List<String> = spokenTokens(text)
+
     /** 大文字小文字と句読点を無視して同じ文か */
     fun sameSentence(a: String, b: String) = spokenTokens(a) == spokenTokens(b)
 

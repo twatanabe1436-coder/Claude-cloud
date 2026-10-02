@@ -87,6 +87,8 @@ data class Feedback(
     val explanationJa: String,
     val mistakes: List<Mistake>,
     val completedMissions: List<String>,
+    /** 台本モードのみ: お手本 (natural) のどの単語を言えたか */
+    val matchScore: SpeechScore? = null,
 )
 
 data class HintSuggestion(val labelJa: String, val en: String, val ja: String)
