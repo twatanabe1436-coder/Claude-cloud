@@ -49,18 +49,27 @@ import io.github.twatanabe1436.hanaso.core.Level
 import io.github.twatanabe1436.hanaso.core.Scenario
 import io.github.twatanabe1436.hanaso.core.Scripts
 
-/** レベルを選ぶ3択 */
+/** CEFR レベル (A1〜C2) を選ぶ。選んだレベルの目安も表示する */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LevelSelector(selected: Level, onSelect: (Level) -> Unit, modifier: Modifier = Modifier) {
-    SingleChoiceSegmentedButtonRow(modifier.fillMaxWidth()) {
-        Level.entries.forEachIndexed { i, level ->
-            SegmentedButton(
-                selected = level == selected,
-                onClick = { onSelect(level) },
-                shape = SegmentedButtonDefaults.itemShape(index = i, count = Level.entries.size),
-            ) { Text(level.ja) }
+    Column(modifier) {
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            Level.entries.forEachIndexed { i, level ->
+                SegmentedButton(
+                    selected = level == selected,
+                    onClick = { onSelect(level) },
+                    shape = SegmentedButtonDefaults.itemShape(index = i, count = Level.entries.size),
+                    icon = {},
+                ) { Text(level.name, maxLines = 1) }
+            }
         }
+        Text(
+            "${selected.displayJa}：${selected.descriptionJa}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 6.dp),
+        )
     }
 }
 
@@ -152,7 +161,7 @@ fun ScenariosScreen(onOpen: (Scenario) -> Unit) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 FilterChip(selected = levelFilter == null, onClick = { levelFilter = null }, label = { Text("すべて") })
                 Level.entries.forEach { lv ->
-                    FilterChip(selected = levelFilter == lv.name, onClick = { levelFilter = lv.name }, label = { Text(lv.ja) })
+                    FilterChip(selected = levelFilter == lv.name, onClick = { levelFilter = lv.name }, label = { Text(lv.name) })
                 }
             }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -197,7 +206,13 @@ fun ScenarioIntroSheet(
                 Spacer(Modifier.width(14.dp))
                 Column {
                     Text(scenario.titleJa, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Text(scenario.titleEn, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(scenario.titleEn, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        scenario.level?.let {
+                            Spacer(Modifier.width(8.dp))
+                            LevelBadge(it)
+                        }
+                    }
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -224,6 +239,7 @@ fun ScenarioIntroSheet(
                 SheetHeading("🔑 使えるフレーズ")
                 scenario.keyPhrases.forEach { p -> PhraseRow(p.en, p.ja, onPlay = { onPlay(p.en) }) }
             }
+            val scriptRolePlay = mode == EngineMode.SCRIPT && !scenario.isFreeTalk
             if (mode == EngineMode.SCRIPT) {
                 val steps = Scripts.forScenario(scenario).steps
                 SheetHeading("📖 台本のお題（全 ${steps.size} 問）")
@@ -234,17 +250,29 @@ fun ScenarioIntroSheet(
                     }
                 }
                 Text(
-                    "台本モード：お題を英語で言うと、相手が台本どおりに返事をします（AI なし・無料）。",
+                    "台本モード：お題を英語で言うと、相手が台本どおりに返事をします（AI なし・無料）。" +
+                        (scenario.level?.let { "台本のレベルは ${it.displayJa} です。" } ?: ""),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 6.dp),
                 )
+                if (scenario.isFreeTalk) {
+                    SheetHeading("回答例のレベル")
+                    LevelSelector(level, { level = it })
+                }
             } else {
-                SheetHeading("レベル")
+                SheetHeading(scenario.level?.let { "レベル（このシナリオの目安は ${it.name}）" } ?: "レベル")
                 LevelSelector(level, { level = it })
+                Text(
+                    "AI が単語や文の長さをこのレベルに合わせて話します。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
             }
             Spacer(Modifier.height(20.dp))
-            Button(onClick = { onStart(level) }, modifier = Modifier.fillMaxWidth().height(52.dp)) {
+            // 台本モードのロールプレイは台本のレベルで始める (自分のレベル設定は変えない)
+            Button(onClick = { onStart(if (scriptRolePlay) scenario.level ?: level else level) }, modifier = Modifier.fillMaxWidth().height(52.dp)) {
                 Icon(AppIcons.Mic, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text("会話をはじめる", style = MaterialTheme.typography.titleMedium)

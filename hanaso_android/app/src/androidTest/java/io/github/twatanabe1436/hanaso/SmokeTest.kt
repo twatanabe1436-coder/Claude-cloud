@@ -2,6 +2,7 @@ package io.github.twatanabe1436.hanaso
 
 import android.Manifest
 import android.os.ParcelFileDescriptor
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasSetTextAction
@@ -90,9 +91,7 @@ class SmokeTest {
         waitUntil("最初のセリフが読み上げられない") { speaker.spoken.contains(opener) }
 
         // マイクで話す → 自動送信 → 返事 (読み上げ) → 添削 (修正ありは自動で開く) → ミッション
-        input.queue.add("i want a medium latte with oat milk")
-        compose.onNodeWithContentDescription("話す").performClick()
-        waitForText("i want a medium latte with oat milk")
+        speak("i want a medium latte with oat milk")
         waitForText("I see! Could you tell me a little more about that?")
         waitForText("修正あり")
         waitForText("I'd like a medium latte with oat milk.")
@@ -153,6 +152,8 @@ class SmokeTest {
 
         input.queue.add("for here please")
         compose.onAllNodesWithText("言ってみる").onFirst().performClick()
+        waitForText("for here please")
+        compose.onNodeWithText("言い終わったらタップ").performClick()
         waitForText("すばらしい！")
         compose.onNodeWithText("100").assertExists()
         screenshot("07_phrases")
@@ -161,6 +162,8 @@ class SmokeTest {
         compose.onNodeWithText("🃏 フラッシュカード").performClick()
         waitForText("英語で言ってみよう")
         compose.onNodeWithContentDescription("話す").performClick()
+        waitForText("hello world")
+        compose.onNodeWithContentDescription("話し終わる").performClick()
         waitForText("聞き取り: “hello world”")
         screenshot("08_flashcard")
         compose.onNodeWithContentDescription("閉じる").performClick()
@@ -184,6 +187,7 @@ class SmokeTest {
         waitForText("i went to the gym today", timeoutMs = 8_000)
         waitForText("it was really fun", timeoutMs = 8_000)
         waitUntil("3回目の聞き取りが始まらない", 8_000) { input.starts >= 3 }
+        assertEquals("ハンズフリーは無音で自動的に区切る", false, input.lastUntilStopped)
         compose.onNodeWithText("🎯 ミッション").assertDoesNotExist()
         screenshot("10_handsfree")
 
@@ -211,24 +215,31 @@ class SmokeTest {
         waitForText("Can I get a medium latte, please?")
 
         // お題どおりに言う → 台本の返事が来て次のお題へ、ミッション達成
+        // マイクをもう一度押すまでは、黙っても回答が確定しない
         input.queue.add("can I get a medium latte please")
         compose.onNodeWithContentDescription("話す").performClick()
+        waitForText("can I get a medium latte please")
+        Thread.sleep(1_500)
+        assertTrue("もう一度押す前に確定してしまった", app.talk?.listening == true)
+        assertEquals(true, input.lastUntilStopped)
+        compose.onAllNodesWithText("Sure! Would you like regular milk, or would you prefer oat or almond milk?").assertCountEquals(0)
+        screenshot("11_listening")
+        compose.onNodeWithContentDescription("話し終わる").performClick()
         waitForText("Sure! Would you like regular milk, or would you prefer oat or almond milk?")
         waitForText("Great!")
         waitForText("📖 お題 2 / 5")
         waitForText("1 / 3")
         waitUntil("返事が読み上げられない") { speaker.spoken.any { it.contains("oat or almond milk") } }
-        screenshot("11_script_talk")
+        screenshot("12_script_talk")
 
         // 関係ないことを言う → 聞き返され、お手本つきで「もう一度」
         waitUntil("返事が終わらない") { app.talk?.busy == false }
-        input.queue.add("hello")
-        compose.onNodeWithContentDescription("話す").performClick()
+        speak("hello")
         waitForText("Sorry, could you say that again?")
         waitForText("もう一度")
         waitForText("言い直し 1 / 2")
         waitForText("📖 お手本")
-        screenshot("12_script_retry")
+        screenshot("13_script_retry")
 
         // ヒント (お手本) をそのまま送る
         waitUntil("返事が終わらない") { app.talk?.busy == false }
@@ -249,13 +260,13 @@ class SmokeTest {
         waitForText("🎉 台本を最後まで話せました！", timeoutMs = 8_000)
         waitForText("振り返りを見る")
         waitForText("3 / 3")
-        screenshot("13_script_done")
+        screenshot("14_script_done")
 
         compose.onNodeWithText("振り返りを見る").performClick()
         waitForText("おつかれさまでした！")
         waitForText("スコア")
         waitForText("すばらしい！台本をほぼ完ぺきに話せました")
-        screenshot("14_script_summary")
+        screenshot("15_script_summary")
         val record = app.store.sessions.value.single()
         assertEquals(6, record.learnerTurns)
         assertEquals(3, record.missionsDone)
@@ -265,7 +276,15 @@ class SmokeTest {
         compose.onNode(hasScrollAction()).performScrollToNode(hasText("ホームへ"))
         compose.onNodeWithText("ホームへ").performClick()
         waitForText("📖 台本モード（AI なし・無料）")
-        screenshot("15_script_home")
+        screenshot("16_script_home")
+    }
+
+    /** マイクで話して、もう一度押して確定する (既定の「マイクをもう一度押すまで聞き続ける」) */
+    private fun speak(text: String) {
+        input.queue.add(text)
+        compose.onNodeWithContentDescription("話す").performClick()
+        waitForText(text)
+        compose.onNodeWithContentDescription("話し終わる").performClick()
     }
 
     private fun waitForText(text: String, timeoutMs: Long = 5_000) {

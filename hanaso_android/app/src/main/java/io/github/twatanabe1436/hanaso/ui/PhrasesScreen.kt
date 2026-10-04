@@ -162,7 +162,7 @@ private fun FlashcardsDialog(deck: List<SavedPhrase>, onResult: (SavedPhrase, In
         app.speaker.stop()
         listening = true
         live = ""
-        app.speechInput.start(1500, object : SpeechInput.Callback {
+        app.speechInput.start(1500, app.store.settings.value.tapToFinish, object : SpeechInput.Callback {
             override fun onPartial(text: String) {
                 live = text
             }

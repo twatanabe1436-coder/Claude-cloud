@@ -10,30 +10,42 @@ import kotlinx.coroutines.flow.StateFlow
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.CopyOnWriteArrayList
 
-/** テスト用の音声認識: queue に入れた英文を、少しずつ認識したふりをして返す */
+/**
+ * テスト用の音声認識: queue に入れた英文を、少しずつ認識したふりをして返す。
+ * untilStopped (マイクをもう一度押すまで聞き続ける) のときは、stop() が呼ばれるまで結果を返さない。
+ */
 class FakeSpeechInput : SpeechInput {
     val queue = ConcurrentLinkedDeque<String>()
     @Volatile var starts = 0
+    @Volatile var lastUntilStopped: Boolean? = null
     private val main = Handler(Looper.getMainLooper())
     private var current: SpeechInput.Callback? = null
+    private var heard = ""
 
     override val available: Boolean = true
 
-    override fun start(silenceMs: Long, callback: SpeechInput.Callback) {
+    override fun start(silenceMs: Long, untilStopped: Boolean, callback: SpeechInput.Callback) {
         cancel()
         current = callback
+        heard = ""
         starts++
+        lastUntilStopped = untilStopped
         val text = queue.pollFirst()
         if (text == null) {
-            // 何も話さない → 少し待って「聞き取れず」で終わる
-            main.postDelayed({ finish(callback, "") }, 500)
+            // 何も話さない → 少し待って「聞き取れず」で終わる (聞き続けるときは stop() を待つ)
+            if (!untilStopped) main.postDelayed({ finish(callback, "") }, 500)
             return
         }
         val words = text.split(" ")
         words.indices.forEach { i ->
-            main.postDelayed({ if (current === callback) callback.onPartial(words.take(i + 1).joinToString(" ")) }, 80L * (i + 1))
+            main.postDelayed({
+                if (current === callback) {
+                    heard = words.take(i + 1).joinToString(" ")
+                    callback.onPartial(heard)
+                }
+            }, 80L * (i + 1))
         }
-        main.postDelayed({ finish(callback, text) }, 80L * (words.size + 2))
+        if (!untilStopped) main.postDelayed({ finish(callback, text) }, 80L * (words.size + 2))
     }
 
     private fun finish(callback: SpeechInput.Callback, text: String) {
@@ -44,7 +56,7 @@ class FakeSpeechInput : SpeechInput {
 
     override fun stop() {
         val cb = current ?: return
-        finish(cb, "")
+        finish(cb, heard)
     }
 
     override fun cancel() {

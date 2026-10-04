@@ -56,6 +56,8 @@ internal object StructuredJson {
         "improvePoints" to arrayOf(objectOf("pointJa" to STRING, "exampleEn" to STRING)),
         "keyPhrases" to arrayOf(PHRASE),
         "nextChallengeJa" to STRING,
+        "estimatedLevel" to enumOf(Level.entries.map { it.name }),
+        "levelCommentJa" to STRING,
     )
 
     /** スキーマを SDK の出力形式にする */
@@ -106,6 +108,8 @@ internal object StructuredJson {
             improvePoints = n.items("improvePoints").map { ImprovePoint(it.str("pointJa"), it.str("exampleEn")) },
             keyPhrases = n.items("keyPhrases").map { it.phrase() },
             nextChallengeJa = n.str("nextChallengeJa"),
+            estimatedLevel = Level.entries.firstOrNull { it.name == n.str("estimatedLevel").uppercase() },
+            levelCommentJa = n.str("levelCommentJa"),
         )
     }
 }

@@ -183,9 +183,12 @@ fun SettingsScreen() {
             Hint("「高品質」は Claude Opus 5.5、「速い・安い」は Claude Sonnet 5.5 を使います。返事の速さと料金を優先するなら「速い・安い」がおすすめです。")
         }
 
-        SettingsCard("英語レベル") {
+        SettingsCard("英語レベル（CEFR）") {
             LevelSelector(settings.level, { level -> update { it.copy(level = level) } })
-            Hint("AI 会話で、AI の話す文の長さや語彙が変わります（台本モードの台本は変わりません）。")
+            Hint(
+                "Epop などで調べた自分のレベルを選んでください。AI 会話では、相手の単語・文法・文の長さがこのレベルに合います。" +
+                    "台本モードでは、このレベルに近いロールプレイがおすすめに出て、フリートークの回答例もこのレベルに近いものから表示されます。",
+            )
         }
 
         SettingsCard("音声") {
@@ -226,9 +229,16 @@ fun SettingsScreen() {
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
-            ToggleRow("ハンズフリー会話", "AI が話し終わると自動でマイクが ON になり、電話のように会話が続きます。", settings.handsFree) { v ->
-                update { it.copy(handsFree = v) }
-            }
+            ToggleRow(
+                "マイクをもう一度押すまで聞き続ける",
+                "オンにすると、途中で黙っても回答が確定しません。言い終わったらマイクをもう一度押してください。1 分間なにも話さないと自動で止まります。",
+                settings.tapToFinish,
+            ) { v -> update { it.copy(tapToFinish = v) } }
+            ToggleRow(
+                "ハンズフリー会話",
+                "相手が話し終わると自動でマイクが ON になり、電話のように会話が続きます（話し終わりは無音で自動判定します）。",
+                settings.handsFree,
+            ) { v -> update { it.copy(handsFree = v) } }
             ToggleRow("話し終わったら自動で送信", "オフにすると、認識した文を確認・修正してから送信できます。", settings.autoSend) { v ->
                 update { it.copy(autoSend = v) }
             }
@@ -239,7 +249,7 @@ fun SettingsScreen() {
                 update { it.copy(autoTranslate = v) }
             }
             Text("話し終わりの待ち時間", modifier = Modifier.padding(top = 8.dp))
-            Hint("考えながら話すなら長めがおすすめ（端末の音声認識によっては効かないことがあります）。")
+            Hint("自動で話し終わりを判定するとき（ハンズフリー会話、または上の「聞き続ける」がオフのとき）に使います。考えながら話すなら長めがおすすめです（端末の音声認識によっては効かないことがあります）。")
             SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(top = 4.dp)) {
                 SILENCE_CHOICES.forEachIndexed { i, (ms, label) ->
                     SegmentedButton(
@@ -259,7 +269,7 @@ fun SettingsScreen() {
         }
 
         Text(
-            "Hanaso v0.2.0・${if (app.modeFor(apiKey, settings) == EngineMode.AI) "AI: ${settings.model}" else "台本モード"}",
+            "Hanaso v0.3.0・${if (app.modeFor(apiKey, settings) == EngineMode.AI) "AI: ${settings.model}" else "台本モード"}",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,

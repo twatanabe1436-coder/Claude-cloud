@@ -43,6 +43,7 @@ import io.github.twatanabe1436.hanaso.data.Totals
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.abs
 
 @Composable
 fun HomeScreen(
@@ -55,7 +56,8 @@ fun HomeScreen(
     onSeeAll: () -> Unit,
 ) {
     val pick = Stats.todaysPick(level)
-    val roleplays = Catalog.scenarios.filter { it.level == level } + Catalog.scenarios.filter { it.level != level }
+    // 自分のレベルに近い順 (同じ距離なら、やさしいほうが先)
+    val roleplays = Catalog.scenarios.sortedWith(compareBy({ abs((it.level ?: level).ordinal - level.ordinal) }, { it.level?.ordinal ?: 0 }))
 
     LazyColumn(
         modifier = Modifier.testTag("home_list"),
@@ -68,7 +70,7 @@ fun HomeScreen(
                     Text("Hanaso", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
                     Text("話して、英語が口から出るように", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                SmallChip(text = "レベル: ${level.ja}", onClick = onOpenSettings)
+                SmallChip(text = "レベル: ${level.displayJa}", onClick = onOpenSettings)
             }
         }
         item { ModeCard(mode, onOpenSettings) }

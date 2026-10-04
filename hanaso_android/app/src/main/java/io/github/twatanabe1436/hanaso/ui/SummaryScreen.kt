@@ -97,7 +97,7 @@ fun SummaryScreen(result: FinishedSession, onAgain: () -> Unit, onHome: () -> Un
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Emoji(scenario.emoji, size = 40)
                 Text("おつかれさまでした！", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                Text("${scenario.titleJa}・${result.level.ja}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("${scenario.titleJa}・${result.level.displayJa}", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         if (summary is LoadState.Ready) {
@@ -107,6 +107,30 @@ fun SummaryScreen(result: FinishedSession, onAgain: () -> Unit, onHome: () -> Un
                         ScoreRing(summary.value.score)
                         Spacer(Modifier.height(10.dp))
                         Text(summary.value.headlineJa, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                    }
+                }
+            }
+            summary.value.estimatedLevel?.let { estimated ->
+                item {
+                    Card {
+                        Heading("📏 今回の英語レベル（推定）")
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(estimated.name, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
+                            Spacer(Modifier.width(10.dp))
+                            Column {
+                                Text(estimated.ja, fontWeight = FontWeight.Bold)
+                                Text("選んだレベル: ${result.level.displayJa}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                        if (summary.value.levelCommentJa.isNotBlank()) {
+                            Text(summary.value.levelCommentJa, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 6.dp))
+                        }
+                        Text(
+                            "AI による目安です。短い会話では正確に判定できないことがあります。",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
                     }
                 }
             }

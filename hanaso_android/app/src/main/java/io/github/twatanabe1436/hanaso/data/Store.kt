@@ -12,7 +12,7 @@ import org.json.JSONObject
 import java.util.UUID
 
 data class Settings(
-    val level: Level = Level.BEGINNER,
+    val level: Level = Level.DEFAULT,
     /** 読み上げ速度 (1.0 が標準) */
     val speechRate: Float = 0.95f,
     /** AI のセリフを自動で読み上げる */
@@ -23,6 +23,8 @@ data class Settings(
     val handsFree: Boolean = false,
     /** 話し終わったら自動で送信 */
     val autoSend: Boolean = true,
+    /** マイクをもう一度押すまで聞き続ける (途中で黙っても確定しない)。ハンズフリー会話では無音で自動判定 */
+    val tapToFinish: Boolean = true,
     /** AI のセリフに自動で日本語訳を付ける */
     val autoTranslate: Boolean = false,
     /** 話し終わりと判断するまでの無音時間 */
@@ -90,6 +92,7 @@ class Store(context: Context) {
             put("showText", s.showText)
             put("handsFree", s.handsFree)
             put("autoSend", s.autoSend)
+            put("tapToFinish", s.tapToFinish)
             put("autoTranslate", s.autoTranslate)
             put("silenceMs", s.silenceMs)
             put("model", s.model)
@@ -107,6 +110,7 @@ class Store(context: Context) {
             showText = o.optBoolean("showText", d.showText),
             handsFree = o.optBoolean("handsFree", d.handsFree),
             autoSend = o.optBoolean("autoSend", d.autoSend),
+            tapToFinish = o.optBoolean("tapToFinish", d.tapToFinish),
             autoTranslate = o.optBoolean("autoTranslate", d.autoTranslate),
             silenceMs = o.optLong("silenceMs", d.silenceMs),
             model = o.optString("model", d.model).ifBlank { d.model },

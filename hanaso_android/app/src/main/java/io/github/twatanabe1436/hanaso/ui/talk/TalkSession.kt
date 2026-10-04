@@ -236,8 +236,10 @@ class TalkSession(
         speaker.stop()
         listening = true
         liveText = ""
-        status = "聞いています — 話し終わると自動で送信されます"
-        input.start(settings.silenceMs, object : SpeechInput.Callback {
+        // ハンズフリー会話は話し終わり (無音) で自動的に区切る。それ以外は設定に従う
+        val untilStopped = settings.tapToFinish && !settings.handsFree
+        status = if (untilStopped) "聞いています — 言い終わったら、もう一度マイクを押してください" else "聞いています — 話し終わると自動で止まります"
+        input.start(settings.silenceMs, untilStopped, object : SpeechInput.Callback {
             override fun onPartial(text: String) {
                 liveText = text
             }

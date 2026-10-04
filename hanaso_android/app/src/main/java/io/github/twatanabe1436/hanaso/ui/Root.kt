@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.twatanabe1436.hanaso.HanasoApp
 import io.github.twatanabe1436.hanaso.Screen
+import io.github.twatanabe1436.hanaso.core.EngineMode
 import io.github.twatanabe1436.hanaso.core.Scenario
 import io.github.twatanabe1436.hanaso.ui.talk.TalkScreen
 
@@ -135,7 +136,9 @@ fun HanasoRoot(app: HanasoApp) {
                 onDismiss = { intro = null },
                 onStart = { level ->
                     intro = null
-                    if (level != settings.level) app.store.updateSettings { it.copy(level = level) }
+                    // 台本モードのロールプレイは台本のレベルで始まるので、自分のレベル設定は変えない
+                    val scriptRolePlay = app.modeFor(apiKey, settings) == EngineMode.SCRIPT && !scenario.isFreeTalk
+                    if (!scriptRolePlay && level != settings.level) app.store.updateSettings { it.copy(level = level) }
                     app.startTalk(scenario, level)
                 },
             )

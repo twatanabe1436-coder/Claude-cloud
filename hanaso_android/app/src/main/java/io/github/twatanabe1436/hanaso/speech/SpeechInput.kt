@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -30,8 +31,13 @@ interface SpeechInput {
         fun onCancel() {}
     }
 
-    /** 認識を始める。すでに動いているものは中断される (onCancel)。 */
-    fun start(silenceMs: Long, callback: Callback)
+    /**
+     * 認識を始める。すでに動いているものは中断される (onCancel)。
+     *
+     * @param untilStopped true なら、途中で黙っても終わらずに聞き続け、[stop] が呼ばれたときに
+     *   それまでの発話をまとめて返す。false なら、話し終わり (無音) で自動的に終わる。
+     */
+    fun start(silenceMs: Long, untilStopped: Boolean, callback: Callback)
 
     /** 話し終わったことにして、ここまでの結果で終える */
     fun stop()
@@ -48,32 +54,94 @@ class AndroidSpeechInput(context: Context) : SpeechInput {
     override val available: Boolean
         get() = SpeechRecognizer.isRecognitionAvailable(context)
 
-    /** 1回の認識。前回の認識からの遅れたコールバックが混ざらないよう、毎回新しい SpeechRecognizer を使う */
-    private inner class Session(val callback: SpeechInput.Callback) {
-        val recognizer: SpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
-        var partial = ""
-        var finished = false
-
-        fun finish(text: String?) {
-            if (finished) return
-            finished = true
-            if (active === this) active = null
-            // コールバックの中で destroy しないよう、少し後で片付ける
-            main.post { recognizer.destroy() }
-            if (text == null) callback.onCancel() else callback.onEnd(text.trim())
-        }
+    override fun start(silenceMs: Long, untilStopped: Boolean, callback: SpeechInput.Callback) {
+        cancel()
+        val session = Session(callback, silenceMs, untilStopped)
+        active = session
+        session.begin()
     }
 
-    override fun start(silenceMs: Long, callback: SpeechInput.Callback) {
-        cancel()
-        val session = Session(callback)
-        active = session
-        val r = session.recognizer
-        r.setRecognitionListener(object : RecognitionListener {
+    override fun stop() {
+        active?.stop()
+    }
+
+    override fun cancel() {
+        active?.cancel()
+    }
+
+    private fun now() = SystemClock.elapsedRealtime()
+
+    /**
+     * 1回の音声入力。Android の音声認識は無音で自動的に区切られるので、untilStopped のときは
+     * 区切られるたびに認識をやり直して、発話をつなげていく。
+     * 区切りごとに新しい SpeechRecognizer を使い、前の区切りの遅れたコールバックは無視する。
+     */
+    private inner class Session(
+        val callback: SpeechInput.Callback,
+        val silenceMs: Long,
+        val untilStopped: Boolean,
+    ) {
+        private var recognizer: SpeechRecognizer? = null
+
+        /** 確定した区切りの文 */
+        private val segments = mutableListOf<String>()
+
+        /** 認識中の区切りの途中経過 */
+        private var partial = ""
+        private var finished = false
+        private var stopRequested = false
+        private var lastHeardAt = now()
+        private var busyRetries = 0
+
+        /** ここまでに聞き取った文 (区切りをつなげたもの) */
+        private fun text() = (segments + partial).filter { it.isNotBlank() }.joinToString(" ").trim()
+
+        fun begin() {
+            if (finished) return
+            val r = SpeechRecognizer.createSpeechRecognizer(context)
+            recognizer = r
+            partial = ""
+            r.setRecognitionListener(Listener(r))
+            try {
+                r.startListening(intent())
+            } catch (e: RuntimeException) {
+                callback.onError("音声認識を開始できませんでした。もう一度お試しください。")
+                finish(if (untilStopped) text().ifEmpty { null } else null)
+            }
+        }
+
+        fun stop() {
+            if (finished) return
+            stopRequested = true
+            val r = recognizer
+            if (r == null) {
+                // 区切りと区切りの間 (やり直す直前) なら、ここまでの文で終える
+                finish(text())
+                return
+            }
+            r.stopListening()
+            // 結果を返さない認識エンジンもあるので、少し待っても来なければ、ここまでの文で終える
+            main.postDelayed({ finish(text()) }, STOP_TIMEOUT_MS)
+        }
+
+        fun cancel() {
+            if (finished) return
+            recognizer?.cancel()
+            finish(null)
+        }
+
+        private inner class Listener(val r: SpeechRecognizer) : RecognitionListener {
+            /** いま動いている区切りのコールバックか (古い区切りや終了後のものは無視する) */
+            private val current: Boolean get() = !finished && recognizer === r
+
             override fun onReadyForSpeech(params: Bundle?) {}
-            override fun onBeginningOfSpeech() {}
+
+            override fun onBeginningOfSpeech() {
+                if (current) lastHeardAt = now()
+            }
+
             override fun onRmsChanged(rmsdB: Float) {
-                if (!session.finished) callback.onLevel(rmsdB)
+                if (current) callback.onLevel(rmsdB)
             }
 
             override fun onBufferReceived(buffer: ByteArray?) {}
@@ -81,58 +149,105 @@ class AndroidSpeechInput(context: Context) : SpeechInput {
 
             override fun onPartialResults(partialResults: Bundle?) {
                 val text = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
-                if (!text.isNullOrBlank() && !session.finished) {
-                    session.partial = text
-                    callback.onPartial(text)
+                if (!text.isNullOrBlank() && current) {
+                    partial = text
+                    lastHeardAt = now()
+                    callback.onPartial(text())
                 }
             }
 
             override fun onResults(results: Bundle?) {
+                if (!current) return
                 val text = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
-                session.finish(if (text.isNullOrBlank()) session.partial else text)
+                segmentEnded(if (text.isNullOrBlank()) partial else text)
             }
 
             override fun onError(error: Int) {
+                if (!current) return
                 when (error) {
-                    // 何も聞こえなかった / 聞き取れなかった
-                    SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> session.finish(session.partial)
-                    // stop の後に来ることがある
-                    SpeechRecognizer.ERROR_CLIENT -> session.finish(session.partial)
-                    else -> {
-                        if (!session.finished) callback.onError(errorMessage(error))
-                        session.finish(null)
+                    // 何も聞こえなかった / 聞き取れなかった / stop の後に来ることがある
+                    SpeechRecognizer.ERROR_NO_MATCH, SpeechRecognizer.ERROR_SPEECH_TIMEOUT, SpeechRecognizer.ERROR_CLIENT ->
+                        segmentEnded(partial)
+                    // やり直しが早すぎると「使用中」になることがあるので、少し待ってもう一度
+                    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> if (untilStopped && !stopRequested && busyRetries < 3) {
+                        busyRetries++
+                        release()
+                        restartLater(BUSY_RETRY_MS)
+                    } else {
+                        fail(error)
                     }
+                    else -> fail(error)
                 }
             }
 
             override fun onEvent(eventType: Int, params: Bundle?) {}
-        })
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+        }
+
+        /** 1つの区切りが終わった: 聞き続けるなら次の区切りへ、そうでなければ結果を返す */
+        private fun segmentEnded(said: String) {
+            if (said.isNotBlank()) {
+                segments += said.trim()
+                lastHeardAt = now()
+                busyRetries = 0
+            }
+            partial = ""
+            release()
+            when {
+                !untilStopped || stopRequested -> finish(text())
+                // 長いあいだ何も話さなければ、聞き続けるのをやめる (区切りのたびにやり直し続けないように)
+                now() - lastHeardAt > MAX_IDLE_MS -> finish(text())
+                else -> restartLater(RESTART_DELAY_MS)
+            }
+        }
+
+        private fun restartLater(delayMs: Long) {
+            main.postDelayed({ if (!finished && !stopRequested) begin() }, delayMs)
+        }
+
+        private fun fail(error: Int) {
+            if (finished) return
+            callback.onError(errorMessage(error))
+            // 聞き続けていた場合は、それまでに聞き取れた分を残す
+            finish(if (untilStopped) text().ifEmpty { null } else null)
+        }
+
+        private fun release() {
+            val r = recognizer ?: return
+            recognizer = null
+            // コールバックの中で destroy しないよう、少し後で片付ける
+            main.post { r.destroy() }
+        }
+
+        private fun finish(result: String?) {
+            if (finished) return
+            finished = true
+            release()
+            if (active === this) active = null
+            if (result == null) callback.onCancel() else callback.onEnd(result.trim())
+        }
+
+        private fun intent() = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US")
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
-            // 考えながら話す学習者向けに、話し終わりの判定を少し長めにする (対応していない認識エンジンもある)
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, silenceMs)
-            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, silenceMs)
+            // 話し終わりと判断するまでの無音時間。聞き続けるときは区切りが少なくなるよう長めにする
+            // (対応していない認識エンジンもある。その場合も区切りのたびにやり直すので聞き続けられる)
+            val silence = if (untilStopped) maxOf(silenceMs, CONTINUOUS_SILENCE_MS) else silenceMs
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, silence)
+            putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, silence)
             putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.packageName)
         }
-        try {
-            r.startListening(intent)
-        } catch (e: RuntimeException) {
-            callback.onError("音声認識を開始できませんでした。もう一度お試しください。")
-            session.finish(null)
-        }
     }
 
-    override fun stop() {
-        active?.recognizer?.stopListening()
-    }
+    private companion object {
+        const val CONTINUOUS_SILENCE_MS = 6_000L
+        const val RESTART_DELAY_MS = 150L
+        const val BUSY_RETRY_MS = 500L
+        const val STOP_TIMEOUT_MS = 2_500L
 
-    override fun cancel() {
-        val session = active ?: return
-        session.recognizer.cancel()
-        session.finish(null)
+        /** 聞き続けるモードで、何も話さないまま待つ最大時間 */
+        const val MAX_IDLE_MS = 60_000L
     }
 
     private fun errorMessage(error: Int): String = when (error) {

@@ -3,6 +3,7 @@ package io.github.twatanabe1436.hanaso.core
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
@@ -107,6 +108,10 @@ class ScriptEngine(private val delayMs: Long = 20) : AiEngine {
             map
         }
 
+        /** お手本・回答例を、学習者のレベルに近い順に並べる (レベルの付いていないものは元の順のまま) */
+        fun examplesFor(step: ScriptStep, level: Level): List<Phrase> =
+            step.answers.sortedBy { a -> a.level?.let { abs(it.ordinal - level.ordinal) } ?: 0 }
+
         /** 台本にある英文なら日本語訳を返す */
         fun lookupJa(en: String): String? = dictionary[Stats.normalizePhrase(en)]
 
@@ -190,10 +195,12 @@ class ScriptEngine(private val delayMs: Long = 20) : AiEngine {
         val p = progress(conversation)
         val steps = p.script.steps
         if (p.finished) {
-            return ScriptTask(steps.size, steps.size, "台本クリア！", open = false, retries = 0, example = steps.last().answers.first(), finished = true)
+            val example = examplesFor(steps.last(), conversation.level).first()
+            return ScriptTask(steps.size, steps.size, "台本クリア！", open = false, retries = 0, example = example, finished = true)
         }
         val step = steps[p.step]
-        return ScriptTask(p.step + 1, steps.size, step.taskJa, step.open, p.retries, step.answers.first(), finished = false)
+        val example = examplesFor(step, conversation.level).first()
+        return ScriptTask(p.step + 1, steps.size, step.taskJa, step.open, p.retries, example, finished = false)
     }
 
     /** 学習者の最後の発話に対する相手のセリフ */
@@ -257,7 +264,8 @@ class ScriptEngine(private val delayMs: Long = 20) : AiEngine {
         return Feedback(
             rating = j.rating,
             corrected = last.said,
-            natural = j.closest.en,
+            // 自由回答は、学習者のレベルに合った回答例を見せる
+            natural = if (step.open) examplesFor(step, conversation.level).first().en else j.closest.en,
             explanationJa = explanation,
             mistakes = emptyList(),
             completedMissions = missions,
@@ -272,8 +280,14 @@ class ScriptEngine(private val delayMs: Long = 20) : AiEngine {
             return conversation.scenario.keyPhrases.take(3).map { HintSuggestion("覚えたいフレーズ", it.en, it.ja) }
         }
         val step = p.script.steps[p.step]
-        return step.answers.take(3).mapIndexed { i, a ->
+        val level = conversation.level
+        return examplesFor(step, level).take(3).mapIndexed { i, a ->
             val label = when {
+                step.open && a.level != null -> when {
+                    a.level.band == level.band -> "あなたのレベル（${a.level.band}）"
+                    a.level.band < level.band -> "やさしめ（${a.level.band}）"
+                    else -> "チャレンジ（${a.level.band}）"
+                }
                 step.open -> "例${i + 1}"
                 i == 0 -> "お手本"
                 else -> "言い換え"
@@ -327,7 +341,7 @@ class ScriptEngine(private val delayMs: Long = 20) : AiEngine {
         val improve = mutableListOf<ImprovePoint>()
         // 合格できなかった・言い直したお題を優先し、次に「通じたけどお手本と違う」お題
         steps.indices.filter { i -> byStep[i].orEmpty().let { it.isNotEmpty() && (passes[i] == null || it.size > 1) } }
-            .forEach { i -> improve += ImprovePoint("「${steps[i].taskJa}」はこう言えます。", steps[i].answers.first().en) }
+            .forEach { i -> improve += ImprovePoint("「${steps[i].taskJa}」はこう言えます。", examplesFor(steps[i], conversation.level).first().en) }
         steps.indices.filter { i -> !steps[i].open && passes[i]?.judgement?.rating == Rating.GOOD && byStep[i].orEmpty().size == 1 }
             .forEach { i -> improve += ImprovePoint("「${steps[i].taskJa}」はお手本の言い方も覚えよう。", steps[i].answers.first().en) }
         if (improve.isEmpty()) {
@@ -335,7 +349,7 @@ class ScriptEngine(private val delayMs: Long = 20) : AiEngine {
             if (alt != null) improve += ImprovePoint("同じ内容を、別の言い方でも言えるようにしてみよう。", alt.answers[1].en)
         }
 
-        val keyPhrases = conversation.scenario.keyPhrases.ifEmpty { steps.map { it.answers.first() } }.take(4)
+        val keyPhrases = conversation.scenario.keyPhrases.ifEmpty { steps.map { examplesFor(it, conversation.level).first() } }.take(4)
         val next = when {
             !p.finished -> "次は最後のお題まで話してみよう。詰まったら「ヒント」でお手本を確認できます。"
             score >= 85 -> "次はヒントを見ずに、言い換えの表現でも話してみよう。"

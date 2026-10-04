@@ -5,6 +5,13 @@ package io.github.twatanabe1436.hanaso.core
 
 private fun p(en: String, ja: String) = Phrase(en, ja)
 
+// フリートークの回答例のレベル (A: A1-A2、B: B1-B2、C: C1-C2 の代表)
+private fun a(en: String, ja: String) = Phrase(en, ja, Level.A2)
+
+private fun b(en: String, ja: String) = Phrase(en, ja, Level.B1)
+
+private fun c(en: String, ja: String) = Phrase(en, ja, Level.C1)
+
 object Scripts {
     val all: Map<String, Script> = listOf(
         Script(
@@ -823,7 +830,295 @@ object Scripts {
             ),
         ),
 
-        // ---- フリートーク (お題はすべて自由回答) ----
+        Script(
+            scenarioId = "negotiation",
+            openerJa = "本日はお時間をいただきありがとうございます。ご存じのとおり来月で契約更新ですが、コスト上昇のため、今年は 10% の値上げをご提案しています。いかがでしょうか？",
+            steps = listOf(
+                ScriptStep(
+                    taskJa = "10% の値上げは受け入れにくいと、理由を添えて伝えよう",
+                    mission = "pushback",
+                    keywords = listOf(
+                        "difficult|hard|tough|can't|not able|unable|too much|too high|expensive|concern*|justify",
+                        "budget|cost*|justify|price|increase|percent",
+                    ),
+                    answers = listOf(
+                        p("I understand where you're coming from, but a ten percent increase would be hard to justify with our current budget.", "おっしゃることはわかりますが、今の予算では 10% の値上げを正当化するのは難しいです。"),
+                        p("To be honest, ten percent is too much for us. Our budget for next year has already been cut.", "正直、10% は厳しいです。来年の予算はすでに削られています。"),
+                    ),
+                    tipJa = "I understand where you're coming from, but 〜. は、相手の立場を認めつつ反対するときの丁寧な言い方です。",
+                    reply = p(
+                        "I hear you. Our costs have gone up quite a bit, though. Is there any flexibility on your side?",
+                        "おっしゃることはわかります。ただ、こちらのコストもかなり上がっているんです。そちらで何か調整の余地はありますか？",
+                    ),
+                ),
+                ScriptStep(
+                    taskJa = "2 年契約にする代わりに、今の価格を据え置けないか提案しよう",
+                    mission = "counter",
+                    keywords = listOf("two year*|longer|multi year*|multiyear"),
+                    answers = listOf(
+                        p("Would you be willing to keep the current price if we committed to a two-year contract?", "2 年契約にするなら、今の価格を据え置いていただけますか？"),
+                        p("What if we signed for two years? Could you keep the price the same?", "2 年契約にしたらどうでしょう？価格を据え置けますか？"),
+                    ),
+                    tipJa = "Would you be willing to 〜 if we …? は、条件付きで譲歩を求める交渉の定番表現です。",
+                    reply = p(
+                        "Hmm, that's an interesting offer. I can't freeze the price completely, but for a two-year deal I could bring the increase down to three percent.",
+                        "うーん、興味深いご提案ですね。完全に据え置くことはできませんが、2 年契約なら値上げを 3% に抑えられます。",
+                    ),
+                ),
+                ScriptStep(
+                    taskJa = "3% ならまだ高いので、研修を無料で付けてもらえないか聞こう",
+                    mission = "counter",
+                    keywords = listOf("training|support|onboarding", "free|include*|no extra|no charge|throw in|add*|at no"),
+                    answers = listOf(
+                        p("Three percent is closer, but could you include the training sessions at no extra cost?", "3% なら近づきましたが、研修を追加料金なしで付けていただけませんか？"),
+                        p("If you could throw in free training for our team, I think we could make three percent work.", "チーム向けの研修を無料で付けてもらえるなら、3% でなんとかなると思います。"),
+                    ),
+                    tipJa = "throw in は「おまけで付ける」。make 〜 work は「〜で何とかする」という交渉でよく使う表現です。",
+                    reply = p(
+                        "Okay, I think we can do that. Three percent, a two-year contract, and free training for up to twenty people.",
+                        "わかりました、それならできると思います。3% の値上げ、2 年契約、20 名までの無料研修ですね。",
+                    ),
+                ),
+                ScriptStep(
+                    taskJa = "合意した内容をくり返して確認しよう",
+                    mission = "agree",
+                    keywords = listOf("confirm|so|recap|just to|make sure|correct|right|summar*", "three|two year*|training|twenty"),
+                    answers = listOf(
+                        p("Just to confirm, that's a three percent increase, a two-year contract, and free training for twenty people, right?", "確認ですが、3% の値上げ、2 年契約、20 名分の無料研修ということでよろしいですね？"),
+                        p("So, to recap: three percent, two years, and training included. Is that correct?", "まとめると、3%、2 年、研修込み。合っていますか？"),
+                    ),
+                    tipJa = "Just to confirm, 〜, right? / So, to recap, 〜 で合意内容を確認すると、行き違いを防げます。",
+                    reply = p("That's right. I'll send over the updated contract by Friday.", "その通りです。金曜までに修正した契約書をお送りします。"),
+                ),
+                ScriptStep(
+                    taskJa = "社内で確認してから返事をする、と伝えて締めくくろう",
+                    mission = "agree",
+                    keywords = listOf("manager|team|boss|internally|run it by|check|get back|review|confirm|discuss"),
+                    answers = listOf(
+                        p("Great. I'll need to run it by my manager, but I'll get back to you early next week.", "ありがとうございます。上司に確認する必要がありますが、来週の早いうちにお返事します。"),
+                        p("Sounds good. Let me check with my team, and I'll get back to you by Wednesday.", "いいですね。チームに確認して、水曜までにお返事します。"),
+                    ),
+                    tipJa = "run it by 〜 は「〜に確認を取る」、get back to you は「改めて連絡する」という定番表現です。",
+                    reply = p("Perfect. Thanks for a productive conversation. Talk soon!", "完ぺきです。有意義なお話をありがとうございました。ではまた！"),
+                ),
+            ),
+        ),
+        Script(
+            scenarioId = "complaint",
+            openerJa = "もしもし、注文の件で電話しています。買った机が 1 週間遅れて届いて、箱を開けたら天板にひどい傷があったんです。正直、本当に腹が立っています。",
+            steps = listOf(
+                ScriptStep(
+                    taskJa = "お客さんの気持ちに寄り添って、丁寧に謝ろう",
+                    mission = "empathize",
+                    keywords = listOf("sorry|apologi*"),
+                    answers = listOf(
+                        p("I'm so sorry to hear that. I completely understand your frustration.", "それは大変申し訳ございません。お怒りはごもっともです。"),
+                        p("I sincerely apologize for the delay and the damage. That must be really disappointing.", "遅延と破損について心からお詫び申し上げます。さぞがっかりされたことと思います。"),
+                    ),
+                    tipJa = "I completely understand your frustration. で、相手の気持ちを受け止めていることを伝えられます。",
+                    reply = p("Thank you. I just want this fixed. I've been waiting for this desk for weeks.", "ありがとう。とにかく何とかしてほしいんです。何週間もこの机を待っていたんですよ。"),
+                ),
+                ScriptStep(
+                    taskJa = "注文番号を教えてもらおう",
+                    mission = "details",
+                    keywords = listOf("order*|number"),
+                    answers = listOf(
+                        p("Of course. May I have your order number, please?", "もちろんです。ご注文番号をいただけますか？"),
+                        p("Let me look into it right away. Could you tell me your order number?", "すぐにお調べします。ご注文番号を教えていただけますか？"),
+                    ),
+                    tipJa = "May I have 〜? / Could you tell me 〜? は、情報を丁寧にたずねる定番の形です。",
+                    reply = p("Sure, it's four eight two seven one.", "はい、48271 です。"),
+                ),
+                ScriptStep(
+                    taskJa = "傷の大きさや、机が使える状態かをたずねよう",
+                    mission = "details",
+                    keywords = listOf("scratch*|damage*|size|big|bad|large|deep|usable|use|condition"),
+                    answers = listOf(
+                        p("Thank you. Could you tell me how big the scratch is? Is the desk still usable?", "ありがとうございます。傷の大きさを教えていただけますか？机はまだ使える状態ですか？"),
+                        p("I see. How bad is the damage? Can you still use the desk?", "承知しました。破損の程度はいかがですか？机はまだお使いになれますか？"),
+                    ),
+                    tipJa = "How bad is the damage? は「どの程度の破損か」を聞く自然な言い方です。",
+                    reply = p(
+                        "It's about ten centimeters long and pretty deep. I can use it, but I paid for a brand-new desk, not a damaged one.",
+                        "10 センチくらいで、かなり深い傷です。使えなくはないですが、払ったのは新品の机の代金で、傷物のためじゃありません。",
+                    ),
+                ),
+                ScriptStep(
+                    taskJa = "新しい机をすぐに無料で送ることを提案しよう",
+                    mission = "solution",
+                    keywords = listOf("replace*|new one|new desk|brand new|send|ship|exchange|refund"),
+                    answers = listOf(
+                        p("You're absolutely right. I'd be happy to send you a replacement right away, free of charge.", "おっしゃる通りです。すぐに無料で代わりの品をお送りいたします。"),
+                        p("That's not acceptable, and I'm sorry. We'll ship a brand-new desk to you this week and pick up the damaged one.", "あってはならないことで、申し訳ございません。今週中に新品の机をお送りし、破損品は引き取りに伺います。"),
+                    ),
+                    tipJa = "I'd be happy to 〜. は「喜んで〜いたします」と前向きに対応を申し出る表現です。",
+                    reply = p("Okay, that would be great. But how do I know it won't arrive late again?", "それは助かります。でも、また遅れないってどうしてわかるんですか？"),
+                ),
+                ScriptStep(
+                    taskJa = "速達で送ることと、届く日を約束しよう",
+                    mission = "solution",
+                    keywords = listOf("express|priority|expedite*|fast*|guarantee|promise|by|within|tomorrow|friday|days|track*"),
+                    answers = listOf(
+                        p("I'll upgrade it to express shipping, so it'll arrive by Friday. I'll also email you the tracking number.", "速達に切り替えますので、金曜までに届きます。追跡番号もメールでお送りします。"),
+                        p("We'll send it by express delivery at no cost, and I'll personally make sure it arrives within three days.", "無料で速達にいたします。3 日以内に届くよう、私が責任を持って確認します。"),
+                    ),
+                    tipJa = "I'll personally make sure 〜. で「私が責任を持って〜します」と誠意を示せます。",
+                    reply = p("Alright, thank you. I appreciate you taking care of this so quickly.", "わかりました、ありがとう。すぐに対応してくれて感謝します。"),
+                ),
+            ),
+        ),
+        Script(
+            scenarioId = "debate",
+            openerJa = "大企業が全員に週 5 日の出社を義務づけるっていう記事、見た？個人的には、そろそろそうなるべきだと思うな。あなたはどう思う？",
+            steps = listOf(
+                ScriptStep(
+                    taskJa = "賛成か反対か、理由とともに自分の立場をはっきり述べよう",
+                    mission = "stance",
+                    keywords = listOf(
+                        "think|argue|believe|disagree|agree|opinion|view|take|personally|honestly|opposite|mistake",
+                        "because|since|productiv*|flexib*|commut*|balance|trust|focus|ignore*|treat*|better|home|remote|efficien*",
+                    ),
+                    answers = listOf(
+                        p("Honestly, I'd argue the opposite. Forcing people back full-time ignores how productive many of them have been at home.", "正直、私は逆の意見です。全員をフルタイムで出社させるのは、多くの人が在宅で成果を上げてきた事実を無視しています。"),
+                        p("I can see why companies want it, but I think a blanket rule is a mistake, because it treats very different jobs as if they were the same.", "企業がそうしたい理由はわかりますが、一律のルールは間違いだと思います。まったく違う仕事を同じように扱うことになるからです。"),
+                    ),
+                    tipJa = "I'd argue 〜. は自分の主張を論理的に打ち出す表現。a blanket rule は「一律のルール」です。",
+                    reply = p(
+                        "Fair enough, but what about younger employees? They learn so much just by sitting next to experienced colleagues.",
+                        "なるほど。でも若手社員はどう？経験のある同僚の隣に座っているだけで、すごく多くを学ぶでしょう。",
+                    ),
+                ),
+                ScriptStep(
+                    taskJa = "その点は認めつつ、それでも全面出社は必要ないと反論しよう",
+                    mission = "concede",
+                    keywords = listOf(
+                        "fair|true|point|admit|grant|agree|valid|right",
+                        "but|however|although|that said|still|yet|whereas",
+                    ),
+                    answers = listOf(
+                        p("That's a fair point, but it doesn't follow that everyone needs to be in five days a week. Mentoring can happen on two or three set days.", "それはもっともですが、だからといって全員が週 5 日出社する必要があることにはなりません。指導は決まった週 2、3 日でもできます。"),
+                        p("I'll grant you that, but the solution is better mentoring, not mandatory attendance for everyone.", "そこは認めますが、解決策はより良い指導であって、全員の出社の義務化ではありません。"),
+                    ),
+                    tipJa = "it doesn't follow that 〜 は「だからといって〜とは限らない」。I'll grant you that は「そこは認めるよ」という譲歩の表現です。",
+                    reply = p(
+                        "Hmm, but don't you think companies have a point about culture too? It's hard to build trust over video calls.",
+                        "うーん、でも企業文化については会社側の言い分にも一理あると思わない？ビデオ通話で信頼関係を築くのは難しいよ。",
+                    ),
+                ),
+                ScriptStep(
+                    taskJa = "「問題は場所ではなく〜だ」という形で論点を整理して反論しよう",
+                    mission = "nuance",
+                    keywords = listOf("not so much|not about|rather than|less about|more about|real issue|real problem|the point is|it's about|problem is|issue is|not the"),
+                    answers = listOf(
+                        p("I think it's not so much about where people work as it is about how teams communicate.", "問題はどこで働くかというより、チームがどう意思疎通するかだと思います。"),
+                        p("To me, the real issue isn't the office itself, but whether managers know how to lead remote teams.", "私にとって本当の問題はオフィスそのものではなく、管理職がリモートのチームを率いる方法を知っているかどうかです。"),
+                    ),
+                    tipJa = "It's not so much about A as it is about B. で「A というよりむしろ B の問題だ」と論点を整理できます。",
+                    reply = p("Okay, that's an interesting way to put it. So where would you draw the line?", "なるほど、面白い言い方だね。じゃあ、どこで線を引く？"),
+                ),
+                ScriptStep(
+                    taskJa = "条件付きの折衷案を示そう（例：チームごとに決める）",
+                    mission = "nuance",
+                    keywords = listOf("depend*|if|unless|case by case|each team|flexib*|hybrid|balance|compromise|middle|as long as"),
+                    answers = listOf(
+                        p("I'd let each team decide, as long as they agree on a few core days to meet in person.", "対面で集まるコアの日をいくつか決めることを条件に、チームごとに決めさせると思います。"),
+                        p("If anything, a hybrid model with clear expectations would give companies most of the benefits without the resentment.", "むしろ、期待値をはっきりさせたハイブリッド型なら、反発を招かずに利点のほとんどを得られるでしょう。"),
+                    ),
+                    tipJa = "as long as 〜（〜する限り）や If anything（むしろ）で、条件付きの主張に厚みが出ます。",
+                    reply = p("That actually sounds pretty reasonable. I might have to rethink my position a bit.", "それ、実はかなり筋が通ってるね。私も少し考え直さないといけないかも。"),
+                ),
+                ScriptStep(
+                    taskJa = "相手の意見も尊重して、議論を気持ちよく締めくくろう",
+                    keywords = listOf("interesting|enjoy*|appreciate|respect|agree to disagree|food for thought|perspective|thank*|fun|great"),
+                    answers = listOf(
+                        p("I guess we'll have to agree to disagree on some of it, but I really enjoyed this conversation.", "一部は意見が違うままだけど、この会話はとても楽しかったよ。"),
+                        p("Thanks for pushing back. It's given me a lot of food for thought, too.", "反論してくれてありがとう。私にとってもいい考える材料になったよ。"),
+                    ),
+                    tipJa = "agree to disagree は「意見の違いを認め合う」、food for thought は「考える材料」という慣用表現です。",
+                    reply = p("Same here. Let's pick this up again over coffee next week!", "こちらこそ。来週コーヒーでも飲みながら続きを話そう！"),
+                ),
+            ),
+        ),
+        Script(
+            scenarioId = "qanda",
+            openerJa = "興味深い発表をありがとうございました。30% という数字について伺いたいのですが、具体的にどう測定したのですか？また、期間はどのくらいですか？",
+            steps = listOf(
+                ScriptStep(
+                    taskJa = "データの測り方と期間を説明しよう（リリース前後の 6 か月を比較）",
+                    mission = "explain",
+                    keywords = listOf(
+                        "compar*|measur*|before|after|track*|analy*",
+                        "month*|period|year*|week*|data|logs|calls",
+                    ),
+                    answers = listOf(
+                        p("That's a great question. We compared the six months before and after the launch, using our call center logs.", "いい質問ですね。コールセンターの記録を使って、リリース前後の 6 か月を比較しました。"),
+                        p("We measured it by comparing support call volumes over six months before and after the app went live.", "アプリ公開前後の 6 か月間の問い合わせ件数を比較して測定しました。"),
+                    ),
+                    tipJa = "That's a great question. と一呼吸おくと、落ち着いて答えを組み立てられます。",
+                    reply = p(
+                        "I see. But couldn't other factors explain the drop? For example, seasonal changes or a smaller customer base?",
+                        "なるほど。でも、ほかの要因でも説明できませんか？例えば季節の変動や顧客数の減少などで。",
+                    ),
+                ),
+                ScriptStep(
+                    taskJa = "ほかの要因の可能性を認めつつ、どう対策したかを説明しよう",
+                    mission = "limit",
+                    keywords = listOf(
+                        "fair|point|possible|true|admit|right|valid|rule out|agree",
+                        "control*|adjust*|account*|normaliz*|per customer|same months|season*|compar*",
+                    ),
+                    answers = listOf(
+                        p("That's a fair point. We did adjust for seasonality by comparing the same months year over year, but we can't completely rule out other factors.", "ごもっともです。前年同月と比較して季節要因は調整しましたが、ほかの要因を完全には否定できません。"),
+                        p("You're right that it's possible. To account for that, we looked at calls per customer rather than total calls.", "その可能性はおっしゃる通りです。それを考慮して、総件数ではなく顧客あたりの件数を見ました。"),
+                    ),
+                    tipJa = "We can't completely rule out 〜. は「〜の可能性を完全には否定できない」と、限界を率直に認める表現です。",
+                    reply = p("That's helpful. And do you know whether customer satisfaction changed over the same period?", "参考になります。同じ期間で顧客満足度が変わったかどうかはご存じですか？"),
+                ),
+                ScriptStep(
+                    taskJa = "手元にデータがないので、あとで共有すると伝えよう",
+                    mission = "handle",
+                    keywords = listOf(
+                        "don't have|not sure|not with me|on hand|off the top|don't know",
+                        "follow up|get back|share|send|email|after",
+                    ),
+                    answers = listOf(
+                        p("I don't have that figure with me, but I'd be happy to follow up with you after the session.", "その数字は手元にありませんが、セッションのあとで喜んでご連絡します。"),
+                        p("Off the top of my head, I'm not sure, so I'd rather not guess. Let me send you the exact numbers by email.", "すぐにはわからないので、推測で答えるのは控えます。正確な数字をメールでお送りします。"),
+                    ),
+                    tipJa = "I'd rather not guess. で「憶測では答えない」と誠実さを示せます。off the top of my head は「今すぐ思いつく範囲では」。",
+                    reply = p(
+                        "Of course, that would be great. One last question: do you think this approach would work in other industries?",
+                        "ええ、ぜひ。最後にひとつ。この手法はほかの業界でも通用すると思いますか？",
+                    ),
+                ),
+                ScriptStep(
+                    taskJa = "条件付きで「通用する」と答え、業界の例を挙げよう",
+                    mission = "handle",
+                    keywords = listOf(
+                        "depend*|if|as long as|provided|likely|probably|principle|generally|believe|think",
+                        "bank*|insurance|retail|health*|telecom*|industr*|sector|compan*|airline*",
+                    ),
+                    answers = listOf(
+                        p("I believe so, as long as the company handles a lot of repetitive questions, like banks or telecom providers.", "銀行や通信会社のように、繰り返しの多い問い合わせを扱う企業であれば、通用すると思います。"),
+                        p("In principle, yes, but it depends on how complex the customers' problems are. Insurance might be a good next test case.", "原則としてはそうですが、顧客の問題の複雑さによります。保険業界は次の検証先として良いかもしれません。"),
+                    ),
+                    tipJa = "as long as 〜 や provided that 〜 で条件を付けると、断定しすぎない説得力のある答えになります。",
+                    reply = p("Very interesting. Thank you, that answers my question.", "とても興味深いです。ありがとうございます、よくわかりました。"),
+                ),
+                ScriptStep(
+                    taskJa = "質問へのお礼を言って、質疑応答を締めくくろう",
+                    keywords = listOf("thank*|appreciate|grateful"),
+                    answers = listOf(
+                        p("Thank you for those thoughtful questions. If anyone would like to discuss this further, please feel free to find me afterward.", "示唆に富むご質問をありがとうございました。さらに議論したい方は、このあと気軽に声をかけてください。"),
+                        p("I appreciate the challenging questions. I think we're out of time, so thank you all for listening.", "鋭いご質問に感謝します。時間になりましたので、ご清聴ありがとうございました。"),
+                    ),
+                    tipJa = "thoughtful questions（示唆に富む質問）と言うと、質問者への敬意が伝わります。",
+                    reply = p("Thank you! Let's give our speaker another round of applause.", "ありがとうございました！もう一度、発表者に拍手をお願いします。"),
+                ),
+            ),
+        ),
+
+        // ---- フリートーク (お題はすべて自由回答。回答例は A・B・C の 3 段階で、学習者のレベルに近いものから見せる) ----
         Script(
             scenarioId = "free:free",
             openerJa = "こんにちは！アレックスです。お話しできてうれしいです。今日はここまでどんな一日？",
@@ -832,8 +1127,9 @@ object Scripts {
                     taskJa = "今日の調子を答えよう",
                     open = true,
                     answers = listOf(
-                        p("It's going pretty well, thanks. How about you?", "けっこういい感じだよ、ありがとう。あなたは？"),
-                        p("I'm a little tired, but I'm good.", "ちょっと疲れてるけど、元気だよ。"),
+                        a("I'm good, thank you. How are you?", "元気です、ありがとう。あなたは？"),
+                        b("It's going pretty well, thanks. How about you?", "けっこういい感じだよ、ありがとう。あなたは？"),
+                        c("Honestly, it's been a bit hectic, but I managed to squeeze in a walk this morning, so I can't complain.", "正直ちょっとバタバタしてるけど、朝に散歩する時間はなんとか作れたから、文句は言えないかな。"),
                     ),
                     tipJa = "How about you? と聞き返すと、会話のキャッチボールになります。",
                     reply = p("I'm doing great, thanks! I just had a really good cup of coffee. So, where are you from?", "元気だよ、ありがとう！さっきすごくおいしいコーヒーを飲んだんだ。ところで、出身はどこ？"),
@@ -842,8 +1138,9 @@ object Scripts {
                     taskJa = "出身地や住んでいる場所を答えよう",
                     open = true,
                     answers = listOf(
-                        p("I'm from Osaka, Japan.", "日本の大阪出身です。"),
-                        p("I live in Tokyo. It's a busy but fun city.", "東京に住んでいます。にぎやかだけど楽しい街です。"),
+                        a("I'm from Osaka. I live in Tokyo now.", "大阪出身です。今は東京に住んでいます。"),
+                        b("I live in Tokyo. It's a busy but fun city.", "東京に住んでいます。にぎやかだけど楽しい街です。"),
+                        c("I grew up in Osaka, but I've been living in Tokyo for about ten years, so it feels like home now.", "大阪で育ちましたが、東京に住んで 10 年ほどになるので、今ではこちらが地元のように感じます。"),
                     ),
                     tipJa = "I'm from 〜. は出身、I live in 〜. は今住んでいる場所です。",
                     reply = p("Oh, nice! I've always wanted to visit Japan. What do you usually do on weekends?", "へえ、いいね！ずっと日本に行ってみたいと思ってるんだ。週末はふだん何をしてるの？"),
@@ -852,8 +1149,9 @@ object Scripts {
                     taskJa = "週末によくすることを話そう",
                     open = true,
                     answers = listOf(
-                        p("I usually go to the gym and watch movies at home.", "たいていジムに行って、家で映画を見ます。"),
-                        p("I often go to cafes with my friends.", "よく友達とカフェに行きます。"),
+                        a("I often watch movies at home.", "よく家で映画を見ます。"),
+                        b("I usually go to the gym and then watch movies at home.", "たいていジムに行って、そのあと家で映画を見ます。"),
+                        c("It depends on my mood, but I usually try to get outside, whether it's hiking or just exploring a new neighborhood.", "気分によりますが、ハイキングでも新しい街の散策でも、できるだけ外に出るようにしています。"),
                     ),
                     tipJa = "usually（たいてい）や often（よく）で、ふだんの習慣を表せます。",
                     reply = p("That sounds nice. By the way, why are you learning English?", "いいね。ところで、どうして英語を勉強してるの？"),
@@ -862,8 +1160,9 @@ object Scripts {
                     taskJa = "英語を勉強している理由を話そう",
                     open = true,
                     answers = listOf(
-                        p("I want to travel abroad and talk with local people.", "海外旅行に行って、現地の人と話したいからです。"),
-                        p("I need English for my job.", "仕事で英語が必要なんです。"),
+                        a("I want to travel and talk to people.", "旅行して人と話したいからです。"),
+                        b("I need English for my job, and I also want to travel abroad.", "仕事で英語が必要で、海外旅行もしたいからです。"),
+                        c("Mainly for work, since I deal with overseas clients, but I'd also love to be able to express myself without holding back.", "主に海外のお客さんとやりとりする仕事のためですが、遠慮せずに自分を表現できるようになりたいという気持ちもあります。"),
                     ),
                     tipJa = "I want to 〜. / I need 〜 for …. で目的や理由を説明できます。",
                     reply = p(
@@ -875,8 +1174,9 @@ object Scripts {
                     taskJa = "今週やりたいことを 1 つ話そう",
                     open = true,
                     answers = listOf(
-                        p("I want to try a new restaurant near my house.", "家の近くの新しいレストランに行ってみたいです。"),
-                        p("I'm going to see a movie with my friend on Saturday.", "土曜日に友達と映画を見に行く予定です。"),
+                        a("I want to eat at a new restaurant.", "新しいレストランで食事したいです。"),
+                        b("I'm going to see a movie with my friend on Saturday.", "土曜日に友達と映画を見に行く予定です。"),
+                        c("I'm hoping to finally finish a novel I started last month. I keep getting distracted, so this week I'm determined.", "先月読み始めた小説をようやく読み終えたいです。つい気が散ってしまうので、今週こそはと決めています。"),
                     ),
                     tipJa = "be going to 〜 は「〜する予定」。決まっている予定を話すときに使います。",
                     reply = p("That sounds fun! Well, it was really nice talking with you. Let's chat again soon!", "楽しそう！お話しできて本当に楽しかったよ。またすぐ話そうね！"),
@@ -891,18 +1191,20 @@ object Scripts {
                     taskJa = "今日したことを話そう（過去形で）",
                     open = true,
                     answers = listOf(
-                        p("I went to work and had a long meeting.", "仕事に行って、長い会議がありました。"),
-                        p("I cleaned my room and went shopping.", "部屋を掃除して、買い物に行きました。"),
+                        a("I went to work today.", "今日は仕事に行きました。"),
+                        b("I went to work and had a long meeting in the afternoon.", "仕事に行って、午後に長い会議がありました。"),
+                        c("I spent most of the day preparing for a presentation, and then I treated myself to a nice dinner.", "一日の大半をプレゼンの準備に費やして、そのあと自分へのごほうびにおいしい夕食を食べました。"),
                     ),
-                    tipJa = "今日のことは went / had / ate のように過去形で話します。",
+                    tipJa = "今日のことは went / had / spent のように過去形で話します。",
                     reply = p("Oh, nice! Thanks for sharing. What did you have for lunch today?", "へえ、いいね！教えてくれてありがとう。今日のお昼は何を食べた？"),
                 ),
                 ScriptStep(
                     taskJa = "お昼に食べたものを話そう",
                     open = true,
                     answers = listOf(
-                        p("I had ramen at a small shop near my office.", "会社の近くの小さなお店でラーメンを食べました。"),
-                        p("I just had a sandwich at my desk.", "デスクでサンドイッチを食べただけです。"),
+                        a("I ate ramen for lunch.", "お昼にラーメンを食べました。"),
+                        b("I had ramen at a small shop near my office.", "会社の近くの小さなお店でラーメンを食べました。"),
+                        c("I just grabbed a sandwich and ate it at my desk, which I know isn't great, but I was swamped.", "サンドイッチを買ってデスクで食べただけです。よくないのはわかっていますが、とても忙しかったので。"),
                     ),
                     tipJa = "「食べた」は ate でも had でも OK。会話では had がよく使われます。",
                     reply = p("Yum, that sounds good! Did anything interesting happen today?", "おいしそう！今日、何か面白いことはあった？"),
@@ -911,18 +1213,20 @@ object Scripts {
                     taskJa = "今日あった面白いこと・うれしかったことを話そう",
                     open = true,
                     answers = listOf(
-                        p("I saw a really cute dog on my way home.", "帰り道でとてもかわいい犬を見ました。"),
-                        p("Not really, but my coworker brought some sweets for everyone.", "特にないけど、同僚がみんなにお菓子を持ってきてくれました。"),
+                        a("I saw a cute dog on the street.", "道でかわいい犬を見ました。"),
+                        b("My coworker brought some sweets for everyone. That made me happy.", "同僚がみんなにお菓子を持ってきてくれて、うれしかったです。"),
+                        c("A client I'd been struggling with actually thanked me today, which was a pleasant surprise.", "手こずっていたお客さんが今日お礼を言ってくれて、うれしい驚きでした。"),
                     ),
-                    tipJa = "on my way home（帰り道で）や on my way to work（通勤中に）は日常の出来事を話すのに便利です。",
+                    tipJa = "That made me happy. で「それでうれしくなった」と気持ちを添えられます。",
                     reply = p("Ha, I love that! Little things like that can make your day. How are you feeling right now?", "はは、いいね！そういう小さなことで一日が楽しくなるよね。いまはどんな気分？"),
                 ),
                 ScriptStep(
                     taskJa = "いまの気分を、理由と一緒に話そう",
                     open = true,
                     answers = listOf(
-                        p("I'm a little tired because I worked late.", "遅くまで働いたので少し疲れています。"),
-                        p("I feel relaxed because tomorrow is a holiday.", "明日は休みなので、リラックスしています。"),
+                        a("I'm tired because I worked a lot.", "たくさん働いたので疲れています。"),
+                        b("I feel relaxed because tomorrow is a holiday.", "明日は休みなので、リラックスしています。"),
+                        c("I'm a bit drained, to be honest, but in a good way, since I got a lot done.", "正直少し疲れていますが、たくさん片付いたので、いい意味での疲れです。"),
                     ),
                     tipJa = "I'm 〜 because …. で、気分と理由をセットで伝えましょう。",
                     reply = p("That makes sense. What are you going to do tonight?", "なるほどね。今夜は何をする予定？"),
@@ -931,10 +1235,11 @@ object Scripts {
                     taskJa = "今夜の予定を話そう",
                     open = true,
                     answers = listOf(
-                        p("I'm going to take a bath and go to bed early.", "お風呂に入って早めに寝るつもりです。"),
-                        p("I'm going to watch a drama on Netflix.", "ネットフリックスでドラマを見る予定です。"),
+                        a("I will take a bath and sleep early.", "お風呂に入って早く寝ます。"),
+                        b("I'm going to watch a drama on Netflix.", "ネットフリックスでドラマを見る予定です。"),
+                        c("I'm planning to cook something simple and then catch up on a podcast I've fallen behind on.", "簡単なものを作って、聞きそびれているポッドキャストを追いかけるつもりです。"),
                     ),
-                    tipJa = "be going to 〜 で「〜するつもり」と予定を話せます。",
+                    tipJa = "be going to 〜 や I'm planning to 〜 で「〜するつもり」と予定を話せます。",
                     reply = p("Sounds like a perfect evening. Thanks for telling me about your day. Talk to you soon!", "最高の夜になりそうだね。今日のことを話してくれてありがとう。またね！"),
                 ),
             ),
@@ -947,18 +1252,20 @@ object Scripts {
                     taskJa = "好きなこと・趣味を話そう",
                     open = true,
                     answers = listOf(
-                        p("I like playing the guitar.", "ギターを弾くのが好きです。"),
-                        p("I love watching anime and reading manga.", "アニメを見たり、マンガを読んだりするのが大好きです。"),
+                        a("I like playing the guitar.", "ギターを弾くのが好きです。"),
+                        b("I love watching anime and reading manga in my free time.", "時間があるときは、アニメを見たりマンガを読んだりするのが大好きです。"),
+                        c("I'm really into photography these days, especially taking pictures of old buildings around the city.", "最近は写真にはまっていて、特に街の古い建物を撮るのが好きです。"),
                     ),
-                    tipJa = "I like 〜ing. で「〜するのが好き」。love を使うと「大好き」になります。",
+                    tipJa = "I like 〜ing. で「〜するのが好き」。love を使うと「大好き」、be into 〜 で「〜にはまっている」です。",
                     reply = p("Oh, cool! How did you get into it?", "へえ、いいね！どうやってそれにはまったの？"),
                 ),
                 ScriptStep(
                     taskJa = "始めたきっかけを話そう",
                     open = true,
                     answers = listOf(
-                        p("My friend taught me when I was in high school.", "高校生のときに友達が教えてくれました。"),
-                        p("I started it a few years ago because I had a lot of free time.", "時間がたくさんあったので、数年前に始めました。"),
+                        a("My friend taught me in high school.", "高校で友達が教えてくれました。"),
+                        b("I started a few years ago because I had a lot of free time.", "時間がたくさんあったので、数年前に始めました。"),
+                        c("I got into it almost by accident, when a friend lent me an old camera and I couldn't put it down.", "友達に古いカメラを借りたら手放せなくなって、ほとんど偶然はまりました。"),
                     ),
                     tipJa = "get into 〜 は「〜にはまる」。きっかけは when や because を使って説明しましょう。",
                     reply = p("That's a great story. How often do you do it?", "いい話だね。どのくらいの頻度でやってるの？"),
@@ -967,8 +1274,9 @@ object Scripts {
                     taskJa = "どのくらいの頻度でやるか話そう",
                     open = true,
                     answers = listOf(
-                        p("I do it almost every day.", "ほぼ毎日やっています。"),
-                        p("About twice a week, usually on weekends.", "週に 2 回くらい、たいてい週末です。"),
+                        a("I do it every day.", "毎日やっています。"),
+                        b("About twice a week, usually on weekends.", "週に 2 回くらい、たいてい週末です。"),
+                        c("Whenever I can find the time, which realistically means a couple of hours on Sunday mornings.", "時間が取れるときはいつでも。現実的には日曜の朝の 2 時間ほどです。"),
                     ),
                     tipJa = "頻度は every day / twice a week / once a month のように表します。",
                     reply = p("Wow, nice! What do you like most about it?", "わあ、いいね！一番好きなところはどこ？"),
@@ -977,8 +1285,9 @@ object Scripts {
                     taskJa = "一番好きなところを話そう",
                     open = true,
                     answers = listOf(
-                        p("It helps me relax after a long day.", "長い一日のあとにリラックスできるところです。"),
-                        p("I can meet a lot of people who like the same things.", "同じものが好きな人とたくさん出会えるところです。"),
+                        a("It is fun, and I can relax.", "楽しくて、リラックスできます。"),
+                        b("It helps me relax after a long day.", "長い一日のあとにリラックスできるところです。"),
+                        c("It forces me to slow down and notice details I'd normally walk right past.", "いつもなら素通りしてしまう細かいことに、立ち止まって気づかせてくれるところです。"),
                     ),
                     tipJa = "It helps me 〜. で「〜するのに役立つ」と良さを説明できます。",
                     reply = p("I totally get that. I play the piano a little myself. Is there anything new you want to try?", "すごくわかる。私も少しピアノを弾くんだ。何か新しく挑戦したいことはある？"),
@@ -987,8 +1296,9 @@ object Scripts {
                     taskJa = "新しく挑戦したいことを話そう",
                     open = true,
                     answers = listOf(
-                        p("I want to try surfing someday.", "いつかサーフィンに挑戦したいです。"),
-                        p("I'd like to learn how to cook Italian food.", "イタリア料理の作り方を習いたいです。"),
+                        a("I want to try surfing.", "サーフィンをやってみたいです。"),
+                        b("I'd like to learn how to cook Italian food.", "イタリア料理の作り方を習いたいです。"),
+                        c("I've always wanted to try pottery, partly because working with my hands would balance out my desk job.", "ずっと陶芸をやってみたいと思っています。手を動かすことが、デスクワークとのバランスになりそうだからです。"),
                     ),
                     tipJa = "I'd like to learn how to 〜. で「〜のやり方を学びたい」と言えます。",
                     reply = p("That sounds amazing. I hope you get to try it soon! It was really fun talking with you.", "すてき！早く挑戦できるといいね。話せて本当に楽しかったよ。"),
@@ -1003,8 +1313,9 @@ object Scripts {
                     taskJa = "一番よかった旅行先を答えよう",
                     open = true,
                     answers = listOf(
-                        p("The best trip was to Hokkaido last winter.", "一番よかったのは去年の冬の北海道です。"),
-                        p("I went to Taiwan with my friends. It was amazing.", "友達と台湾に行きました。最高でした。"),
+                        a("I liked Hokkaido the best.", "北海道が一番よかったです。"),
+                        b("The best trip was to Taiwan with my friends last year.", "一番よかったのは、去年友達と行った台湾です。"),
+                        c("Probably the trip I took to Portugal a few years ago. It completely exceeded my expectations.", "たぶん数年前に行ったポルトガル旅行です。期待をはるかに超えていました。"),
                     ),
                     tipJa = "The best trip was to 〜. で「一番の旅行は〜」と答えられます。",
                     reply = p("Oh, I've heard great things about it! What did you do there?", "へえ、すごくいいって聞くよ！そこで何をしたの？"),
@@ -1013,8 +1324,9 @@ object Scripts {
                     taskJa = "旅先でしたことを話そう（過去形で）",
                     open = true,
                     answers = listOf(
-                        p("I went skiing and ate a lot of seafood.", "スキーをして、海鮮をたくさん食べました。"),
-                        p("We visited night markets and tried a lot of street food.", "夜市に行って、屋台の食べ物をたくさん食べました。"),
+                        a("I went skiing and ate a lot of seafood.", "スキーをして、海鮮をたくさん食べました。"),
+                        b("We visited night markets and tried a lot of street food.", "夜市に行って、屋台の食べ物をたくさん食べました。"),
+                        c("We wandered around Lisbon without much of a plan, which turned out to be the best way to see it.", "計画もあまり立てずにリスボンを歩き回りましたが、それが結局一番いい見て回り方でした。"),
                     ),
                     tipJa = "旅行の思い出は went / visited / tried など過去形で話しましょう。",
                     reply = p("That sounds so fun! What was the most memorable moment?", "すごく楽しそう！一番思い出に残っている瞬間は？"),
@@ -1023,8 +1335,9 @@ object Scripts {
                     taskJa = "一番思い出に残っていることを話そう",
                     open = true,
                     answers = listOf(
-                        p("The view from the mountain was beautiful.", "山からの景色がきれいでした。"),
-                        p("A local family invited us to dinner. They were so kind.", "地元の家族が夕食に招いてくれました。とても親切でした。"),
+                        a("The view from the mountain was beautiful.", "山からの景色がきれいでした。"),
+                        b("A local family invited us to dinner. They were so kind.", "地元の家族が夕食に招いてくれました。とても親切でした。"),
+                        c("Watching the sunset from a tiny bar by the sea, with music playing in the background. I'll never forget it.", "海辺の小さなバーで、音楽を聴きながら夕日を眺めたことです。一生忘れません。"),
                     ),
                     tipJa = "memorable は「思い出に残る」。The 〜 was beautiful. のように感想を添えましょう。",
                     reply = p("Wow, I can imagine that. Where do you want to go next?", "わあ、目に浮かぶよ。次はどこに行きたい？"),
@@ -1033,8 +1346,9 @@ object Scripts {
                     taskJa = "次に行きたい場所と理由を話そう",
                     open = true,
                     answers = listOf(
-                        p("I want to go to Italy because I love pasta and art.", "パスタと芸術が好きなので、イタリアに行きたいです。"),
-                        p("I'd like to visit New York someday to see a musical.", "いつかミュージカルを見にニューヨークに行きたいです。"),
+                        a("I want to go to Italy. I like pasta.", "イタリアに行きたいです。パスタが好きなので。"),
+                        b("I'd like to visit New York someday to see a musical.", "いつかミュージカルを見にニューヨークに行きたいです。"),
+                        c("I'm dying to go to Iceland, mainly because I'd love to see the northern lights before I get too old.", "アイスランドにすごく行きたいです。年を取りすぎる前にオーロラを見たいというのが一番の理由です。"),
                     ),
                     tipJa = "I want to go to 〜 because …. で行き先と理由をセットで話しましょう。",
                     reply = p("Great choice! Do you prefer traveling alone or with other people?", "いいね！一人旅と誰かと一緒の旅、どっちが好き？"),
@@ -1043,8 +1357,9 @@ object Scripts {
                     taskJa = "一人旅と、誰かと行く旅のどちらが好きか話そう",
                     open = true,
                     answers = listOf(
-                        p("I prefer traveling with friends because it's more fun.", "友達と行くほうが楽しいので好きです。"),
-                        p("I like traveling alone. I can go wherever I want.", "一人旅が好きです。行きたいところにどこでも行けるので。"),
+                        a("I like traveling with friends. It is more fun.", "友達との旅行が好きです。もっと楽しいので。"),
+                        b("I prefer traveling alone because I can go wherever I want.", "行きたいところにどこでも行けるので、一人旅のほうが好きです。"),
+                        c("It depends on the trip. I like going solo for cities, but for nature trips, it's nicer to share the experience.", "旅によります。街なら一人がいいですが、自然を楽しむ旅なら誰かと体験を分かち合うほうがいいです。"),
                     ),
                     tipJa = "I prefer 〜. で「〜のほうが好き」と好みを伝えられます。",
                     reply = p("That makes sense. Thanks for sharing your stories. I hope your next trip is amazing!", "なるほどね。旅の話をしてくれてありがとう。次の旅行もすてきになりますように！"),
@@ -1059,38 +1374,42 @@ object Scripts {
                     taskJa = "仕事や勉強していることを答えよう",
                     open = true,
                     answers = listOf(
-                        p("I work at an IT company in Tokyo.", "東京の IT 企業で働いています。"),
-                        p("I'm a university student. I study economics.", "大学生です。経済学を勉強しています。"),
+                        a("I work at an IT company.", "IT 企業で働いています。"),
+                        b("I'm a university student. I study economics.", "大学生です。経済学を勉強しています。"),
+                        c("I work in marketing for a mid-sized tech company, mostly handling our overseas campaigns.", "中規模の IT 企業でマーケティングをしていて、主に海外向けのキャンペーンを担当しています。"),
                     ),
-                    tipJa = "I work at 〜（会社）／ I work in 〜（業界）。学生なら I study 〜. と専攻を言いましょう。",
+                    tipJa = "I work at 〜（会社）／ I work in 〜（業界・部門）。学生なら I study 〜. と専攻を言いましょう。",
                     reply = p("Oh, interesting! What's a typical day like for you?", "へえ、面白いね！ふだんはどんな一日なの？"),
                 ),
                 ScriptStep(
                     taskJa = "ふだんの 1 日の流れを話そう",
                     open = true,
                     answers = listOf(
-                        p("I usually start work at nine and have meetings in the morning.", "たいてい 9 時に仕事を始めて、午前中は会議があります。"),
-                        p("I go to classes in the morning and work part-time in the evening.", "午前中は授業に出て、夕方はアルバイトをしています。"),
+                        a("I start work at nine and go home at six.", "9 時に仕事を始めて、6 時に帰ります。"),
+                        b("I usually have meetings in the morning and do my own work in the afternoon.", "たいてい午前は会議で、午後は自分の仕事をします。"),
+                        c("My mornings are packed with calls, so I try to block off the afternoons for work that needs real focus.", "午前は打ち合わせで埋まっているので、集中が必要な仕事のために午後は予定を入れないようにしています。"),
                     ),
-                    tipJa = "usually で習慣を、in the morning / in the evening で時間帯を表します。",
+                    tipJa = "usually で習慣を、in the morning / in the afternoon で時間帯を表します。",
                     reply = p("Sounds busy! What do you enjoy most about it?", "忙しそう！一番楽しいところは？"),
                 ),
                 ScriptStep(
                     taskJa = "楽しいこと・やりがいを話そう",
                     open = true,
                     answers = listOf(
-                        p("I enjoy working with my team.", "チームで働くのが楽しいです。"),
-                        p("I like it when I can solve difficult problems.", "難しい問題を解決できたときがうれしいです。"),
+                        a("I like my team.", "チームが好きです。"),
+                        b("I enjoy working with my team and solving problems together.", "チームで一緒に問題を解決するのが楽しいです。"),
+                        c("What I find most rewarding is seeing a project I was involved in actually make a difference for customers.", "一番やりがいを感じるのは、自分が関わったプロジェクトが実際にお客さんの役に立つのを見るときです。"),
                     ),
-                    tipJa = "I enjoy 〜ing. で「〜するのが楽しい」と言えます。",
+                    tipJa = "I enjoy 〜ing. で「〜するのが楽しい」。rewarding は「やりがいのある」です。",
                     reply = p("That's great. And what's the most challenging part?", "いいね。じゃあ一番大変なところは？"),
                 ),
                 ScriptStep(
                     taskJa = "大変なことを話そう",
                     open = true,
                     answers = listOf(
-                        p("Sometimes I have too much work, and I can't go home early.", "仕事が多すぎて、早く帰れないことがあります。"),
-                        p("Speaking English in meetings is still difficult for me.", "会議で英語を話すのがまだ難しいです。"),
+                        a("I have a lot of work. I am busy.", "仕事が多くて忙しいです。"),
+                        b("Speaking English in meetings is still difficult for me.", "会議で英語を話すのがまだ難しいです。"),
+                        c("Juggling several deadlines at once can be overwhelming, especially when priorities keep changing.", "複数の締め切りを同時にこなすのは大変です。特に優先順位がころころ変わるときは。"),
                     ),
                     tipJa = "challenging は「大変だけどやりがいがある」という前向きな響きの言葉です。",
                     reply = p("I understand. That's not easy. What do you want to do in the future?", "わかるよ。簡単じゃないよね。将来は何をしたい？"),
@@ -1099,10 +1418,11 @@ object Scripts {
                     taskJa = "将来やりたいことを話そう",
                     open = true,
                     answers = listOf(
-                        p("I want to work abroad someday.", "いつか海外で働きたいです。"),
-                        p("I'd like to start my own business in the future.", "将来は自分で事業を始めたいです。"),
+                        a("I want to work in another country.", "外国で働きたいです。"),
+                        b("I'd like to start my own business in the future.", "将来は自分で事業を始めたいです。"),
+                        c("Eventually, I'd like to move into a role where I can mentor younger colleagues and shape the team's direction.", "いずれは、後輩を育てたりチームの方向性を決めたりできる立場に就きたいです。"),
                     ),
-                    tipJa = "someday（いつか）や in the future（将来）を使って夢を話しましょう。",
+                    tipJa = "someday（いつか）や in the future / eventually（ゆくゆくは）を使って夢を話しましょう。",
                     reply = p("That's a wonderful goal. I'm sure you can do it! Thanks for chatting with me.", "すてきな目標だね。きっとできるよ！話してくれてありがとう。"),
                 ),
             ),
@@ -1115,8 +1435,9 @@ object Scripts {
                     taskJa = "数年以内にやりたいことを話そう",
                     open = true,
                     answers = listOf(
-                        p("I really want to live abroad for a year.", "1 年間海外に住んでみたいです。"),
-                        p("I want to get a better job and save money.", "もっといい仕事に就いて、お金を貯めたいです。"),
+                        a("I want to live in another country.", "外国に住みたいです。"),
+                        b("I really want to live abroad for a year.", "1 年間、本当に海外に住んでみたいです。"),
+                        c("Within the next few years, I'd love to work abroad, ideally somewhere I can use both English and my professional skills.", "数年以内に海外で働きたいです。できれば英語と仕事のスキルの両方を活かせるところで。"),
                     ),
                     tipJa = "I really want to 〜. で強い気持ちを伝えられます。",
                     reply = p("Oh, that's exciting! Why is that important to you?", "わあ、わくわくするね！どうしてそれが大切なの？"),
@@ -1125,8 +1446,9 @@ object Scripts {
                     taskJa = "その理由を話そう（because を使って）",
                     open = true,
                     answers = listOf(
-                        p("Because I want to experience a different culture.", "違う文化を体験したいからです。"),
-                        p("Because I want to grow as a person.", "人として成長したいからです。"),
+                        a("Because I want to see a new culture.", "新しい文化を見たいからです。"),
+                        b("Because I want to experience a different culture and make new friends.", "違う文化を体験して、新しい友達を作りたいからです。"),
+                        c("Because I think living somewhere unfamiliar would push me out of my comfort zone in a way nothing else could.", "なじみのない場所で暮らすことは、ほかの何よりも自分を居心地のいい場所から押し出してくれると思うからです。"),
                     ),
                     tipJa = "Because 〜. で理由を答えられます。会話では Because から始めても大丈夫です。",
                     reply = p("That makes a lot of sense. What are you doing now to get there?", "すごく納得。いまはそのために何をしているの？"),
@@ -1135,8 +1457,9 @@ object Scripts {
                     taskJa = "いま取り組んでいることを話そう",
                     open = true,
                     answers = listOf(
-                        p("I'm studying English every day with apps.", "アプリで毎日英語を勉強しています。"),
-                        p("I'm saving money and reading about different countries.", "お金を貯めて、いろいろな国について調べています。"),
+                        a("I study English every day.", "毎日英語を勉強しています。"),
+                        b("I'm studying English every day with apps, and I'm saving money.", "アプリで毎日英語を勉強して、お金も貯めています。"),
+                        c("I'm brushing up on my English, and I've started reaching out to people who've made a similar move.", "英語を磨き直していて、同じような移住をした人たちに連絡を取り始めました。"),
                     ),
                     tipJa = "I'm 〜ing.（現在進行形）で、いま続けていることを表せます。",
                     reply = p("Good for you! How is English going to help you?", "えらいね！英語はどんなふうに役に立ちそう？"),
@@ -1145,8 +1468,9 @@ object Scripts {
                     taskJa = "英語がどう役立つか話そう",
                     open = true,
                     answers = listOf(
-                        p("English will help me make friends from all over the world.", "世界中に友達を作るのに役立ちます。"),
-                        p("I can use English at work and get more chances.", "仕事で英語を使えて、チャンスが増えます。"),
+                        a("I can talk to many people.", "たくさんの人と話せます。"),
+                        b("English will help me make friends from all over the world.", "世界中に友達を作るのに役立ちます。"),
+                        c("It would open up far more career options and let me build relationships without relying on translation.", "仕事の選択肢がずっと広がるし、翻訳に頼らずに人間関係を築けるようになります。"),
                     ),
                     tipJa = "〜 will help me …. で「〜が…するのに役立つ」と言えます。",
                     reply = p("Absolutely. Your English is already getting better! What's one small goal for this month?", "その通り。英語はもう上達してきてるよ！今月の小さな目標を 1 つ教えて？"),
@@ -1155,8 +1479,9 @@ object Scripts {
                     taskJa = "今月の小さな目標を話そう",
                     open = true,
                     answers = listOf(
-                        p("I want to practice speaking English every day this month.", "今月は毎日英語を話す練習をしたいです。"),
-                        p("I'm going to read one English book.", "英語の本を 1 冊読むつもりです。"),
+                        a("I want to speak English every day.", "毎日英語を話したいです。"),
+                        b("I'm going to read one English book this month.", "今月は英語の本を 1 冊読むつもりです。"),
+                        c("My goal this month is to have at least one conversation in English every day, even if it's just for a few minutes.", "今月の目標は、たとえ数分でも、毎日少なくとも 1 回は英語で会話することです。"),
                     ),
                     tipJa = "小さな目標は、具体的な数字や頻度を入れると達成しやすくなります。",
                     reply = p("Love it! I'll be cheering for you. Let's talk again soon!", "いいね！応援してるよ。またすぐ話そうね！"),

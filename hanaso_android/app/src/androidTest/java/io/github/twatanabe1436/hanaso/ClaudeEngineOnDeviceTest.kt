@@ -33,7 +33,7 @@ class ClaudeEngineOnDeviceTest {
     private val cafe = Catalog.find("cafe")!!
     private val conversation = Conversation(
         cafe,
-        Level.BEGINNER,
+        Level.A2,
         listOf(Line(Speaker.AI, cafe.opener), Line(Speaker.LEARNER, "a latte please")),
     )
 

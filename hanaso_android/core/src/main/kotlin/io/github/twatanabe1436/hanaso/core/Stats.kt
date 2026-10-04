@@ -3,6 +3,7 @@ package io.github.twatanabe1436.hanaso.core
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlin.math.abs
 
 object Stats {
     /** 今日 (または昨日) から遡って、会話した日が何日続いているか */
@@ -22,9 +23,10 @@ object Stats {
     /** フレーズ帳の重複チェック用 (大文字小文字・記号を無視) */
     fun normalizePhrase(s: String): String = s.lowercase().replace(Regex("[^a-z0-9']+"), " ").trim()
 
-    /** 「今日のおすすめ」: 自分のレベルのシナリオから日替わりで選ぶ */
+    /** 「今日のおすすめ」: 自分のレベル (なければいちばん近いレベル) のシナリオから日替わりで選ぶ */
     fun todaysPick(level: Level, now: Long = System.currentTimeMillis()): Scenario {
-        val pool = Catalog.scenarios.filter { it.level == level }.ifEmpty { Catalog.scenarios }
+        val nearest = Catalog.scenarios.minOf { s -> s.level?.let { abs(it.ordinal - level.ordinal) } ?: Int.MAX_VALUE }
+        val pool = Catalog.scenarios.filter { s -> s.level?.let { abs(it.ordinal - level.ordinal) } == nearest }
         val day = Math.floorDiv(now, 86_400_000L)
         return pool[Math.floorMod(day, pool.size.toLong()).toInt()]
     }

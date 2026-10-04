@@ -82,9 +82,9 @@ class ScriptEngineTest {
         val history = mutableListOf(Line(Speaker.AI, scenario.opener))
         for (text in said) {
             history += Line(Speaker.LEARNER, text)
-            history += Line(Speaker.AI, engine.nextLine(Conversation(scenario, Level.BEGINNER, history)).en)
+            history += Line(Speaker.AI, engine.nextLine(Conversation(scenario, Level.A2, history)).en)
         }
-        return Conversation(scenario, Level.BEGINNER, history)
+        return Conversation(scenario, Level.A2, history)
     }
 
     /** 最後の AI のセリフを外して「学習者が話した直後」にする */
@@ -122,6 +122,12 @@ class ScriptEngineTest {
         assertTrue(ScriptEngine.judge(hotel[3], "the AC is not working").passed)
         assertTrue(ScriptEngine.judge(Scripts.forScenario(Catalog.find("weekend")!!).steps[1], "2:30").passed)
         assertFalse(ScriptEngine.judge(drink, "i want coffee").passed) // サイズがない
+        val negotiation = Scripts.forScenario(Catalog.find("negotiation")!!).steps
+        assertTrue(ScriptEngine.judge(negotiation[0], "ten percent is too expensive for us").passed)
+        assertTrue(ScriptEngine.judge(negotiation[1], "what if we sign a 2 year contract").passed)
+        val debate = Scripts.forScenario(Catalog.find("debate")!!).steps
+        assertTrue(ScriptEngine.judge(debate[2], "the problem is not the office but communication").passed)
+        assertFalse(ScriptEngine.judge(debate[2], "yes").passed)
 
         val close = ScriptEngine.judge(drink, "i'd like a medium latte")
         assertEquals("I'd like a medium latte, please.", close.closest.en)
@@ -249,12 +255,45 @@ class ScriptEngineTest {
         assertEquals(cafeSteps[1].answers[0].en, engine.hint(talk(cafe, "A medium latte, please."), "ミルクを変えて")[0].en)
 
         val open = engine.hint(talk(Catalog.find("free:work")!!), null)
-        assertEquals("例1", open[0].labelJa)
+        assertEquals("あなたのレベル（A）", open[0].labelJa)
+        // レベルの付いていない自由回答 (面接など) は「例」
+        assertEquals("例1", engine.hint(talk(Catalog.find("interview")!!), null)[0].labelJa)
 
         assertEquals(Scripts.forScenario(cafe).openerJa, engine.translate(cafe.opener).ja)
         assertEquals(cafeSteps[0].reply.ja, engine.translate(cafeSteps[0].reply.en.lowercase()).ja)
         assertTrue(engine.translate("Completely unrelated sentence.").ja.contains("翻訳できません"))
         assertNull(ScriptEngine.lookupJa("Completely unrelated sentence."))
+    }
+
+    @Test
+    fun freeTalkExamplesFollowTheLearnersLevel() = runBlocking {
+        val free = Catalog.find("free:hobbies")!!
+        val step = Scripts.forScenario(free).steps[0]
+        assertEquals(listOf(Level.A2, Level.B1, Level.C1), ScriptEngine.examplesFor(step, Level.A1).map { it.level })
+        assertEquals(listOf(Level.B1, Level.C1, Level.A2), ScriptEngine.examplesFor(step, Level.B2).map { it.level })
+        assertEquals(listOf(Level.C1, Level.B1, Level.A2), ScriptEngine.examplesFor(step, Level.C2).map { it.level })
+        // お手本にレベルのないロールプレイは元の順のまま
+        assertEquals(cafeSteps[0].answers, ScriptEngine.examplesFor(cafeSteps[0], Level.C2))
+
+        fun at(level: Level) = Conversation(free, level, listOf(Line(Speaker.AI, free.opener)))
+        assertEquals(step.answers.first { it.level == Level.C1 }, engine.task(at(Level.C1)).example)
+        assertEquals(step.answers.first { it.level == Level.A2 }, engine.task(at(Level.A1)).example)
+        assertEquals(
+            listOf("あなたのレベル（B）", "やさしめ（A）", "チャレンジ（C）"),
+            engine.hint(at(Level.B1), null).map { it.labelJa },
+        )
+        // 自由回答の「回答例」も学習者のレベルのもの
+        val said = at(Level.C1).let { it.copy(history = it.history + Line(Speaker.LEARNER, "I like soccer.")) }
+        assertEquals(step.answers.first { it.level == Level.C1 }.en, engine.feedback(said).natural)
+    }
+
+    @Test
+    fun everyFreeTalkStepHasThreeLevels() {
+        for (s in Catalog.freeTalks) {
+            for (step in Scripts.forScenario(s).steps) {
+                assertEquals("${s.id} / ${step.taskJa}", setOf('A', 'B', 'C'), step.answers.mapNotNull { it.level?.band }.toSet())
+            }
+        }
     }
 
     @Test

@@ -12,7 +12,7 @@ import org.junit.Test
 class CatalogTest {
     @Test
     fun scenariosAreComplete() {
-        assertEquals(12, Catalog.scenarios.size)
+        assertEquals(16, Catalog.scenarios.size)
         assertEquals(Catalog.scenarios.size, Catalog.scenarios.map { it.id }.toSet().size)
         for (s in Catalog.scenarios) {
             assertNotNull(s.id, s.level)
@@ -22,6 +22,26 @@ class CatalogTest {
             assertEquals("${s.id}: mission id 重複", s.missions.size, s.missions.map { it.id }.toSet().size)
             assertTrue(s.keyPhrases.all { it.en.isNotBlank() && it.ja.isNotBlank() })
         }
+    }
+
+    @Test
+    fun everyLevelHasRolePlays() {
+        val byLevel = Catalog.scenarios.groupBy { it.level }
+        for (level in Level.entries) assertTrue("$level のシナリオが少ない", byLevel[level].orEmpty().size >= 2)
+    }
+
+    @Test
+    fun levelsAndLegacyNames() {
+        assertEquals(listOf("A1", "A2", "B1", "B2", "C1", "C2"), Level.entries.map { it.name })
+        assertEquals("B2 中上級", Level.B2.displayJa)
+        assertEquals('C', Level.C2.band)
+        // 0.2.0 までの 3 段階の保存値
+        assertEquals(Level.A2, Level.fromName("BEGINNER"))
+        assertEquals(Level.B1, Level.fromName("INTERMEDIATE"))
+        assertEquals(Level.C1, Level.fromName("ADVANCED"))
+        assertEquals(Level.C2, Level.fromName("C2"))
+        assertEquals(Level.DEFAULT, Level.fromName(null))
+        assertTrue(Level.entries.all { it.label.startsWith("CEFR ${it.name}") && it.partnerGuide.isNotBlank() })
     }
 
     @Test
@@ -41,16 +61,16 @@ class PromptsTest {
 
     @Test
     fun partnerSystemIncludesRoleLevelAndGoals() {
-        val sys = Prompts.partnerSystem(cafe, Level.BEGINNER)
+        val sys = Prompts.partnerSystem(cafe, Level.A2)
         assertTrue(sys.contains(cafe.aiRole))
-        assertTrue(sys.contains(Level.BEGINNER.partnerGuide))
+        assertTrue(sys.contains(Level.A2.partnerGuide))
         assertTrue(sys.contains("- [drink] ドリンクをサイズ付きで注文する"))
         assertTrue(sys.contains("text-to-speech"))
         assertFalse("trimMargin の | が残っていない", sys.lines().any { it.trimStart().startsWith("|") })
 
-        val free = Prompts.partnerSystem(Catalog.find("free:free")!!, Level.ADVANCED)
+        val free = Prompts.partnerSystem(Catalog.find("free:free")!!, Level.C2)
         assertTrue(free.contains("free conversation"))
-        assertTrue(free.contains(Level.ADVANCED.partnerGuide))
+        assertTrue(free.contains(Level.C2.partnerGuide))
     }
 
     @Test
@@ -62,7 +82,7 @@ class PromptsTest {
     @Test
     fun feedbackHintAndSummaryPrompts() {
         val hotel = Catalog.find("hotel")!!
-        val c = Conversation(hotel, Level.INTERMEDIATE, listOf(Line(Speaker.AI, hotel.opener), Line(Speaker.LEARNER, "yes i have reservation")))
+        val c = Conversation(hotel, Level.B1, listOf(Line(Speaker.AI, hotel.opener), Line(Speaker.LEARNER, "yes i have reservation")))
         val fb = Prompts.feedbackPrompt(c)
         assertTrue(fb.contains("<utterance_to_review>\nyes i have reservation\n</utterance_to_review>"))
         assertTrue(fb.contains("${hotel.aiName}: ${hotel.opener}"))
@@ -134,7 +154,7 @@ class MockEngineTest {
 
     @Test
     fun demoConversation() = runBlocking {
-        val c = Conversation(cafe, Level.BEGINNER, listOf(Line(Speaker.AI, cafe.opener), Line(Speaker.LEARNER, "i want a latte")))
+        val c = Conversation(cafe, Level.A2, listOf(Line(Speaker.AI, cafe.opener), Line(Speaker.LEARNER, "i want a latte")))
         assertEquals("I see! Could you tell me a little more about that?", engine.reply(c).toList().joinToString(""))
         val fb = engine.feedback(c)
         assertEquals(Rating.FIX, fb.rating)

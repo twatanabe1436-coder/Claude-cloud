@@ -23,7 +23,6 @@ class StatsTest {
     @Test
     fun normalizeAndPick() {
         assertEquals("i'd like a latte", Stats.normalizePhrase("I'd like a latte!"))
-        val pick = Stats.todaysPick(Level.ADVANCED, now)
-        assertEquals(Level.ADVANCED, pick.level)
+        for (level in Level.entries) assertEquals(level, Stats.todaysPick(level, now).level)
     }
 }

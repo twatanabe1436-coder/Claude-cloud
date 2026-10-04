@@ -27,7 +27,7 @@ class ClaudeEngineTest {
     private val scenario = Catalog.find("cafe")!!
     private val conversation = Conversation(
         scenario = scenario,
-        level = Level.BEGINNER,
+        level = Level.A2,
         history = listOf(Line(Speaker.AI, scenario.opener), Line(Speaker.LEARNER, "a latte please")),
     )
 
@@ -159,7 +159,7 @@ class ClaudeEngineTest {
         server.enqueue(
             jsonMessage(
                 """{"score":140,"headlineJa":"よくできました","goodPointsJa":["a"],"improvePoints":[{"pointJa":"b","exampleEn":"c"}],
-                "keyPhrases":[{"en":"For here, please.","ja":"店内で"}],"nextChallengeJa":"d"}""",
+                "keyPhrases":[{"en":"For here, please.","ja":"店内で"}],"nextChallengeJa":"d","estimatedLevel":"b1","levelCommentJa":"e"}""",
             ),
         )
         val e = engine()
@@ -171,7 +171,12 @@ class ClaudeEngineTest {
 
         val summary = e.summary(conversation, setOf("drink"))
         assertEquals("スコアは 0-100 に丸める", 100, summary.score)
+        assertEquals(Level.B1, summary.estimatedLevel)
+        assertEquals("e", summary.levelCommentJa)
         val body = server.takeRequest().bodyJson()
+        val levelEnum = body["output_config"]["format"]["schema"]["properties"]["estimatedLevel"]["enum"].map { it.asText() }
+        assertEquals(listOf("A1", "A2", "B1", "B2", "C1", "C2"), levelEnum)
+        assertTrue(body["system"].toString().contains("estimatedLevel"))
         assertEquals("medium", body["output_config"]["effort"].asText())
         assertTrue(body["messages"][0]["content"].asText().contains("- [x] ドリンクをサイズ付きで注文する"))
     }

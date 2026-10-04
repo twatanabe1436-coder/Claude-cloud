@@ -89,14 +89,14 @@ fun SmallChip(
 @Composable
 fun LevelBadge(level: Level, modifier: Modifier = Modifier) {
     val grades = LocalGrades.current
-    val (fg, bg) = when (level) {
-        Level.BEGINNER -> grades.great to grades.greatContainer
-        Level.INTERMEDIATE -> grades.good to grades.goodContainer
-        Level.ADVANCED -> grades.fix to grades.fixContainer
+    val (fg, bg) = when (level.band) {
+        'A' -> grades.great to grades.greatContainer
+        'B' -> grades.good to grades.goodContainer
+        else -> MaterialTheme.colorScheme.onPrimaryContainer to MaterialTheme.colorScheme.primaryContainer
     }
     Surface(modifier = modifier, shape = CircleShape, color = bg, contentColor = fg) {
         Text(
-            level.ja,
+            level.name,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 1.dp),
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
@@ -228,7 +228,7 @@ fun PracticeButton(
         result = null
         live = ""
         listening = true
-        app.speechInput.start(1500, object : SpeechInput.Callback {
+        app.speechInput.start(1500, app.store.settings.value.tapToFinish, object : SpeechInput.Callback {
             override fun onPartial(text: String) {
                 live = text
             }
@@ -252,7 +252,7 @@ fun PracticeButton(
 
     Column(modifier) {
         SmallChip(
-            text = if (listening) "話し終わったらタップ" else label,
+            text = if (listening) "言い終わったらタップ" else label,
             icon = AppIcons.Mic,
             highlighted = listening,
             onClick = {

@@ -80,7 +80,7 @@ object Prompts {
         |- Judge naturalness for the situation and the relationship between the speakers (e.g., polite with an officer, casual with a friend).
         |- rating: "GREAT" = correct and natural for the situation. "GOOD" = understandable and mostly correct, but a native speaker would say it differently. "FIX" = there are grammar or word-choice errors a native speaker would notice.
         |- corrected: the learner's sentence with only the errors fixed, keeping their words and meaning. If there are no errors, return it with proper capitalization and punctuation.
-        |- natural: how a native speaker would naturally say the same thing in this situation, pitched slightly above the learner's level. It may be the same as "corrected" when that is already natural.
+        |- natural: how a native speaker would naturally say the same thing in this situation, using vocabulary and grammar at the learner's CEFR level (see <learner_level>) or at most one level above, so the learner can actually use it next time. It may be the same as "corrected" when that is already natural.
         |- explanationJa: 1-2 short sentences in Japanese. Explain the single most useful point (why the correction, or what makes the natural version better). If the rating is "GREAT", praise something specific in Japanese.
         |- mistakes: each concrete error as {wrong, right, noteJa}. Empty array if none.
         |- completedMissions: the ids of learner goals that have been achieved at any point in the conversation so far, including this utterance. A goal counts as achieved if the learner clearly did it, even with grammar mistakes. Empty array for free conversation.
@@ -102,7 +102,7 @@ object Prompts {
     val HINT_SYSTEM = """
         |You help a Japanese English learner who is stuck in a spoken role-play conversation. Suggest exactly 3 things the learner could say next, speaking as the learner's role, in reply to the partner's last line.
         |
-        |- Match the learner's level; each suggestion should be one or two sentences that are easy to say out loud.
+        |- Match the learner's CEFR level (see <learner_level>): use only vocabulary and grammar at or below that level. Each suggestion should be one or two sentences that are easy to say out loud.
         |- Default styles, in this order: 1) labelJa "シンプル": the easiest natural reply, 2) labelJa "自然な言い方": what a native speaker would likely say, 3) labelJa "会話を進める": a reply that moves toward one of the learner's unfinished goals (or, in free conversation, asks the partner something interesting).
         |- If <learner_wants_to_say> is given, it is Japanese for what the learner wants to express. Then all 3 suggestions must express that meaning, in these styles: "シンプル", "自然な言い方", and "丁寧" (polite) or "カジュアル" (casual) - whichever contrasts better with the situation.
         |- en: the English sentence. ja: a natural Japanese translation. labelJa: the short style label above.
@@ -141,6 +141,8 @@ object Prompts {
         |- improvePoints: the 2-3 most valuable things to improve. pointJa explains in Japanese; exampleEn is a better English sentence they could have used in this conversation.
         |- keyPhrases: 3-5 useful English phrases for this kind of situation for the learner to memorize, each with a Japanese translation (en, ja). Prefer phrases they needed but didn't know, and corrected versions of their own sentences.
         |- nextChallengeJa: one sentence in Japanese suggesting what to try next time.
+        |- estimatedLevel: your estimate of the CEFR level (A1, A2, B1, B2, C1, or C2) that the learner's own English in this conversation demonstrates, judged from vocabulary range, grammar, sentence complexity, and how well they handled the situation. It may differ from the level they selected. Judge only the learner's lines, not the partner's.
+        |- levelCommentJa: one or two short sentences in Japanese explaining the estimate (quote a word or structure they used) and what they would need to show to reach the next level. If the conversation was too short to judge reliably, say so.
     """.trimMargin()
 
     fun summaryPrompt(c: Conversation, completedMissions: Set<String>): String {
