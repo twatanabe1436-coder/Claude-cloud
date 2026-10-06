@@ -48,7 +48,7 @@ Android 8.0 以降で動きます。ダークモード対応。
 
 1. **Android 端末のブラウザ**で次のリンクを開くと、APK が直接ダウンロードされます（GitHub へのログインは不要です）。
 
-   **https://github.com/twatanabe1436-coder/Claude-cloud/releases/download/hanaso-v0.3.0/hanaso.apk**
+   **https://github.com/twatanabe1436-coder/Claude-cloud/releases/download/hanaso-v0.3.1/hanaso.apk**
 
    （[Releases ページ](https://github.com/twatanabe1436-coder/Claude-cloud/releases) の「Hanaso 英会話」からも入手できます）
 2. ダウンロードした `hanaso.apk` をタップします。「提供元不明のアプリ」の確認が出たら、
@@ -57,8 +57,9 @@ Android 8.0 以降で動きます。ダークモード対応。
 
 > 実技タイマーと同じリポジトリなので、`releases/latest` のリンクはタイマーのままにしてあります。
 > Hanaso は上のリンク（またはReleases 一覧）から入手してください。
-> 新しい版は、古い版の上からそのままインストールできます（フレーズ帳や記録は残ります）。
-> 「アプリをインストールできませんでした」と出た場合は、古いほうをアンインストールしてから入れ直してください。
+> **v0.3.0 以前から更新するときは、一度だけアンインストールが必要です。** v0.3.0 までの APK は版ごとに署名鍵が違っていたため、
+> 上から入れると「アプリがインストールされていません」と出ます（フレーズ帳や記録は引き継げません）。
+> v0.3.1 からは同じ鍵で署名しているので、次の版からは上からそのままインストールでき、記録も残ります。
 
 ## Claude の API キーを設定する（AI 会話モードを使う場合）
 
@@ -146,7 +147,10 @@ GitHub Actions（`.github/workflows/hanaso-android.yml`）が push ごとに、�
 また、端末上にテスト用サーバーを立てて、Claude SDK が Android 上で正しく動くこと（ストリーミング・構造化出力）も確かめます。
 
 **新しい版を公開するには**: [Actions](https://github.com/twatanabe1436-coder/Claude-cloud/actions/workflows/hanaso-android.yml) から
-ワークフローを手動実行して `release_version` に `0.2.1` のようなバージョンを入れるか、`hanaso-v0.2.1` のようなタグを push します。
+ワークフローを手動実行して `release_version` に `0.3.2` のようなバージョンを入れるか、`hanaso-v0.3.2` のようなタグを push します。
+`app/build.gradle.kts` の `versionCode` は版ごとに増やしてください（小さいと上書きインストールできません）。
+公開用 APK は固定の鍵で署名します。鍵のパスワードを GitHub Actions の secret `HANASO_KEYSTORE_PASSWORD` に入れておく必要があり、
+ない場合や証明書が違う場合は Release を作らずに失敗します（[signing/README.md](signing/README.md)）。
 
 ### シナリオを追加するには
 

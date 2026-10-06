@@ -58,10 +58,31 @@ jobs:
         run: cat app/build/reports/lint-results-debug.txt 2>/dev/null || true
 
       - name: APK をビルド
+        env:
+          # 公開用の署名鍵のパスワード (signing/README.md)。ない場合は debug 鍵で署名される
+          HANASO_KEYSTORE_PASSWORD: ${{ secrets.HANASO_KEYSTORE_PASSWORD }}
         run: |
           ./gradlew --no-daemon assembleRelease
           cp app/build/outputs/apk/release/app-release.apk ../hanaso.apk
           ls -la ../hanaso.apk
+
+      - name: APK の署名を確認
+        env:
+          RELEASING: ${{ startsWith(github.ref, 'refs/tags/hanaso-v') || (github.event_name == 'workflow_dispatch' && inputs.release_version != '') }}
+        run: |
+          APKSIGNER="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner"
+          "$APKSIGNER" verify --print-certs ../hanaso.apk | tee ../signers.txt
+          ACTUAL=$(grep -m1 'certificate SHA-256 digest' ../signers.txt | awk '{print $NF}')
+          EXPECTED=$(cat signing/release-cert.sha256)
+          if [ "$ACTUAL" = "$EXPECTED" ]; then
+            echo "公開用の鍵で署名されています"
+          elif [ "$RELEASING" = "true" ]; then
+            # 違う鍵で署名した APK を公開すると、インストール済みのアプリを上書き更新できなくなる
+            echo "::error::APK が公開用の鍵で署名されていません。secret HANASO_KEYSTORE_PASSWORD を設定してください (signing/README.md)"
+            exit 1
+          else
+            echo "::notice::公開用の鍵ではなく debug 鍵で署名しました (Release は作りません)"
+          fi
 
       - uses: actions/upload-artifact@v6
         with:
@@ -104,9 +125,10 @@ jobs:
             --target "$GITHUB_SHA" \
             --latest=false \
             --title "Hanaso 英会話 ${TAG#hanaso-}" \
-            --notes "AI と声で話して学ぶ英会話アプリ (Android 8.0 以降)。
+            --notes "声で話して学ぶ英会話アプリ (Android 8.0 以降)。
           Android 端末で下の hanaso.apk をダウンロードしてタップするとインストールできます。
-          初回起動後、設定画面で Claude の API キーを入れると本物の AI と会話できます (未設定ならデモモード)。"
+          API キーなしでも台本モードで練習できます。設定で Claude の API キーを入れると AI と自由に会話できます。
+          v0.3.1 から署名鍵を固定したため、v0.3.0 以前を入れている場合は一度アンインストールしてから入れてください。"
 
   emulator:
     name: エミュレータで動作確認 (API ${{ matrix.api-level }})

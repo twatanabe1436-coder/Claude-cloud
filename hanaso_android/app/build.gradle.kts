@@ -3,6 +3,9 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+// 公開用の署名鍵 (signing/README.md)。パスワードは GitHub Actions の secret から環境変数で渡す。
+val releaseKeystorePassword: String? = System.getenv("HANASO_KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() }
+
 android {
     namespace = "io.github.twatanabe1436.hanaso"
     compileSdk = 36
@@ -11,10 +14,22 @@ android {
         applicationId = "io.github.twatanabe1436.hanaso"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.3.0"
+        versionCode = 4
+        versionName = "0.3.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        if (releaseKeystorePassword != null) {
+            create("release") {
+                storeFile = rootProject.file("signing/hanaso-release.p12")
+                storeType = "pkcs12"
+                storePassword = releaseKeystorePassword
+                keyAlias = "hanaso"
+                keyPassword = releaseKeystorePassword
+            }
+        }
     }
 
     compileOptions {
@@ -26,8 +41,9 @@ android {
         getByName("release") {
             // Claude SDK は Jackson のリフレクションで JSON を読み書きするので、難読化・縮小はしない
             isMinifyEnabled = false
-            // ストア配布はしないので、デバッグ鍵で署名してそのままインストールできる APK にする。
-            signingConfig = signingConfigs.getByName("debug")
+            // 配布用は固定の鍵で署名する (同じ鍵でないと上書き更新できない)。
+            // パスワードがない環境 (手元・テスト) では debug 鍵で署名する。
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
 
