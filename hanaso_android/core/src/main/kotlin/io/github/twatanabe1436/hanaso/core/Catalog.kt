@@ -19,6 +19,8 @@ object Catalog {
             userRole = "A customer ordering a drink and something to eat.",
             userRoleJa = "お客さん",
             opener = "Hi there, good morning! What can I get started for you today?",
+            aiRoleJa = "明るいバリスタ",
+            backgroundJa = "平日の朝、シアトルのカフェ。あなたはお客さんとして、レジでドリンクと軽食を注文します。",
             missions = listOf(
                 Mission("drink", "ドリンクをサイズ付きで注文する"),
                 Mission("custom", "カスタマイズを頼む（ミルク変更・氷少なめなど）"),
@@ -45,6 +47,8 @@ object Catalog {
             userRole = "A tourist looking for the art museum.",
             userRoleJa = "観光客",
             opener = "Oh, hi! You look a little lost. Can I help you find something?",
+            aiRoleJa = "通りがかりの親切な地元の人",
+            backgroundJa = "シカゴの街角。観光中のあなたは美術館を探していますが、行き方がわかりません。",
             missions = listOf(
                 Mission("ask", "美術館への行き方をたずねる"),
                 Mission("time", "かかる時間や距離を確認する"),
@@ -71,6 +75,8 @@ object Catalog {
             userRole = "A diner having dinner.",
             userRoleJa = "お客さん",
             opener = "Good evening, welcome! Here are your menus. Can I start you off with something to drink?",
+            aiRoleJa = "陽気なウェイター",
+            backgroundJa = "ロンドンのイタリアンレストランで夕食。席に着いたところで、店員が注文を取りに来ました。",
             missions = listOf(
                 Mission("recommend", "おすすめを聞く"),
                 Mission("order", "メイン料理を注文する"),
@@ -97,6 +103,8 @@ object Catalog {
             userRole = "A traveler arriving from Japan.",
             userRoleJa = "旅行者",
             opener = "Hello. Passport, please. What's the purpose of your visit?",
+            aiRoleJa = "落ち着いた入国審査官",
+            backgroundJa = "サンフランシスコ空港の入国審査。日本から観光で来て、ダウンタウンのホテルに 1 週間泊まる予定です。",
             missions = listOf(
                 Mission("purpose", "渡航目的を答える"),
                 Mission("stay", "滞在期間と滞在先を答える"),
@@ -123,6 +131,8 @@ object Catalog {
             userRole = "A guest checking in, who later notices the air conditioner in the room is broken.",
             userRoleJa = "宿泊客",
             opener = "Good afternoon, and welcome to the Harbor View Hotel. Are you checking in today?",
+            aiRoleJa = "ホテルのフロント係",
+            backgroundJa = "シドニーのホテルに到着。田中の名前で 3 泊予約しています。チェックインのあと、部屋のエアコンが動かないことに気づきます。",
             missions = listOf(
                 Mission("checkin", "予約名を伝えてチェックインする"),
                 Mission("breakfast", "朝食の時間や場所を聞く"),
@@ -149,6 +159,8 @@ object Catalog {
             userRole = "A customer who bought a sweater that is too small.",
             userRoleJa = "お客さん",
             opener = "Hi, how can I help you today?",
+            aiRoleJa = "洋服店の店員",
+            backgroundJa = "トロントの洋服店。先週買ったセーターが小さすぎたので、レシートを持って交換か返金をお願いしに来ました。",
             missions = listOf(
                 Mission("reason", "返品・交換したい理由を説明する"),
                 Mission("option", "別の色や返金など選択肢について相談する"),
@@ -175,6 +187,8 @@ object Catalog {
             userRole = "A guest at the party who doesn't know many people.",
             userRoleJa = "パーティーの参加者",
             opener = "Hey! I don't think we've met yet. I'm Chris. How do you know Emily?",
+            aiRoleJa = "エミリーの大学時代の友人。グラフィックデザイナーで、ハイキングと食べ歩きが好き",
+            backgroundJa = "ロサンゼルスでの友人エミリーのホームパーティー。エミリーとは同じ職場ですが、ほかの参加者はほとんど知りません。",
             missions = listOf(
                 Mission("intro", "自己紹介をする"),
                 Mission("common", "趣味など共通の話題を見つける"),
@@ -201,6 +215,8 @@ object Catalog {
             userRole = "Taylor's friend who wants to hang out this weekend.",
             userRoleJa = "テイラーの友達",
             opener = "Hey! What's up? Are you doing anything this weekend?",
+            aiRoleJa = "気さくな友達。土曜の午後と日曜が空いている",
+            backgroundJa = "木曜の夜、友達のテイラーから電話がかかってきました。週末は特に予定がないので、一緒に出かける約束をします。",
             missions = listOf(
                 Mission("suggest", "やりたいことを提案する"),
                 Mission("when", "日時を決める"),
@@ -227,6 +243,8 @@ object Catalog {
             userRole = "A traveler who has had a sore throat and fever since yesterday.",
             userRoleJa = "患者（旅行者）",
             opener = "Hi, I'm Dr. Lee. So, what brings you in today?",
+            aiRoleJa = "やさしい医師",
+            backgroundJa = "ニューヨークを旅行中。昨日の朝から喉が痛くて熱があるので、クリニックに来ました。あなたはペニシリンにアレルギーがあり、来週は飛行機で帰国する予定です。",
             missions = listOf(
                 Mission("symptom", "症状を説明する"),
                 Mission("since", "いつから症状があるか伝える"),
@@ -253,6 +271,8 @@ object Catalog {
             userRole = "A coworker from the engineering team.",
             userRoleJa = "同僚",
             opener = "Morning! Ugh, Mondays, right? How was your weekend?",
+            aiRoleJa = "マーケティング部の同僚。週末にキャンプに行ってきた",
+            backgroundJa = "月曜の朝、会社のキッチンで別の部署の同僚とばったり会いました。あなたはエンジニアです。",
             missions = listOf(
                 Mission("weekend", "自分の週末について話す"),
                 Mission("follow", "相手の話に質問して会話を広げる"),
@@ -279,6 +299,8 @@ object Catalog {
             userRole = "An engineer on the team who has concerns about quality and testing.",
             userRoleJa = "チームのエンジニア",
             opener = "Okay, thanks for joining, everyone. So I'd really like to ship the new search feature next Monday. What do you think? Any concerns?",
+            aiRoleJa = "プロダクトマネージャー（PM）。来週月曜にリリースしたい",
+            backgroundJa = "ソフトウェア会社のオンライン会議。新しい検索機能をいつリリースするか話し合います。あなたはエンジニアで、テストがまだ半分ほどしか終わっていないのが心配です。",
             missions = listOf(
                 Mission("opinion", "理由を添えて自分の意見を述べる"),
                 Mission("disagree", "相手の意見に丁寧に反論する"),
@@ -305,6 +327,8 @@ object Catalog {
             userRole = "A job candidate applying for a position they are interested in.",
             userRoleJa = "応募者",
             opener = "Hi, thanks for taking the time to talk with us today. To start, could you tell me a little bit about yourself?",
+            aiRoleJa = "採用担当のマネージャー",
+            backgroundJa = "外資系企業のオンライン面接。自分の実際の経歴か、なりたい自分を想像して答えましょう（正解はありません）。",
             missions = listOf(
                 Mission("self", "経歴を簡潔に自己紹介する"),
                 Mission("strength", "具体例を交えて強みを話す"),
@@ -331,6 +355,8 @@ object Catalog {
             userRole = "A purchasing manager who wants to keep costs down and secure good terms.",
             userRoleJa = "購買担当者",
             opener = "Thanks for making time today. As you know, your contract is up for renewal next month, and we're proposing a ten percent increase this year due to rising costs. How does that sound?",
+            aiRoleJa = "ソフトウェア会社の営業マネージャー",
+            backgroundJa = "あなたは日本企業の購買担当。使っているソフトウェアの年間契約（年 5 万ドル）が来月更新です。来年の予算は増やせないので、値上げはできるだけ抑えたいところです。",
             missions = listOf(
                 Mission("pushback", "値上げに理由を添えて難色を示す"),
                 Mission("counter", "条件付きの対案を出す"),
@@ -357,6 +383,8 @@ object Catalog {
             userRole = "A customer support representative at the store.",
             userRoleJa = "サポート担当者",
             opener = "Hi, I'm calling about my order. The desk I bought arrived a week late, and when I opened the box, the top was badly scratched. Honestly, I'm really frustrated.",
+            aiRoleJa = "怒っているお客さん（注文番号 48271）",
+            backgroundJa = "あなたは家具の通販サイトのサポート担当。机が 1 週間遅れて届き、天板に傷があったというお客さんから電話がかかってきました。",
             missions = listOf(
                 Mission("empathize", "お客さんの気持ちに寄り添って謝罪する"),
                 Mission("details", "状況を確認するための質問をする"),
@@ -383,6 +411,8 @@ object Catalog {
             userRole = "A friend with their own opinions about remote work.",
             userRoleJa = "友人",
             opener = "Did you see that article about big companies forcing everyone back to the office five days a week? Personally, I think it's about time. What's your take?",
+            aiRoleJa = "議論好きなジャーナリストの友人。あえて「毎日出社」派の立場をとる",
+            backgroundJa = "友人と夕食中、「大企業が全員に週 5 日の出社を義務づけた」というニュースの話になりました。あなたは「在宅勤務も認めるべき」という立場で話してみましょう。",
             missions = listOf(
                 Mission("stance", "理由とともに自分の立場を明確にする"),
                 Mission("concede", "相手の論点を認めつつ反論する"),
@@ -409,6 +439,8 @@ object Catalog {
             userRole = "The presenter answering questions from the audience.",
             userRoleJa = "発表者",
             opener = "Thank you for a fascinating talk. I'd like to ask about your thirty percent figure. How exactly did you measure that, and over what period?",
+            aiRoleJa = "会場の研究者。データの根拠を鋭く質問する",
+            backgroundJa = "国際カンファレンスで「自社アプリでサポートへの問い合わせが 30% 減った」と発表し、いまは質疑応答の時間です。30% は、アプリ公開前後の 6 か月の問い合わせ件数を比べた数字です。",
             missions = listOf(
                 Mission("explain", "データの根拠を簡潔に説明する"),
                 Mission("limit", "限界や弱点を率直に認める"),
@@ -489,6 +521,8 @@ object Catalog {
         userRole = "Themselves, a Japanese person practicing English conversation.",
         userRoleJa = "自分自身",
         opener = opener,
+        aiRoleJa = "ポートランド在住の旅行ライター。食べ物や音楽、いろいろな国の話が好き",
+        backgroundJa = "アレックスとビデオ通話で気軽におしゃべりします。テーマは「$titleJa」。正解はないので、自分のことを自由に話しましょう。",
     )
 
     fun find(id: String): Scenario? = scenarios.firstOrNull { it.id == id } ?: freeTalks.firstOrNull { it.id == id }

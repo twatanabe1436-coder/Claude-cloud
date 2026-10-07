@@ -28,6 +28,8 @@ data class ScriptStep(
     val tipJa: String = "",
     /** 自分のことを答える自由回答のお題。英語でひとこと以上 (2 語以上) 話せば合格 */
     val open: Boolean = false,
+    /** お題に答えるのに必要な事情 (画面ではお題の下に出す)。お題だけで分かるときは空 */
+    val contextJa: String = "",
 )
 
 /** シナリオ 1 つ分の台本。最初のセリフはシナリオの opener (その日本語訳が openerJa)。 */
@@ -39,6 +41,8 @@ data class ScriptTask(
     val number: Int,
     val total: Int,
     val taskJa: String,
+    /** お題に答えるのに必要な事情 (なければ空) */
+    val contextJa: String,
     val open: Boolean,
     /** このお題で言い直した回数 */
     val retries: Int,
@@ -196,11 +200,11 @@ class ScriptEngine(private val delayMs: Long = 20) : AiEngine {
         val steps = p.script.steps
         if (p.finished) {
             val example = examplesFor(steps.last(), conversation.level).first()
-            return ScriptTask(steps.size, steps.size, "台本クリア！", open = false, retries = 0, example = example, finished = true)
+            return ScriptTask(steps.size, steps.size, "台本クリア！", "", open = false, retries = 0, example = example, finished = true)
         }
         val step = steps[p.step]
         val example = examplesFor(step, conversation.level).first()
-        return ScriptTask(p.step + 1, steps.size, step.taskJa, step.open, p.retries, example, finished = false)
+        return ScriptTask(p.step + 1, steps.size, step.taskJa, step.contextJa, step.open, p.retries, example, finished = false)
     }
 
     /** 学習者の最後の発話に対する相手のセリフ */

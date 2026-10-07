@@ -61,7 +61,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -76,6 +80,7 @@ import io.github.twatanabe1436.hanaso.core.EngineMode
 import io.github.twatanabe1436.hanaso.core.Feedback
 import io.github.twatanabe1436.hanaso.core.HintSuggestion
 import io.github.twatanabe1436.hanaso.core.Rating
+import io.github.twatanabe1436.hanaso.core.Scenario
 import io.github.twatanabe1436.hanaso.core.ScriptEngine
 import io.github.twatanabe1436.hanaso.core.ScriptTask
 import io.github.twatanabe1436.hanaso.core.SpeechScore
@@ -113,7 +118,12 @@ fun TalkScreen(session: TalkSession, onQuit: () -> Unit, onFinish: () -> Unit) {
     // 新しいメッセージが来たら一番下 (reverseLayout なので 0 番目) へ
     LaunchedEffect(session.items.size) { listState.animateScrollToItem(0) }
 
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
     val onMic: () -> Unit = {
+        // 声で答えるときはキーボードをしまう
+        focusManager.clearFocus()
+        keyboard?.hide()
         when {
             session.listening -> session.toggleMic()
             !app.speechInput.available -> session.startListening() // 使えない旨を表示してキーボードに切り替える
@@ -149,6 +159,7 @@ fun TalkScreen(session: TalkSession, onQuit: () -> Unit, onFinish: () -> Unit) {
         ) {
             items(session.items.asReversed(), key = { it.id }) { item ->
                 when (item) {
+                    is Scene -> SceneCard(session.scenario)
                     is AiMessage -> AiBubble(item, session, settings.showText, isSaved)
                     is LearnerMessage -> LearnerBubble(item, session, isSaved)
                     is Celebration -> CelebrationCard(item, onFinish)
@@ -298,6 +309,9 @@ private fun TaskBody(session: TalkSession, task: ScriptTask) {
             )
         }
         Text(task.taskJa, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 2.dp))
+        if (task.contextJa.isNotBlank()) {
+            Text("ℹ️ ${task.contextJa}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 2.dp))
+        }
         if (session.showExample) {
             Spacer(Modifier.height(6.dp))
             Surface(shape = RoundedCornerShape(10.dp), color = scheme.surfaceContainerLowest, contentColor = scheme.onSurface) {
@@ -544,6 +558,33 @@ private fun Label(text: String) {
     Text(text, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
 }
 
+/** 会話の最初に出す場面の説明 (状況・自分の役・相手) */
+@Composable
+private fun SceneCard(scenario: Scenario) {
+    val scheme = MaterialTheme.colorScheme
+    Surface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = scheme.surfaceContainerHigh) {
+        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+            Text("🎬 場面", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            Text(
+                scenario.backgroundJa.ifBlank { scenario.descriptionJa },
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            Text(
+                "あなた：${scenario.userRoleJa}",
+                style = MaterialTheme.typography.bodySmall,
+                color = scheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+            Text(
+                "相手：${scenario.aiName}" + if (scenario.aiRoleJa.isBlank()) "" else "（${scenario.aiRoleJa}）",
+                style = MaterialTheme.typography.bodySmall,
+                color = scheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
 @Composable
 private fun CelebrationCard(item: Celebration, onFinish: () -> Unit) {
     val grades = LocalGrades.current
@@ -582,6 +623,24 @@ private fun Footer(session: TalkSession, onMic: () -> Unit, onFinish: () -> Unit
 @Composable
 private fun FooterControls(session: TalkSession, onMic: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+    val focusRequester = remember { FocusRequester() }
+    val closeInput: () -> Unit = {
+        focusManager.clearFocus()
+        keyboard?.hide()
+        session.closeKeyboard()
+    }
+    // 送ったらキーボードはしまう (入力欄は残すので、続けて打つときはタップ)
+    val send: () -> Unit = {
+        session.submitDraft()
+        focusManager.clearFocus()
+        keyboard?.hide()
+    }
+    // 「入力」で開いたときは、すぐに打てるようにフォーカスしてキーボードを出す
+    LaunchedEffect(session.keyboardFocusRequest) {
+        if (session.keyboardFocusRequest > 0 && session.showKeyboard) runCatching { focusRequester.requestFocus() }
+    }
     Column {
         if (session.listening) {
             Surface(shape = RoundedCornerShape(12.dp), color = scheme.primaryContainer, modifier = Modifier.fillMaxWidth()) {
@@ -606,16 +665,19 @@ private fun FooterControls(session: TalkSession, onMic: () -> Unit) {
         }
         if (session.showKeyboard) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp)) {
+                IconButton(onClick = closeInput) {
+                    Icon(Icons.Filled.Close, contentDescription = "入力を閉じる", tint = scheme.onSurfaceVariant)
+                }
                 OutlinedTextField(
                     value = session.draft,
                     onValueChange = { session.draft = it.take(500) },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).focusRequester(focusRequester),
                     placeholder = { Text(if (session.mode == EngineMode.SCRIPT) "英語で入力" else "英語で入力（日本語なら言い方を提案）") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                    keyboardActions = KeyboardActions(onSend = { session.submitDraft() }),
+                    keyboardActions = KeyboardActions(onSend = { send() }),
                 )
-                IconButton(onClick = { session.submitDraft() }, enabled = !session.busy) {
+                IconButton(onClick = { send() }, enabled = !session.busy) {
                     Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "送信", tint = scheme.primary)
                 }
             }
@@ -623,7 +685,9 @@ private fun FooterControls(session: TalkSession, onMic: () -> Unit) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
             RoundAction(AppIcons.Lightbulb, "ヒント", enabled = !session.busy) { session.openHint() }
             MicButton(session.listening, session.micLevel, enabled = !session.busy || session.listening, onClick = onMic)
-            RoundAction(AppIcons.Keyboard, "入力", enabled = true) { session.showKeyboard = !session.showKeyboard }
+            RoundAction(AppIcons.Keyboard, if (session.showKeyboard) "閉じる" else "入力", enabled = true) {
+                if (session.showKeyboard) closeInput() else session.openKeyboard()
+            }
         }
     }
 }

@@ -297,6 +297,20 @@ class ScriptEngineTest {
     }
 
     @Test
+    fun taskShowsTheBackgroundNeededToAnswer() {
+        val meeting = Catalog.find("meeting")!!
+        val task = engine.task(talk(meeting))
+        assertTrue(task.contextJa.contains("テストはまだ半分"))
+        // 背景がいらないお題は空
+        assertEquals("", engine.task(talk(cafe)).contextJa)
+        // B2 以上のロールプレイは、すべてのお題に背景がある
+        for (s in Catalog.scenarios.filter { (it.level?.ordinal ?: 0) >= Level.B2.ordinal }) {
+            val steps = Scripts.forScenario(s).steps
+            assertTrue(s.id, steps.count { it.contextJa.isNotBlank() } >= steps.size - 1)
+        }
+    }
+
+    @Test
     fun modes() {
         assertEquals(EngineMode.SCRIPT, engine.mode)
         assertEquals(EngineMode.DEMO, MockEngine().mode)

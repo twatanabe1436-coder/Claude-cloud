@@ -269,6 +269,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "自分の職業を答えよう（例：エンジニア、会社員、学生）",
+                    contextJa = "職業は自分のことでも、架空でもかまいません。会社員は office worker で通じます。",
                     mission = "job",
                     open = true,
                     answers = listOf(
@@ -343,6 +344,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "（部屋からフロントに電話して）エアコンが動かないと伝えよう",
+                    contextJa = "部屋（512 号室）に入ったら、エアコンが動きません。フロントに電話しています。",
                     keywords = listOf(
                         "air conditioner|air conditioning|ac|a c|aircon|air con|heater",
                         "work*|broken|not|problem",
@@ -359,6 +361,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "部屋を替えてもらえるか頼もう",
+                    contextJa = "修理を待つより、別の部屋に移りたいと思っています。",
                     mission = "problem",
                     keywords = listOf("room*|move|change|switch"),
                     answers = listOf(
@@ -413,6 +416,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "ネイビーのものを見せてもらおう",
+                    contextJa = "グレーの M サイズは品切れ。同じセーターのネイビーならあると言われました。",
                     mission = "option",
                     keywords = listOf("navy|see|look|color|colour|show"),
                     answers = listOf(
@@ -424,6 +428,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "考えた結果、返金にしてもらうと伝えよう",
+                    contextJa = "ネイビーも見てみましたが、やっぱり返金にしたいと思いました。",
                     mission = "decide",
                     keywords = listOf("refund|money back"),
                     answers = listOf(
@@ -444,6 +449,7 @@ object Scripts {
             steps = listOf(
                 ScriptStep(
                     taskJa = "自己紹介して、エミリーとは同僚だと伝えよう",
+                    contextJa = "名前は自分の名前でどうぞ。エミリーとは同じ職場で働いています。",
                     mission = "intro",
                     keywords = listOf(
                         "i am|my name|name is|nice to meet|this is",
@@ -543,6 +549,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "賛成して、ラーメンを提案しよう",
+                    contextJa = "テイラーは、映画のあとに何か食べに行こうと誘っています。",
                     keywords = listOf("yes|sure|sounds|good|great|love|ramen|pizza|sushi"),
                     answers = listOf(
                         p("Sure! How about ramen?", "いいね！ラーメンはどう？"),
@@ -591,6 +598,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "ペニシリンにアレルギーがあると伝えよう",
+                    contextJa = "医師に薬のアレルギーを聞かれました。あなたはペニシリンにアレルギーがあります。",
                     keywords = listOf("allerg*|penicillin"),
                     answers = listOf(
                         p("I'm allergic to penicillin.", "ペニシリンにアレルギーがあります。"),
@@ -615,6 +623,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "来週、飛行機に乗っても大丈夫か聞こう",
+                    contextJa = "来週、飛行機で日本に帰る予定です。",
                     keywords = listOf("fly|flight|plane|airplane|travel*|trip"),
                     answers = listOf(
                         p("Is it okay to fly next week?", "来週飛行機に乗っても大丈夫ですか？"),
@@ -634,6 +643,7 @@ object Scripts {
             steps = listOf(
                 ScriptStep(
                     taskJa = "自分の週末について話そう（何をしたか・どうだったか）",
+                    contextJa = "例：家でゆっくりした、買い物に行った、友達と会った。自分のことでも想像でもかまいません。",
                     mission = "weekend",
                     open = true,
                     answers = listOf(
@@ -679,6 +689,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "「仕事に戻らなきゃ、またあとで」と会話を切り上げよう",
+                    contextJa = "相手は 9 時から会議。あなたもそろそろ仕事に戻る時間です。",
                     mission = "close",
                     keywords = listOf("later|bye|back|anyway|see you|go"),
                     answers = listOf(
@@ -696,6 +707,7 @@ object Scripts {
             steps = listOf(
                 ScriptStep(
                     taskJa = "テストが足りないという懸念を、理由と一緒に伝えよう",
+                    contextJa = "テストはまだ半分ほどしか終わっていません。このまま来週出すと、バグが残るかもしれません。",
                     mission = "opinion",
                     keywords = listOf(
                         "test*|bug*|quality|risk*|ready",
@@ -713,6 +725,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "相手の意見を認めつつ、丁寧に反論しよう",
+                    contextJa = "来週のキャンペーンの事情はわかります。でも、バグのある機能を出すとユーザーの信頼を失います。",
                     mission = "disagree",
                     keywords = listOf(
                         "but|however|although|though|still|that said",
@@ -727,6 +740,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "まず一部のユーザーに公開する、という代案を出そう",
+                    contextJa = "全員に出す前に、一部のユーザー（例：10%）にベータ版として先に出す案です。",
                     mission = "propose",
                     keywords = listOf(
                         "what if|how about|could we|suggest*|propose|why don't we|maybe we|we could|let's",
@@ -744,6 +758,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "2 週間ほしいと、理由を添えて答えよう",
+                    contextJa = "2 週間あれば、大きなバグを直して、ユーザーの声も集められます。",
                     keywords = listOf("week*|days|month*"),
                     answers = listOf(
                         p("I think two weeks would be enough to fix any major issues.", "大きな問題を直すには、2 週間あれば十分だと思います。"),
@@ -757,6 +772,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "水曜までに共有すると引き受けよう",
+                    contextJa = "テスト計画を、水曜までにチーム全員に送ればよい状況です。",
                     keywords = listOf("sure|yes|of course|will|absolutely|no problem|can do|definitely|okay|ok"),
                     answers = listOf(
                         p("Sure, I'll send it to everyone by Wednesday.", "はい、水曜までに皆さんに送ります。"),
@@ -773,6 +789,7 @@ object Scripts {
             steps = listOf(
                 ScriptStep(
                     taskJa = "経歴を簡潔に自己紹介しよう（仕事と経験年数）",
+                    contextJa = "今の仕事・経験年数・得意な分野など。架空の経歴でもかまいません。",
                     mission = "self",
                     open = true,
                     answers = listOf(
@@ -784,6 +801,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "自分の強みを話そう",
+                    contextJa = "例：覚えが早い、人と協力するのが得意、計画を立てるのが得意。",
                     open = true,
                     answers = listOf(
                         p("One of my strengths is that I'm a quick learner.", "私の強みのひとつは、覚えが早いことです。"),
@@ -794,6 +812,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "強みの具体例を話そう（前の仕事でのエピソード）",
+                    contextJa = "強みが伝わる仕事のエピソードを 1 つ。何をして、どうなったかを話します。",
                     mission = "strength",
                     open = true,
                     answers = listOf(
@@ -805,6 +824,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "志望動機を伝えよう",
+                    contextJa = "この会社で働きたい理由。例：ミッションに共感した、経験を活かしたい、海外とかかわる仕事がしたい。",
                     mission = "why",
                     open = true,
                     answers = listOf(
@@ -816,6 +836,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "チームや仕事内容について質問しよう",
+                    contextJa = "面接の最後に「何か質問は？」と聞かれました。例：チームのこと、1 日の仕事の流れ。",
                     open = true,
                     answers = listOf(
                         p("Could you tell me more about the team I'd be working with?", "一緒に働くチームについて、もう少し教えていただけますか？"),
@@ -836,6 +857,7 @@ object Scripts {
             steps = listOf(
                 ScriptStep(
                     taskJa = "10% の値上げは受け入れにくいと、理由を添えて伝えよう",
+                    contextJa = "今の契約は年 5 万ドル。来年の予算はすでに削られていて、増やせません。",
                     mission = "pushback",
                     keywords = listOf(
                         "difficult|hard|tough|can't|not able|unable|too much|too high|expensive|concern*|justify",
@@ -853,6 +875,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "2 年契約にする代わりに、今の価格を据え置けないか提案しよう",
+                    contextJa = "長く契約すれば、相手にも安定した売上というメリットがあります。",
                     mission = "counter",
                     keywords = listOf("two year*|longer|multi year*|multiyear"),
                     answers = listOf(
@@ -867,6 +890,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "3% ならまだ高いので、研修を無料で付けてもらえないか聞こう",
+                    contextJa = "チームの研修（トレーニング）が無料で付けば、3% でも受け入れられそうです。",
                     mission = "counter",
                     keywords = listOf("training|support|onboarding", "free|include*|no extra|no charge|throw in|add*|at no"),
                     answers = listOf(
@@ -881,6 +905,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "合意した内容をくり返して確認しよう",
+                    contextJa = "決まったのは「値上げ 3%・2 年契約・20 名分の研修が無料」です。",
                     mission = "agree",
                     keywords = listOf("confirm|so|recap|just to|make sure|correct|right|summar*", "three|two year*|training|twenty"),
                     answers = listOf(
@@ -892,6 +917,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "社内で確認してから返事をする、と伝えて締めくくろう",
+                    contextJa = "最終決定には上司の承認が必要です。",
                     mission = "agree",
                     keywords = listOf("manager|team|boss|internally|run it by|check|get back|review|confirm|discuss"),
                     answers = listOf(
@@ -909,6 +935,7 @@ object Scripts {
             steps = listOf(
                 ScriptStep(
                     taskJa = "お客さんの気持ちに寄り添って、丁寧に謝ろう",
+                    contextJa = "まずは言い訳をせず、相手の気持ちを受け止めて謝りましょう。",
                     mission = "empathize",
                     keywords = listOf("sorry|apologi*"),
                     answers = listOf(
@@ -920,6 +947,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "注文番号を教えてもらおう",
+                    contextJa = "状況を調べるために、注文番号が必要です。",
                     mission = "details",
                     keywords = listOf("order*|number"),
                     answers = listOf(
@@ -931,6 +959,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "傷の大きさや、机が使える状態かをたずねよう",
+                    contextJa = "対応を決めるために、傷の程度と、机がまだ使えるかを確認します。",
                     mission = "details",
                     keywords = listOf("scratch*|damage*|size|big|bad|large|deep|usable|use|condition"),
                     answers = listOf(
@@ -945,6 +974,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "新しい机をすぐに無料で送ることを提案しよう",
+                    contextJa = "傷のない新品を、無料ですぐに送ることができます。",
                     mission = "solution",
                     keywords = listOf("replace*|new one|new desk|brand new|send|ship|exchange|refund"),
                     answers = listOf(
@@ -956,6 +986,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "速達で送ることと、届く日を約束しよう",
+                    contextJa = "速達（express）に切り替えれば、金曜までに届けられます。",
                     mission = "solution",
                     keywords = listOf("express|priority|expedite*|fast*|guarantee|promise|by|within|tomorrow|friday|days|track*"),
                     answers = listOf(
@@ -973,6 +1004,7 @@ object Scripts {
             steps = listOf(
                 ScriptStep(
                     taskJa = "賛成か反対か、理由とともに自分の立場をはっきり述べよう",
+                    contextJa = "あなたは「在宅勤務も認めるべき」という立場です。例：家のほうが集中できる、通勤時間がない、仕事によって向き不向きがある。",
                     mission = "stance",
                     keywords = listOf(
                         "think|argue|believe|disagree|agree|opinion|view|take|personally|honestly|opposite|mistake",
@@ -990,6 +1022,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "その点は認めつつ、それでも全面出社は必要ないと反論しよう",
+                    contextJa = "「若手は先輩の隣で学ぶ」という点は認めつつ、だから週 5 日必要とは限らない、と返しましょう。",
                     mission = "concede",
                     keywords = listOf(
                         "fair|true|point|admit|grant|agree|valid|right",
@@ -1007,6 +1040,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "「問題は場所ではなく〜だ」という形で論点を整理して反論しよう",
+                    contextJa = "相手は「ビデオ通話では信頼関係を築きにくい」と言っています。問題は場所ではなく、チームの意思疎通の仕方だと返します。",
                     mission = "nuance",
                     keywords = listOf("not so much|not about|rather than|less about|more about|real issue|real problem|the point is|it's about|problem is|issue is|not the"),
                     answers = listOf(
@@ -1018,6 +1052,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "条件付きの折衷案を示そう（例：チームごとに決める）",
+                    contextJa = "例：チームごとに決める、週に何日かだけ集まる日を決める、など。",
                     mission = "nuance",
                     keywords = listOf("depend*|if|unless|case by case|each team|flexib*|hybrid|balance|compromise|middle|as long as"),
                     answers = listOf(
@@ -1045,6 +1080,7 @@ object Scripts {
             steps = listOf(
                 ScriptStep(
                     taskJa = "データの測り方と期間を説明しよう（リリース前後の 6 か月を比較）",
+                    contextJa = "30% は、アプリ公開前の 6 か月と後の 6 か月の、問い合わせ件数を比べた数字です。",
                     mission = "explain",
                     keywords = listOf(
                         "compar*|measur*|before|after|track*|analy*",
@@ -1062,6 +1098,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "ほかの要因の可能性を認めつつ、どう対策したかを説明しよう",
+                    contextJa = "前年の同じ月と比べて、季節の影響は取り除きました。ただ、ほかの要因を完全には否定できません。",
                     mission = "limit",
                     keywords = listOf(
                         "fair|point|possible|true|admit|right|valid|rule out|agree",
@@ -1076,6 +1113,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "手元にデータがないので、あとで共有すると伝えよう",
+                    contextJa = "顧客満足度のデータは、いま手元にありません。",
                     mission = "handle",
                     keywords = listOf(
                         "don't have|not sure|not with me|on hand|off the top|don't know",
@@ -1093,6 +1131,7 @@ object Scripts {
                 ),
                 ScriptStep(
                     taskJa = "条件付きで「通用する」と答え、業界の例を挙げよう",
+                    contextJa = "銀行や通信会社のように、同じような質問が多い業界なら効果がありそうです。",
                     mission = "handle",
                     keywords = listOf(
                         "depend*|if|as long as|provided|likely|probably|principle|generally|believe|think",

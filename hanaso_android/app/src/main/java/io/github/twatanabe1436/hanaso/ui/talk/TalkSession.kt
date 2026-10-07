@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -63,6 +64,9 @@ class LearnerMessage(override val id: Long, val text: String) : ChatItem {
     var feedback by mutableStateOf<LoadState<Feedback>>(LoadState.Loading)
     var expanded by mutableStateOf(false)
 }
+
+/** 会話の最初に出す、場面の説明 */
+class Scene(override val id: Long) : ChatItem
 
 /** ミッションをすべて達成した (AI 会話)、または台本を最後まで終えた (台本モード) */
 class Celebration(override val id: Long, val scriptDone: Boolean = false) : ChatItem
@@ -148,6 +152,11 @@ class TalkSession(
         private set
     var draft by mutableStateOf("")
     var showKeyboard by mutableStateOf(!input.available)
+        private set
+
+    /** 入力欄を開いたときに増える (画面側で入力欄にフォーカスしてキーボードを出す) */
+    var keyboardFocusRequest by mutableIntStateOf(0)
+        private set
 
     /** 台本モードのいまのお題 (AI 会話では null) */
     var task by mutableStateOf<ScriptTask?>(null)
@@ -171,6 +180,7 @@ class TalkSession(
     val learnerTurns: Int get() = turns.size
 
     fun start() {
+        items += Scene(nextId++)
         val opener = AiMessage(nextId++, emptyList())
         opener.text = scenario.opener
         opener.streaming = false
@@ -234,6 +244,8 @@ class TalkSession(
             return
         }
         speaker.stop()
+        // 声で答えるときは文字の入力欄を閉じる
+        showKeyboard = false
         listening = true
         liveText = ""
         // ハンズフリー会話は話し終わり (無音) で自動的に区切る。それ以外は設定に従う
@@ -267,6 +279,16 @@ class TalkSession(
 
             override fun onCancel() = endListening()
         })
+    }
+
+    /** 文字の入力欄を開く (開いたらキーボードも出す) */
+    fun openKeyboard() {
+        showKeyboard = true
+        keyboardFocusRequest++
+    }
+
+    fun closeKeyboard() {
+        showKeyboard = false
     }
 
     private fun endListening() {

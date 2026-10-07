@@ -117,6 +117,10 @@ data class Scenario(
     val opener: String,
     val missions: List<Mission> = emptyList(),
     val keyPhrases: List<Phrase> = emptyList(),
+    /** 相手の役 (画面表示用) */
+    val aiRoleJa: String = "",
+    /** 会話画面の最初に出す場面の説明。お題に答えるのに必要な事情も書く (画面表示用) */
+    val backgroundJa: String = "",
 ) {
     val isFreeTalk: Boolean get() = category == Category.FREE
 }

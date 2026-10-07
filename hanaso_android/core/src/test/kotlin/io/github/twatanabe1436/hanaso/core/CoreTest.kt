@@ -16,7 +16,7 @@ class CatalogTest {
         assertEquals(Catalog.scenarios.size, Catalog.scenarios.map { it.id }.toSet().size)
         for (s in Catalog.scenarios) {
             assertNotNull(s.id, s.level)
-            listOf(s.titleJa, s.setting, s.aiName, s.aiRole, s.userRole, s.userRoleJa, s.opener, s.descriptionJa)
+            listOf(s.titleJa, s.setting, s.aiName, s.aiRole, s.userRole, s.userRoleJa, s.opener, s.descriptionJa, s.aiRoleJa, s.backgroundJa)
                 .forEach { assertTrue("${s.id} に空の項目がある", it.isNotBlank()) }
             assertTrue(s.id, s.missions.isNotEmpty())
             assertEquals("${s.id}: mission id 重複", s.missions.size, s.missions.map { it.id }.toSet().size)
@@ -49,6 +49,8 @@ class CatalogTest {
         assertEquals(6, Catalog.freeTalks.size)
         val free = Catalog.find("free:hobbies")!!
         assertTrue(free.isFreeTalk)
+        assertTrue(free.backgroundJa.contains("趣味・好きなこと"))
+        assertTrue(free.aiRoleJa.isNotBlank())
         assertEquals("Alex", free.aiName)
         assertTrue(free.missions.isEmpty())
         assertNull(Catalog.find("free:nope"))

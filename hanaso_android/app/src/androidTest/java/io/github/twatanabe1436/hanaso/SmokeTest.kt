@@ -88,6 +88,9 @@ class SmokeTest {
 
         val opener = "Hi there, good morning! What can I get started for you today?"
         waitForText(opener)
+        // 会話の最初に場面の説明 (状況・自分の役・相手)
+        compose.onNodeWithText("🎬 場面").assertExists()
+        compose.onNodeWithText("あなた：お客さん").assertExists()
         waitUntil("最初のセリフが読み上げられない") { speaker.spoken.contains(opener) }
 
         // マイクで話す → 自動送信 → 返事 (読み上げ) → 添削 (修正ありは自動で開く) → ミッション
@@ -123,6 +126,10 @@ class SmokeTest {
         waitForText("🎉 すべてのミッションを達成しました！", timeoutMs = 8_000)
         waitUntil("返事が終わらない") { app.talk?.busy == false }
         screenshot("05_complete")
+
+        // 文字の入力欄は × で閉じられる
+        compose.onNodeWithContentDescription("入力を閉じる").performClick()
+        compose.onAllNodes(hasSetTextAction()).assertCountEquals(0)
 
         // 終了 → 振り返り
         compose.onNodeWithText("終了").performClick()
