@@ -120,6 +120,13 @@ fun TalkScreen(session: TalkSession, onQuit: () -> Unit, onFinish: () -> Unit) {
 
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
+    // 入力欄を閉じたとき・台本を終えたとき (入力欄が消えるとき) は、キーボードもしまう
+    LaunchedEffect(session.showKeyboard, session.scriptDone) {
+        if (!session.showKeyboard || session.scriptDone) {
+            focusManager.clearFocus()
+            keyboard?.hide()
+        }
+    }
     val onMic: () -> Unit = {
         // 声で答えるときはキーボードをしまう
         focusManager.clearFocus()

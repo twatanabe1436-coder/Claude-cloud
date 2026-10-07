@@ -48,7 +48,7 @@ Android 8.0 以降で動きます。ダークモード対応。
 
 1. **Android 端末のブラウザ**で次のリンクを開くと、APK が直接ダウンロードされます（GitHub へのログインは不要です）。
 
-   **https://github.com/twatanabe1436-coder/Claude-cloud/releases/download/hanaso-v0.3.2/hanaso.apk**
+   **https://github.com/twatanabe1436-coder/Claude-cloud/releases/download/hanaso-v0.3.3/hanaso.apk**
 
    （[Releases ページ](https://github.com/twatanabe1436-coder/Claude-cloud/releases) の「Hanaso 英会話」からも入手できます）
 2. ダウンロードした `hanaso.apk` をタップします。「提供元不明のアプリ」の確認が出たら、
