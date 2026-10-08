@@ -245,7 +245,7 @@ fun SettingsScreen() {
             ToggleRow("AI のセリフを文字で表示", "オフにすると聞き取りの練習になります（タップで表示）。", settings.showText) { v ->
                 update { it.copy(showText = v) }
             }
-            ToggleRow("日本語訳を自動で表示", "AI のセリフに毎回日本語訳を付けます。", settings.autoTranslate) { v ->
+            ToggleRow("日本語訳を自動で表示", "AI 会話で、相手のセリフに毎回日本語訳を付けます（台本モードでは常に表示されます）。", settings.autoTranslate) { v ->
                 update { it.copy(autoTranslate = v) }
             }
             Text("話し終わりの待ち時間", modifier = Modifier.padding(top = 8.dp))
@@ -269,7 +269,7 @@ fun SettingsScreen() {
         }
 
         Text(
-            "Hanaso v0.3.3・${if (app.modeFor(apiKey, settings) == EngineMode.AI) "AI: ${settings.model}" else "台本モード"}",
+            "Hanaso v0.3.4・${if (app.modeFor(apiKey, settings) == EngineMode.AI) "AI: ${settings.model}" else "台本モード"}",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,

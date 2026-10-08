@@ -168,6 +168,10 @@ class TalkSession(
     /** 台本を最後まで終えた */
     val scriptDone: Boolean get() = task?.finished == true
 
+    /** 相手のセリフに日本語訳を自動で付けるか。台本モードの訳は台本から出せる (無料・すぐ) ので常に付ける (聞き取り練習中は除く) */
+    private val autoTranslate: Boolean
+        get() = settings.autoTranslate || (mode == EngineMode.SCRIPT && settings.showText)
+
     /** マイクの権限があるか (ハンズフリーで自動開始してよいか) */
     private fun micPermitted(): Boolean =
         ContextCompat.checkSelfPermission(app, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
@@ -186,7 +190,7 @@ class TalkSession(
         opener.streaming = false
         items += opener
         history += Line(Speaker.AI, scenario.opener)
-        if (settings.autoTranslate) loadTranslation(opener)
+        if (autoTranslate) loadTranslation(opener)
         refreshTask()
         speakAll(scenario.opener) { afterAiSpoke() }
     }
@@ -377,7 +381,7 @@ class TalkSession(
                 status = ""
                 refreshTask()
                 if (!muted) chunker.flush().forEach { speaker.say(it) }
-                if (settings.autoTranslate) loadTranslation(bubble)
+                if (autoTranslate) loadTranslation(bubble)
                 speaker.whenIdle { afterAiSpoke() }
             } catch (e: CancellationException) {
                 throw e

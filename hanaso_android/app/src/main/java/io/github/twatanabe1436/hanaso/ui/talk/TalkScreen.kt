@@ -145,7 +145,6 @@ fun TalkScreen(session: TalkSession, onQuit: () -> Unit, onFinish: () -> Unit) {
             onFinish = onFinish,
         )
         if (session.scenario.missions.isNotEmpty()) MissionPanel(session, compact = session.mode == EngineMode.SCRIPT)
-        session.task?.let { TaskCard(session, it) }
         if (session.mode == EngineMode.DEMO) {
             Text(
                 "🧪 デモモード（決まった返事のみ）",
@@ -276,12 +275,17 @@ private fun MissionPanel(session: TalkSession, compact: Boolean) {
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 }
 
-/** 台本モードのお題カード */
+/** 台本モードのお題。答えるときに目に入るよう、画面下のパネルのマイクのすぐ上に出す */
 @Composable
-private fun TaskCard(session: TalkSession, task: ScriptTask) {
+private fun TaskPrompt(session: TalkSession, task: ScriptTask) {
     val scheme = MaterialTheme.colorScheme
-    Surface(color = scheme.primaryContainer, contentColor = scheme.onPrimaryContainer) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = scheme.primaryContainer,
+        contentColor = scheme.onPrimaryContainer,
+        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+    ) {
+        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
             if (task.finished) {
                 Text("🎉 台本クリア！「振り返りを見る」で結果を確認しよう", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             } else {
@@ -289,7 +293,6 @@ private fun TaskCard(session: TalkSession, task: ScriptTask) {
             }
         }
     }
-    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 }
 
 @Composable
@@ -315,7 +318,7 @@ private fun TaskBody(session: TalkSession, task: ScriptTask) {
                 onClick = { session.showExample = !session.showExample },
             )
         }
-        Text(task.taskJa, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 2.dp))
+        Text(task.taskJa, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
         if (task.contextJa.isNotBlank()) {
             Text("ℹ️ ${task.contextJa}", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 2.dp))
         }
@@ -613,8 +616,15 @@ private fun CelebrationCard(item: Celebration, onFinish: () -> Unit) {
 @Composable
 private fun Footer(session: TalkSession, onMic: () -> Unit, onFinish: () -> Unit) {
     val scheme = MaterialTheme.colorScheme
-    Surface(color = scheme.surfaceContainerLowest, tonalElevation = 3.dp) {
-        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 14.dp, vertical = 8.dp)) {
+    Surface(
+        color = scheme.surfaceContainerLowest,
+        tonalElevation = 3.dp,
+        shadowElevation = 8.dp,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+    ) {
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 14.dp, vertical = 10.dp)) {
+            // 台本モード: 言うことはマイクのすぐ上に (相手の最新のセリフはそのすぐ上の会話の一番下)
+            session.task?.let { TaskPrompt(session, it) }
             if (session.scriptDone && !session.busy) {
                 // 台本を終えたら、マイクの代わりに振り返りへのボタン
                 Button(onClick = onFinish, modifier = Modifier.fillMaxWidth().height(52.dp).padding(vertical = 2.dp)) {

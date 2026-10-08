@@ -218,6 +218,8 @@ class SmokeTest {
 
         waitForText("📖 お題 1 / 5")
         waitForText("ラテの M サイズを注文しよう")
+        // 台本モードでは相手のセリフに日本語訳が自動で付く
+        waitForText("いらっしゃいませ、おはようございます！ご注文は何にしますか？")
         compose.onNodeWithText("お手本").performClick()
         waitForText("Can I get a medium latte, please?")
 
