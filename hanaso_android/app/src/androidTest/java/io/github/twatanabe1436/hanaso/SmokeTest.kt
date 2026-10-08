@@ -255,7 +255,7 @@ class SmokeTest {
         waitForText("ヒント：何て言えばいい？")
         waitForText("Could you make it with oat milk?")
         compose.onAllNodesWithText("そのまま送る").onFirst().performClick()
-        waitForText("📖 お題 3 / 5")
+        waitForText("3 / 5")
 
         // 残りはキーボードで
         compose.onNodeWithContentDescription("入力").performClick()
@@ -265,7 +265,7 @@ class SmokeTest {
             compose.onNode(hasContentDescription("送信")).performClick()
             waitForText(line)
         }
-        waitForText("🎉 台本を最後まで話せました！", timeoutMs = 8_000)
+        waitForText("🎉 台本クリア！", timeoutMs = 8_000)
         waitForText("振り返りを見る")
         waitForText("3 / 3")
         screenshot("14_script_done")
