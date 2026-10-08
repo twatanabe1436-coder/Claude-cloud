@@ -204,7 +204,6 @@ class TalkSession(
         if (next.finished && !celebrated) {
             celebrated = true
             items += Celebration(nextId++, scriptDone = true)
-            _messages.tryEmit("台本クリア！🎉")
         }
     }
 
@@ -254,7 +253,7 @@ class TalkSession(
         liveText = ""
         // ハンズフリー会話は話し終わり (無音) で自動的に区切る。それ以外は設定に従う
         val untilStopped = settings.tapToFinish && !settings.handsFree
-        status = if (untilStopped) "聞いています — 言い終わったら、もう一度マイクを押してください" else "聞いています — 話し終わると自動で止まります"
+        status = if (untilStopped) "言い終わったら、もう一度タップ" else ""
         input.start(settings.silenceMs, untilStopped, object : SpeechInput.Callback {
             override fun onPartial(text: String) {
                 liveText = text
@@ -272,7 +271,7 @@ class TalkSession(
                 endListening()
                 if (closed) return
                 when {
-                    text.isBlank() -> status = "聞き取れませんでした。マイクをタップしてもう一度どうぞ"
+                    text.isBlank() -> status = "聞き取れませんでした"
                     settings.autoSend -> send(text)
                     else -> {
                         draft = text
@@ -354,13 +353,13 @@ class TalkSession(
         if (completed.containsAll(scenario.missions.map { it.id })) {
             celebrated = true
             items += Celebration(nextId++)
-            _messages.tryEmit("ミッションコンプリート！🎉")
         }
     }
 
     private fun requestReply(snapshot: List<Line>) {
         busy = true
-        status = "${scenario.aiName} が考え中…"
+        // 考え中は吹き出しの「・・・」で伝わるので、文字は出さない
+        status = ""
         val bubble = AiMessage(nextId++, snapshot)
         items += bubble
         speaker.stop()

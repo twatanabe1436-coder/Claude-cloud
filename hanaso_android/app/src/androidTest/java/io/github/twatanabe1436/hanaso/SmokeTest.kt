@@ -216,7 +216,7 @@ class SmokeTest {
         waitForText("📖 台本のお題（全 5 問）")
         compose.onNodeWithText("会話をはじめる").performScrollTo().performClick()
 
-        waitForText("📖 お題 1 / 5")
+        waitForText("1 / 5")
         waitForText("ラテの M サイズを注文しよう")
         // 台本モードでは相手のセリフに日本語訳が自動で付く
         waitForText("いらっしゃいませ、おはようございます！ご注文は何にしますか？")
@@ -236,7 +236,7 @@ class SmokeTest {
         compose.onNodeWithContentDescription("話し終わる").performClick()
         waitForText("Sure! Would you like regular milk, or would you prefer oat or almond milk?")
         waitForText("Great!")
-        waitForText("📖 お題 2 / 5")
+        waitForText("2 / 5")
         waitForText("1 / 3")
         waitUntil("返事が読み上げられない") { speaker.spoken.any { it.contains("oat or almond milk") } }
         screenshot("12_script_talk")
@@ -246,7 +246,6 @@ class SmokeTest {
         speak("hello")
         waitForText("Sorry, could you say that again?")
         waitForText("もう一度")
-        waitForText("言い直し 1 / 2")
         waitForText("📖 お手本")
         screenshot("13_script_retry")
 

@@ -42,6 +42,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -300,19 +301,16 @@ private fun TaskBody(session: TalkSession, task: ScriptTask) {
     val scheme = MaterialTheme.colorScheme
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                "📖 お題 ${task.number} / ${task.total}" + if (task.open) "（自由に答えよう）" else "",
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
+            LinearProgressIndicator(
+                progress = { (task.number - 1).toFloat() / task.total },
+                modifier = Modifier.weight(1f).height(6.dp).clip(CircleShape),
             )
-            if (task.retries > 0) {
-                Text(
-                    "言い直し ${task.retries} / ${ScriptEngine.MAX_TRIES - 1}",
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(end = 8.dp),
-                )
-            }
+            Text(
+                "${task.number} / ${task.total}",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 8.dp),
+            )
             SmallChip(
                 if (session.showExample) "隠す" else if (task.open) "回答例" else "お手本",
                 onClick = { session.showExample = !session.showExample },
@@ -366,13 +364,12 @@ private fun AiBubble(m: AiMessage, session: TalkSession, showText: Boolean, isSa
             shadowElevation = 1.dp,
         ) {
             Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
-                Text(session.scenario.aiName, style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
                 val error = m.error
                 when {
                     error != null -> Text(error, color = scheme.error, style = MaterialTheme.typography.bodyMedium)
                     m.text.isEmpty() -> Text("・・・", color = scheme.onSurfaceVariant, style = MaterialTheme.typography.titleMedium)
                     !showText && !m.revealed && !m.streaming -> Text(
-                        "👂 聞き取りに挑戦中 — タップで表示",
+                        "👂 タップで表示",
                         color = scheme.primary,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
@@ -397,23 +394,45 @@ private fun AiBubble(m: AiMessage, session: TalkSession, showText: Boolean, isSa
                     Spacer(Modifier.height(8.dp))
                     SmallChip("もう一度", onClick = { session.retry(m) }, icon = AppIcons.Replay)
                 } else if (!m.streaming) {
-                    Spacer(Modifier.height(8.dp))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        SmallChip("再生", onClick = { session.play(m.text) }, icon = AppIcons.VolumeUp)
-                        SmallChip("🐢 ゆっくり", onClick = { session.play(m.text, 0.7f) })
-                        SmallChip("訳", onClick = { session.toggleTranslation(m) }, icon = AppIcons.Translate)
+                    Spacer(Modifier.height(4.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        IconAction("再生", AppIcons.VolumeUp) { session.play(m.text) }
+                        IconAction("ゆっくり再生", emoji = "🐢") { session.play(m.text, 0.7f) }
+                        IconAction("訳", AppIcons.Translate, active = m.showTranslation) { session.toggleTranslation(m) }
                         val saved = isSaved(m.text)
-                        SmallChip(
-                            if (saved) "保存済み" else "保存",
-                            onClick = {
-                                val tr = m.translation
-                                session.savePhrase(m.text, if (tr is LoadState.Ready) tr.value.ja else "")
-                            },
-                            icon = Icons.Filled.Star,
-                            tint = if (saved) scheme.tertiary else null,
-                        )
+                        IconAction(if (saved) "保存済み" else "保存", Icons.Filled.Star, tint = if (saved) scheme.tertiary else null) {
+                            val tr = m.translation
+                            session.savePhrase(m.text, if (tr is LoadState.Ready) tr.value.ja else "")
+                        }
                     }
                 }
+            }
+        }
+    }
+}
+
+/** 文字なしの小さな丸ボタン (説明は読み上げ・長押し用の contentDescription に入れる) */
+@Composable
+private fun IconAction(
+    description: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    emoji: String? = null,
+    tint: androidx.compose.ui.graphics.Color? = null,
+    active: Boolean = false,
+    onClick: () -> Unit,
+) {
+    val scheme = MaterialTheme.colorScheme
+    Surface(
+        onClick = onClick,
+        shape = CircleShape,
+        color = if (active) scheme.secondaryContainer else androidx.compose.ui.graphics.Color.Transparent,
+        modifier = Modifier.size(36.dp).semantics { contentDescription = description },
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            if (icon != null) {
+                Icon(icon, contentDescription = null, tint = tint ?: scheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+            } else if (emoji != null) {
+                Text(emoji, style = MaterialTheme.typography.titleSmall)
             }
         }
     }
@@ -439,13 +458,13 @@ private fun LearnerBubble(m: LearnerMessage, session: TalkSession, isSaved: (Str
                 Spacer(Modifier.width(6.dp))
                 Text("チェック中…", style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant)
             }
-            is LoadState.Failed -> Text("フィードバックを取得できませんでした", style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
+            is LoadState.Failed -> Text("チェックできませんでした", style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
             is LoadState.Ready -> {
                 val (fg, bg) = grades.of(f.value.rating)
                 val scripted = session.mode == EngineMode.SCRIPT
                 val (label, icon) = when (f.value.rating) {
                     Rating.GREAT -> "Great!" to Icons.Filled.Check
-                    Rating.GOOD -> (if (scripted) "OK! 通じた" else "もっと自然に") to AppIcons.Lightbulb
+                    Rating.GOOD -> (if (scripted) "OK!" else "もっと自然に") to AppIcons.Lightbulb
                     Rating.FIX -> (if (scripted) "もう一度" else "修正あり") to Icons.Filled.Edit
                 }
                 Surface(onClick = { m.expanded = !m.expanded }, shape = CircleShape, color = bg, contentColor = fg) {
@@ -490,18 +509,15 @@ private fun FeedbackCard(fb: Feedback, said: String, session: TalkSession, isSav
                     Label("✨ 自然な言い方")
                     Text(fb.natural, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(6.dp))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        SmallChip("再生", onClick = { session.play(fb.natural) }, icon = AppIcons.VolumeUp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconAction("再生", AppIcons.VolumeUp) { session.play(fb.natural) }
                         val saved = isSaved(fb.natural)
-                        SmallChip(
-                            if (saved) "保存済み" else "保存",
-                            onClick = { session.savePhrase(fb.natural) },
-                            icon = Icons.Filled.Star,
-                            tint = if (saved) scheme.tertiary else null,
-                        )
+                        IconAction(if (saved) "保存済み" else "保存", Icons.Filled.Star, tint = if (saved) scheme.tertiary else null) {
+                            session.savePhrase(fb.natural)
+                        }
+                        Spacer(Modifier.width(6.dp))
+                        PracticeButton(fb.natural)
                     }
-                    Spacer(Modifier.height(6.dp))
-                    PracticeButton(fb.natural)
                 }
             }
             Surface(shape = RoundedCornerShape(10.dp), color = scheme.surfaceContainerHigh) {
@@ -544,22 +560,18 @@ private fun ScriptAnswer(fb: Feedback, session: TalkSession, isSaved: (String) -
                     )
                 }
             }
-            Text("お手本との一致 ${match.score}%", style = MaterialTheme.typography.labelSmall, color = scheme.onSurfaceVariant)
         }
         ScriptEngine.lookupJa(fb.natural)?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant) }
         Spacer(Modifier.height(6.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            SmallChip("再生", onClick = { session.play(fb.natural) }, icon = AppIcons.VolumeUp)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconAction("再生", AppIcons.VolumeUp) { session.play(fb.natural) }
             val saved = isSaved(fb.natural)
-            SmallChip(
-                if (saved) "保存済み" else "保存",
-                onClick = { session.savePhrase(fb.natural) },
-                icon = Icons.Filled.Star,
-                tint = if (saved) scheme.tertiary else null,
-            )
+            IconAction(if (saved) "保存済み" else "保存", Icons.Filled.Star, tint = if (saved) scheme.tertiary else null) {
+                session.savePhrase(fb.natural)
+            }
+            Spacer(Modifier.width(6.dp))
+            PracticeButton(fb.natural)
         }
-        Spacer(Modifier.height(6.dp))
-        PracticeButton(fb.natural)
     }
 }
 
@@ -601,13 +613,11 @@ private fun CelebrationCard(item: Celebration, onFinish: () -> Unit) {
     Surface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), color = grades.greatContainer, contentColor = grades.great) {
         Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             if (item.scriptDone) {
-                Text("🎉 台本を最後まで話せました！", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-                Text("振り返りで、お手本と比べてみよう", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 4.dp))
+                Text("🎉 台本クリア！", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
             } else {
                 Text("🎉 すべてのミッションを達成しました！", fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(8.dp))
                 Button(onClick = onFinish) { Text("会話を終えて振り返る") }
-                Text("このまま会話を続けることもできます", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 6.dp))
             }
         }
     }
@@ -624,7 +634,7 @@ private fun Footer(session: TalkSession, onMic: () -> Unit, onFinish: () -> Unit
     ) {
         Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 14.dp, vertical = 10.dp)) {
             // 台本モード: 言うことはマイクのすぐ上に (相手の最新のセリフはそのすぐ上の会話の一番下)
-            session.task?.let { TaskPrompt(session, it) }
+            session.task?.takeUnless { it.finished }?.let { TaskPrompt(session, it) }
             if (session.scriptDone && !session.busy) {
                 // 台本を終えたら、マイクの代わりに振り返りへのボタン
                 Button(onClick = onFinish, modifier = Modifier.fillMaxWidth().height(52.dp).padding(vertical = 2.dp)) {
@@ -662,7 +672,7 @@ private fun FooterControls(session: TalkSession, onMic: () -> Unit) {
         if (session.listening) {
             Surface(shape = RoundedCornerShape(12.dp), color = scheme.primaryContainer, modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    session.liveText.ifBlank { "どうぞ話してください…" },
+                    session.liveText.ifBlank { "🎤 …" },
                     style = MaterialTheme.typography.bodyLarge,
                     color = if (session.liveText.isBlank()) scheme.onSurfaceVariant else scheme.onPrimaryContainer,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
@@ -689,7 +699,7 @@ private fun FooterControls(session: TalkSession, onMic: () -> Unit) {
                     value = session.draft,
                     onValueChange = { session.draft = it.take(500) },
                     modifier = Modifier.weight(1f).focusRequester(focusRequester),
-                    placeholder = { Text(if (session.mode == EngineMode.SCRIPT) "英語で入力" else "英語で入力（日本語なら言い方を提案）") },
+                    placeholder = { Text("英語で入力") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = { send() }),
@@ -821,14 +831,8 @@ private fun HintSheet(hint: HintState, session: TalkSession, mic: MicPermission)
                 }
             }
         }
-        HorizontalDivider(Modifier.padding(vertical = 12.dp))
-        if (scripted) {
-            Text(
-                "📖 台本モードでは、いまのお題のお手本を表示します。日本語から自由に英語にするには、設定で AI 会話モードにしてください。",
-                style = MaterialTheme.typography.bodySmall,
-                color = scheme.onSurfaceVariant,
-            )
-        } else {
+        if (!scripted) {
+            HorizontalDivider(Modifier.padding(vertical = 12.dp))
             WantInput(hint, session)
         }
     }
