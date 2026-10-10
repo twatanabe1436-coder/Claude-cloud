@@ -239,6 +239,11 @@ fun SettingsScreen() {
                 "相手が話し終わると自動でマイクが ON になり、電話のように会話が続きます（話し終わりは無音で自動判定します）。",
                 settings.handsFree,
             ) { v -> update { it.copy(handsFree = v) } }
+            ToggleRow(
+                "聞き間違いを自動で直す",
+                "音声認識が聞き間違えた語を、お題や会話の流れに合う語に直します（例：lotte → latte）。文法の間違いは直しません。",
+                settings.autoFix,
+            ) { v -> update { it.copy(autoFix = v) } }
             ToggleRow("話し終わったら自動で送信", "オフにすると、認識した文を確認・修正してから送信できます。", settings.autoSend) { v ->
                 update { it.copy(autoSend = v) }
             }

@@ -33,6 +33,7 @@ internal object StructuredJson {
 
     val FEEDBACK = objectOf(
         "rating" to enumOf(Rating.entries.map { it.name }),
+        "heard" to STRING,
         "corrected" to STRING,
         "natural" to STRING,
         "explanationJa" to STRING,
@@ -88,6 +89,7 @@ internal object StructuredJson {
             explanationJa = n.str("explanationJa"),
             mistakes = n.items("mistakes").map { Mistake(it.str("wrong"), it.str("right"), it.str("noteJa")) },
             completedMissions = n.strings("completedMissions"),
+            heard = n.str("heard"),
         )
     }
 

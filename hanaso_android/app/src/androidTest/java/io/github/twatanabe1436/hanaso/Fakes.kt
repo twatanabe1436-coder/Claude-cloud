@@ -21,18 +21,20 @@ class FakeSpeechInput : SpeechInput {
     val queue = ConcurrentLinkedDeque<String>()
     @Volatile var starts = 0
     @Volatile var lastUntilStopped: Boolean? = null
+    @Volatile var lastHints: List<String> = emptyList()
     private val main = Handler(Looper.getMainLooper())
     private var current: SpeechInput.Callback? = null
     private var heard = ""
 
     override val available: Boolean = true
 
-    override fun start(silenceMs: Long, untilStopped: Boolean, callback: SpeechInput.Callback) {
+    override fun start(silenceMs: Long, untilStopped: Boolean, callback: SpeechInput.Callback, hints: List<String>) {
         cancel()
         current = callback
         heard = ""
         starts++
         lastUntilStopped = untilStopped
+        lastHints = hints
         val text = queue.pollFirst()
         if (text == null) {
             // 何も話さない → 少し待って「聞き取れず」で終わる (聞き続けるときは stop() を待つ)

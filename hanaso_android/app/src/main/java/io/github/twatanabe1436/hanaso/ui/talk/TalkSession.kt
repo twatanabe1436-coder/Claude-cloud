@@ -26,6 +26,7 @@ import io.github.twatanabe1436.hanaso.core.ScriptTask
 import io.github.twatanabe1436.hanaso.core.SentenceChunker
 import io.github.twatanabe1436.hanaso.core.Speaker
 import io.github.twatanabe1436.hanaso.core.Summary
+import io.github.twatanabe1436.hanaso.core.Transcript
 import io.github.twatanabe1436.hanaso.core.Translation
 import io.github.twatanabe1436.hanaso.core.Xp
 import io.github.twatanabe1436.hanaso.core.hasJapanese
@@ -61,7 +62,16 @@ class AiMessage(override val id: Long, val snapshot: List<Line>) : ChatItem {
     var revealed by mutableStateOf(false)
 }
 
-class LearnerMessage(override val id: Long, val text: String) : ChatItem {
+/**
+ * @param voice 声で話した (キーボードではない)
+ */
+class LearnerMessage(override val id: Long, text: String, val voice: Boolean = false, heard: String? = null) : ChatItem {
+    /** 表示する発話 (聞き間違いを直したもの) */
+    var text by mutableStateOf(text)
+
+    /** 音声認識そのままの文。聞き間違いを直して text と語が変わったときだけ入る */
+    var heard by mutableStateOf(heard)
+
     var feedback by mutableStateOf<LoadState<Feedback>>(LoadState.Loading)
     var expanded by mutableStateOf(false)
 
@@ -89,7 +99,7 @@ data class HintState(
 )
 
 /** 学習者の1回の発話と、その添削 */
-class Turn(val text: String) {
+class Turn(var text: String) {
     var feedback: Feedback? = null
 }
 
@@ -171,6 +181,27 @@ class TalkSession(
 
     /** 台本を最後まで終えた */
     val scriptDone: Boolean get() = task?.finished == true
+
+    /** これまでの会話をすべて表示する。false なら、いまのやりとりだけを大きく表示する */
+    var showHistory by mutableStateOf(false)
+
+    /** 場面の説明を開いているか (最初に答えたら 1 行にたたむ) */
+    var sceneExpanded by mutableStateOf(true)
+
+    /**
+     * 画面に出す項目。ふだんは、場面と、自分の最後の発話 (判定つき) から後ろだけ
+     * (= 相手の最新のセリフ)。履歴を開いているときはすべて。
+     */
+    val visibleItems: List<ChatItem>
+        get() {
+            if (showHistory) return items.toList()
+            val lastLearner = items.indexOfLast { it is LearnerMessage }
+            if (lastLearner < 0) return items.toList()
+            return items.filterIsInstance<Scene>() + items.subList(lastLearner, items.size)
+        }
+
+    /** 履歴を開くと、いまより多くの項目が見える */
+    val hasHistory: Boolean get() = items.indexOfLast { it is LearnerMessage } > 1
 
     /** 相手のセリフに日本語訳を自動で付けるか。台本モードの訳は台本から出せる (無料・すぐ) ので常に付ける (聞き取り練習中は除く) */
     private val autoTranslate: Boolean
@@ -254,6 +285,10 @@ class TalkSession(
         speaker.stop()
         // 声で答えるときは文字の入力欄を閉じる
         showKeyboard = false
+        // 聞き間違いの自動修正がオフなら、認識のヒントも渡さない (聞こえたとおりに出す)
+        val autoFix = settings.autoFix
+        val expected = if (autoFix) expectedEnglish() else emptyList()
+        val context = if (autoFix) contextEnglish() else emptyList()
         listening = true
         liveText = ""
         // ハンズフリー会話は話し終わり (無音) で自動的に区切る。それ以外は設定に従う
@@ -275,18 +310,33 @@ class TalkSession(
             override fun onEnd(text: String) {
                 endListening()
                 if (closed) return
+                // 聞き間違いを、お題で言いそうな語に直す (文法の間違いはそのまま)
+                val fixed = if (text.isBlank()) "" else if (autoFix) Transcript.fix(text, expected, context) else text.trim()
                 when {
-                    text.isBlank() -> status = "聞き取れませんでした"
-                    settings.autoSend -> send(text)
+                    fixed.isBlank() -> status = "聞き取れませんでした"
+                    settings.autoSend -> send(fixed, heard = text, voice = true)
                     else -> {
-                        draft = text
+                        draft = fixed
                         showKeyboard = true
                     }
                 }
             }
 
             override fun onCancel() = endListening()
-        })
+        }, hints = expected + context)
+    }
+
+    /** いま言うはずの英語 (聞き間違いはこれに寄せて直す): 見ているヒントと、台本のお題のお手本・キーワード */
+    private fun expectedEnglish(): List<String> = buildList {
+        cue?.let { add(it.en) }
+        task?.takeUnless { it.finished }?.let { addAll(it.vocabulary) }
+    }
+
+    /** 会話に出てきた英語 (固有名詞の書き方をそろえる・認識のヒントにする): 相手の直前のセリフ、名前、キーフレーズ */
+    private fun contextEnglish(): List<String> = buildList {
+        history.lastOrNull { it.speaker == Speaker.AI }?.let { add(it.text) }
+        add(scenario.aiName)
+        addAll(scenario.keyPhrases.map { it.en })
     }
 
     /** 文字の入力欄を開く (開いたらキーボードも出す) */
@@ -315,18 +365,24 @@ class TalkSession(
 
     // ---- 送信 → 添削 & AI の返事 ----
 
-    /** @param fromHint ヒントをそのまま送った (XP は少なめ) */
-    fun send(text: String, fromHint: Boolean = false) {
+    /**
+     * @param fromHint ヒントをそのまま送った (XP は少なめ)
+     * @param heard 音声認識そのままの文 (声で話したとき)
+     */
+    fun send(text: String, fromHint: Boolean = false, heard: String? = null, voice: Boolean = heard != null) {
         if (busy || closed) return
         if (text.hasJapanese()) {
             openHint(text)
             return
         }
         cue = null
+        // 最初に答えたら、場面の説明はたたむ (タップで開ける)
+        if (turns.isEmpty()) sceneExpanded = false
+        val line = history.size
         history += Line(Speaker.LEARNER, text)
         val turn = Turn(text)
         turns += turn
-        val message = LearnerMessage(nextId++, text)
+        val message = LearnerMessage(nextId++, text, voice, heard?.takeIf { Transcript.wordsChanged(it, text) })
         items += message
         val snapshot = history.toList()
 
@@ -335,6 +391,13 @@ class TalkSession(
             try {
                 val fb = engine.feedback(Conversation(scenario, level, snapshot))
                 turn.feedback = fb
+                // AI 会話: AI が文脈から聞き間違いを直していたら、その文にする (文法の直しが混ざっていたら使わない)
+                if (voice && settings.autoFix && fb.heard.isNotBlank() && Transcript.acceptRepair(message.text, fb.heard)) {
+                    if (message.heard == null) message.heard = message.text
+                    message.text = fb.heard
+                    turn.text = fb.heard
+                    if (history.getOrNull(line)?.text == text) history[line] = Line(Speaker.LEARNER, fb.heard)
+                }
                 message.feedback = LoadState.Ready(fb)
                 message.xp = if (fromHint) HINT_XP else Xp.forUtterance(fb.rating)
                 app.awardXp(message.xp)

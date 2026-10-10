@@ -27,6 +27,8 @@ data class Settings(
     val autoSend: Boolean = true,
     /** マイクをもう一度押すまで聞き続ける (途中で黙っても確定しない)。ハンズフリー会話では無音で自動判定 */
     val tapToFinish: Boolean = true,
+    /** 音声認識の聞き間違いを、お題や文脈に合う語に自動で直す (文法の間違いは直さない) */
+    val autoFix: Boolean = true,
     /** AI のセリフに自動で日本語訳を付ける */
     val autoTranslate: Boolean = false,
     /** 話し終わりと判断するまでの無音時間 */
@@ -102,6 +104,7 @@ class Store(context: Context) {
             put("handsFree", s.handsFree)
             put("autoSend", s.autoSend)
             put("tapToFinish", s.tapToFinish)
+            put("autoFix", s.autoFix)
             put("autoTranslate", s.autoTranslate)
             put("silenceMs", s.silenceMs)
             put("model", s.model)
@@ -122,6 +125,7 @@ class Store(context: Context) {
             handsFree = o.optBoolean("handsFree", d.handsFree),
             autoSend = o.optBoolean("autoSend", d.autoSend),
             tapToFinish = o.optBoolean("tapToFinish", d.tapToFinish),
+            autoFix = o.optBoolean("autoFix", d.autoFix),
             autoTranslate = o.optBoolean("autoTranslate", d.autoTranslate),
             silenceMs = o.optLong("silenceMs", d.silenceMs),
             model = o.optString("model", d.model).ifBlank { d.model },

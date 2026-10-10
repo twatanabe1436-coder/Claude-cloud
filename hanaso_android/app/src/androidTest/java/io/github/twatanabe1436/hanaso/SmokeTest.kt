@@ -25,6 +25,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import io.github.twatanabe1436.hanaso.core.LeagueEntry
 import io.github.twatanabe1436.hanaso.core.Level
 import io.github.twatanabe1436.hanaso.core.MockEngine
+import io.github.twatanabe1436.hanaso.ui.talk.LearnerMessage
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -96,14 +97,25 @@ class SmokeTest {
         compose.onNodeWithText("あなた：お客さん").assertExists()
         waitUntil("最初のセリフが読み上げられない") { speaker.spoken.contains(opener) }
 
-        // マイクで話す → 自動送信 → 返事 (読み上げ) → 添削 (修正ありは自動で開く) → ミッション
+        // マイクで話す → 自動送信 (文頭の大文字・i → I・文末の . は自動で直る) → 返事 (読み上げ) → 添削 → ミッション
         speak("i want a medium latte with oat milk")
         waitForText("I see! Could you tell me a little more about that?")
-        waitForText("修正あり")
+        waitForText("I want a medium latte with oat milk.")
+        waitForText("もっと自然に")
+        compose.onNodeWithText("もっと自然に").performClick()
         waitForText("I'd like a medium latte with oat milk.")
         waitUntil("返事が読み上げられない") { speaker.spoken.any { it.contains("Could you tell me a little more") } }
         compose.onNodeWithText("1 / 3").assertExists()
         screenshot("03_talk")
+
+        // ふだんは、いまのやりとりだけ (最初のセリフは履歴に隠れ、場面は 1 行にたたまれる)
+        compose.onAllNodesWithText(opener).assertCountEquals(0)
+        compose.onNodeWithText("🎬 場面").assertDoesNotExist()
+        compose.onNodeWithContentDescription("これまでの会話").performClick()
+        waitForText(opener)
+        screenshot("03b_history")
+        compose.onNodeWithContentDescription("いまのやりとりだけ表示").performClick()
+        compose.waitUntil(3_000) { compose.onAllNodesWithText(opener).fetchSemanticsNodes().isEmpty() }
 
         // ヒント → そのまま送る
         waitUntil("返事が終わらない") { app.talk?.busy == false }
@@ -194,10 +206,12 @@ class SmokeTest {
         compose.onNodeWithText("ホーム").performClick()
         compose.onNodeWithText("今日の出来事").performScrollTo().performClick()
         compose.onNodeWithText("会話をはじめる").performScrollTo().performClick()
-        waitForText("i went to the gym today", timeoutMs = 8_000)
-        waitForText("it was really fun", timeoutMs = 8_000)
+        waitForText("It was really fun.", timeoutMs = 8_000)
         waitUntil("3回目の聞き取りが始まらない", 8_000) { input.starts >= 3 }
         assertEquals("ハンズフリーは無音で自動的に区切る", false, input.lastUntilStopped)
+        var said = emptyList<String>()
+        onMain { said = app.talk!!.items.filterIsInstance<LearnerMessage>().map { it.text } }
+        assertEquals(listOf("I went to the gym today.", "It was really fun."), said)
         compose.onNodeWithText("🎯 ミッション").assertDoesNotExist()
         screenshot("10_handsfree")
 
@@ -228,16 +242,20 @@ class SmokeTest {
 
         // お題どおりに言う → 台本の返事が来て次のお題へ、ミッション達成
         // マイクをもう一度押すまでは、黙っても回答が確定しない
-        input.queue.add("can I get a medium latte please")
+        // 聞き間違い (latte → lotte) は、お題で使う語に自動で直る
+        input.queue.add("can I get a medium lotte please")
         compose.onNodeWithContentDescription("話す").performClick()
-        waitForText("can I get a medium latte please")
+        waitForText("can I get a medium lotte please")
         Thread.sleep(1_500)
         assertTrue("もう一度押す前に確定してしまった", app.talk?.listening == true)
         assertEquals(true, input.lastUntilStopped)
+        assertTrue("お題の英語が認識のヒントに渡らない", "Can I get a medium latte, please?" in input.lastHints)
         compose.onAllNodesWithText("Sure! Would you like regular milk, or would you prefer oat or almond milk?").assertCountEquals(0)
         screenshot("11_listening")
         compose.onNodeWithContentDescription("話し終わる").performClick()
         waitForText("Sure! Would you like regular milk, or would you prefer oat or almond milk?")
+        waitForText("Can I get a medium latte please?")
+        waitForText("🎤 lotte → latte")
         waitForText("Great!")
         waitForText("+10 XP")
         waitForText("2 / 5")

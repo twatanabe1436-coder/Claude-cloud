@@ -50,6 +50,8 @@ data class ScriptTask(
     val example: Phrase,
     /** 最後のお題まで終わった */
     val finished: Boolean,
+    /** このお題で言いそうな英語 (お手本とキーワード)。音声認識の聞き間違いを直すのに使う */
+    val vocabulary: List<String> = emptyList(),
 )
 
 /** 1 回の発話の判定 */
@@ -204,7 +206,14 @@ class ScriptEngine(private val delayMs: Long = 20) : AiEngine {
         }
         val step = steps[p.step]
         val example = examplesFor(step, conversation.level).first()
-        return ScriptTask(p.step + 1, steps.size, step.taskJa, step.contextJa, step.open, p.retries, example, finished = false)
+        // 自分のことを答えるお題の回答例は一例なので入れない (似た語に直してしまわないように)。
+        // 前方一致のキーワード (allerg* など) は語ではないので入れない
+        val vocabulary = if (step.open) {
+            emptyList()
+        } else {
+            step.answers.map { it.en } + step.keywords.flatMap { it.split("|") }.map { it.trim() }.filterNot { it.endsWith("*") }
+        }
+        return ScriptTask(p.step + 1, steps.size, step.taskJa, step.contextJa, step.open, p.retries, example, finished = false, vocabulary)
     }
 
     /** 学習者の最後の発話に対する相手のセリフ */

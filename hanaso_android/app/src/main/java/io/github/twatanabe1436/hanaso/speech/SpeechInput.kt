@@ -2,6 +2,7 @@ package io.github.twatanabe1436.hanaso.speech
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -9,6 +10,7 @@ import android.os.SystemClock
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import io.github.twatanabe1436.hanaso.core.Transcript
 
 /** 英語の音声認識。テストでは偽物に差し替える。コールバックはメインスレッドで呼ばれる。 */
 interface SpeechInput {
@@ -36,8 +38,10 @@ interface SpeechInput {
      *
      * @param untilStopped true なら、途中で黙っても終わらずに聞き続け、[stop] が呼ばれたときに
      *   それまでの発話をまとめて返す。false なら、話し終わり (無音) で自動的に終わる。
+     * @param hints そのお題で言いそうな英文。認識エンジンに伝え (Android 13 以降)、認識の候補が
+     *   いくつかあるときは、これに合うものを選ぶ ([Transcript.pick])
      */
-    fun start(silenceMs: Long, untilStopped: Boolean, callback: Callback)
+    fun start(silenceMs: Long, untilStopped: Boolean, callback: Callback, hints: List<String> = emptyList())
 
     /** 話し終わったことにして、ここまでの結果で終える */
     fun stop()
@@ -54,9 +58,9 @@ class AndroidSpeechInput(context: Context) : SpeechInput {
     override val available: Boolean
         get() = SpeechRecognizer.isRecognitionAvailable(context)
 
-    override fun start(silenceMs: Long, untilStopped: Boolean, callback: SpeechInput.Callback) {
+    override fun start(silenceMs: Long, untilStopped: Boolean, callback: SpeechInput.Callback, hints: List<String>) {
         cancel()
-        val session = Session(callback, silenceMs, untilStopped)
+        val session = Session(callback, silenceMs, untilStopped, hints)
         active = session
         session.begin()
     }
@@ -80,6 +84,7 @@ class AndroidSpeechInput(context: Context) : SpeechInput {
         val callback: SpeechInput.Callback,
         val silenceMs: Long,
         val untilStopped: Boolean,
+        val hints: List<String>,
     ) {
         private var recognizer: SpeechRecognizer? = null
 
@@ -158,8 +163,8 @@ class AndroidSpeechInput(context: Context) : SpeechInput {
 
             override fun onResults(results: Bundle?) {
                 if (!current) return
-                val text = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()
-                segmentEnded(if (text.isNullOrBlank()) partial else text)
+                val alternatives = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION).orEmpty().filter { it.isNotBlank() }
+                segmentEnded(if (alternatives.isEmpty()) partial else Transcript.pick(alternatives, hints))
             }
 
             override fun onError(error: Int) {
@@ -230,7 +235,11 @@ class AndroidSpeechInput(context: Context) : SpeechInput {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-US")
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+            // お題があれば候補を複数もらって、お題に合うものを選ぶ
+            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, if (hints.isEmpty()) 1 else MAX_ALTERNATIVES)
+            if (hints.isNotEmpty() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                putStringArrayListExtra(RecognizerIntent.EXTRA_BIASING_STRINGS, ArrayList(hints.take(MAX_BIASING_STRINGS)))
+            }
             // 話し終わりと判断するまでの無音時間。聞き続けるときは区切りが少なくなるよう長めにする
             // (対応していない認識エンジンもある。その場合も区切りのたびにやり直すので聞き続けられる)
             val silence = if (untilStopped) maxOf(silenceMs, CONTINUOUS_SILENCE_MS) else silenceMs
@@ -245,6 +254,8 @@ class AndroidSpeechInput(context: Context) : SpeechInput {
         const val RESTART_DELAY_MS = 150L
         const val BUSY_RETRY_MS = 500L
         const val STOP_TIMEOUT_MS = 2_500L
+        const val MAX_ALTERNATIVES = 5
+        const val MAX_BIASING_STRINGS = 40
 
         /** 聞き続けるモードで、何も話さないまま待つ最大時間 */
         const val MAX_IDLE_MS = 60_000L

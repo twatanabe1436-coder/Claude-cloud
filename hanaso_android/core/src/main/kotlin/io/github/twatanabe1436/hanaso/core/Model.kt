@@ -151,6 +151,8 @@ data class Feedback(
     val completedMissions: List<String>,
     /** 台本モードのみ: お手本 (natural) のどの単語を言えたか */
     val matchScore: SpeechScore? = null,
+    /** AI 会話のみ: 音声認識の聞き間違いだけを直した発話 (文法の間違いはそのまま)。なければ空 */
+    val heard: String = "",
 )
 
 data class HintSuggestion(val labelJa: String, val en: String, val ja: String)

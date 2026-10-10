@@ -43,6 +43,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -87,6 +88,7 @@ import io.github.twatanabe1436.hanaso.core.ScriptTask
 import io.github.twatanabe1436.hanaso.core.SpeechScore
 import io.github.twatanabe1436.hanaso.core.SpeechScorer
 import io.github.twatanabe1436.hanaso.core.Stats
+import io.github.twatanabe1436.hanaso.core.Transcript
 import io.github.twatanabe1436.hanaso.ui.AppIcons
 import io.github.twatanabe1436.hanaso.ui.Emoji
 import io.github.twatanabe1436.hanaso.ui.LevelBadge
@@ -116,8 +118,8 @@ fun TalkScreen(session: TalkSession, onQuit: () -> Unit, onFinish: () -> Unit) {
     BackHandler { if (session.learnerTurns > 0) confirmQuit = true else onQuit() }
     LaunchedEffect(session) { session.messages.collect { context.toast(it) } }
 
-    // 新しいメッセージが来たら一番下 (reverseLayout なので 0 番目) へ
-    LaunchedEffect(session.items.size) { listState.animateScrollToItem(0) }
+    // 新しいメッセージが来たとき・表示を切り替えたときは一番下 (reverseLayout なので 0 番目) へ
+    LaunchedEffect(session.items.size, session.showHistory) { listState.animateScrollToItem(0) }
 
     val keyboard = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
@@ -164,10 +166,12 @@ fun TalkScreen(session: TalkSession, onQuit: () -> Unit, onFinish: () -> Unit) {
             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.Bottom),
         ) {
-            items(session.items.asReversed(), key = { it.id }) { item ->
+            // ふだんは、いまのやりとりだけを大きく出す (これまでの会話はヘッダーの履歴ボタンで)
+            val focus = !session.showHistory
+            items(session.visibleItems.asReversed(), key = { it.id }) { item ->
                 when (item) {
-                    is Scene -> SceneCard(session.scenario)
-                    is AiMessage -> AiBubble(item, session, settings.showText, isSaved)
+                    is Scene -> SceneCard(session)
+                    is AiMessage -> AiBubble(item, session, settings.showText, isSaved, large = focus)
                     is LearnerMessage -> LearnerBubble(item, session, isSaved)
                     is Celebration -> CelebrationCard(item, onFinish)
                 }
@@ -229,6 +233,15 @@ private fun Header(session: TalkSession, onQuit: () -> Unit, onFinish: () -> Uni
             Spacer(Modifier.width(6.dp))
             LevelBadge(session.level)
             Spacer(Modifier.weight(1f))
+            if (session.hasHistory || session.showHistory) {
+                IconButton(onClick = { session.showHistory = !session.showHistory }) {
+                    Icon(
+                        AppIcons.History,
+                        contentDescription = if (session.showHistory) "いまのやりとりだけ表示" else "これまでの会話",
+                        tint = if (session.showHistory) MaterialTheme.colorScheme.primary else LocalContentColor.current,
+                    )
+                }
+            }
             IconButton(onClick = { session.toggleMute() }) {
                 Icon(
                     if (session.muted) AppIcons.VolumeOff else AppIcons.VolumeUp,
@@ -339,8 +352,12 @@ private fun TaskBody(session: TalkSession, task: ScriptTask) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AiBubble(m: AiMessage, session: TalkSession, showText: Boolean, isSaved: (String) -> Boolean) {
+private fun AiBubble(m: AiMessage, session: TalkSession, showText: Boolean, isSaved: (String) -> Boolean, large: Boolean = false) {
     val scheme = MaterialTheme.colorScheme
+    val type = MaterialTheme.typography
+    // いまのやりとり (フォーカス表示) では、相手のセリフと訳を大きく出す
+    val lineStyle = if (large) type.titleLarge else type.bodyLarge
+    val translationStyle = if (large) type.bodyLarge else type.bodyMedium
     Row(verticalAlignment = Alignment.Top) {
         Box(
             Modifier
@@ -375,15 +392,15 @@ private fun AiBubble(m: AiMessage, session: TalkSession, showText: Boolean, isSa
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable { m.revealed = true }.padding(vertical = 4.dp),
                     )
-                    else -> Text(m.text, style = MaterialTheme.typography.bodyLarge)
+                    else -> Text(m.text, style = lineStyle)
                 }
                 if (m.showTranslation) {
                     HorizontalDivider(Modifier.padding(vertical = 8.dp), color = scheme.outlineVariant)
                     when (val t = m.translation) {
                         is LoadState.Ready -> {
-                            Text(t.value.ja, style = MaterialTheme.typography.bodyMedium)
+                            Text(t.value.ja, style = translationStyle)
                             t.value.words.forEach { w ->
-                                Text("・${w.en}：${w.ja}", style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
+                                Text("・${w.en}：${w.ja}", style = if (large) type.bodyMedium else type.bodySmall, color = scheme.onSurfaceVariant)
                             }
                         }
                         is LoadState.Failed -> Text(t.message, color = scheme.error, style = MaterialTheme.typography.bodySmall)
@@ -450,6 +467,18 @@ private fun LearnerBubble(m: LearnerMessage, session: TalkSession, isSaved: (Str
             contentColor = scheme.onPrimary,
         ) {
             Text(m.text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp))
+        }
+        // 音声認識の聞き間違いを直した語 (例: 🎤 lotte → latte)
+        val fixes = m.heard?.let { Transcript.corrections(it, m.text) }.orEmpty()
+        if (fixes.isNotEmpty()) {
+            Text(
+                "🎤 " + fixes.joinToString("、") { (heard, fixed) -> "$heard → $fixed" },
+                style = MaterialTheme.typography.labelSmall,
+                color = scheme.onSurfaceVariant,
+                modifier = Modifier
+                    .padding(top = 3.dp, end = 4.dp)
+                    .semantics { contentDescription = "聞き取りを自動修正: " + fixes.joinToString { "${it.first} を ${it.second} に" } },
+            )
         }
         Spacer(Modifier.height(6.dp))
         when (val f = m.feedback) {
@@ -591,30 +620,54 @@ private fun Label(text: String) {
     Text(text, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.Bold)
 }
 
-/** 会話の最初に出す場面の説明 (状況・自分の役・相手) */
+/** 会話の最初に出す場面の説明 (状況・自分の役・相手)。答え始めたら 1 行にたたむ (タップで開閉) */
 @Composable
-private fun SceneCard(scenario: Scenario) {
+private fun SceneCard(session: TalkSession) {
     val scheme = MaterialTheme.colorScheme
-    Surface(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp), color = scheme.surfaceContainerHigh) {
-        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
-            Text("🎬 場面", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+    val scenario = session.scenario
+    val background = scenario.backgroundJa.ifBlank { scenario.descriptionJa }
+    Surface(
+        onClick = { session.sceneExpanded = !session.sceneExpanded },
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(14.dp),
+        color = scheme.surfaceContainerHigh,
+    ) {
+        if (!session.sceneExpanded) {
             Text(
-                scenario.backgroundJa.ifBlank { scenario.descriptionJa },
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 4.dp),
-            )
-            Text(
-                "あなた：${scenario.userRoleJa}",
+                "🎬 $background",
                 style = MaterialTheme.typography.bodySmall,
                 color = scheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 6.dp),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
             )
-            Text(
-                "相手：${scenario.aiName}" + if (scenario.aiRoleJa.isBlank()) "" else "（${scenario.aiRoleJa}）",
-                style = MaterialTheme.typography.bodySmall,
-                color = scheme.onSurfaceVariant,
-            )
+        } else {
+            SceneDetails(scenario, background)
         }
+    }
+}
+
+@Composable
+private fun SceneDetails(scenario: Scenario, background: String) {
+    val scheme = MaterialTheme.colorScheme
+    Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+        Text("🎬 場面", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        Text(
+            background,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+        Text(
+            "あなた：${scenario.userRoleJa}",
+            style = MaterialTheme.typography.bodySmall,
+            color = scheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 6.dp),
+        )
+        Text(
+            "相手：${scenario.aiName}" + if (scenario.aiRoleJa.isBlank()) "" else "（${scenario.aiRoleJa}）",
+            style = MaterialTheme.typography.bodySmall,
+            color = scheme.onSurfaceVariant,
+        )
     }
 }
 

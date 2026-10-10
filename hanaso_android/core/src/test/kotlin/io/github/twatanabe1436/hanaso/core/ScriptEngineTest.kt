@@ -311,6 +311,28 @@ class ScriptEngineTest {
     }
 
     @Test
+    fun misheardAnswersAreFixedWithTheTasksVocabulary() {
+        val task = engine.task(talk(cafe))
+        assertTrue(task.vocabulary.containsAll(listOf("Can I get a medium latte, please?", "latte", "medium")))
+        val heard = "can i get a medium lotte please"
+        val fixed = Transcript.fix(heard, task.vocabulary)
+        assertEquals("Can I get a medium latte please?", fixed)
+        assertTrue(ScriptEngine.judge(cafeSteps[0], fixed).passed)
+
+        val doctor = Catalog.find("doctor")!!
+        val steps = Scripts.forScenario(doctor).steps
+        val allergy = steps.indexOfFirst { step -> step.answers.any { it.en.contains("penicillin") } }
+        val vocabulary = engine.task(talk(doctor, *steps.take(allergy).map { it.answers.first().en }.toTypedArray())).vocabulary
+        assertTrue(vocabulary.none { it.endsWith("*") })
+        assertEquals("I'm allergic to penicillin.", Transcript.fix("i'm alergic to penicilin", vocabulary))
+
+        // 自分のことを答えるお題 (フリートーク) では、回答例の語に寄せない
+        val free = Catalog.freeTalks.first()
+        assertTrue(engine.task(talk(free)).open)
+        assertEquals(emptyList<String>(), engine.task(talk(free)).vocabulary)
+    }
+
+    @Test
     fun modes() {
         assertEquals(EngineMode.SCRIPT, engine.mode)
         assertEquals(EngineMode.DEMO, MockEngine().mode)

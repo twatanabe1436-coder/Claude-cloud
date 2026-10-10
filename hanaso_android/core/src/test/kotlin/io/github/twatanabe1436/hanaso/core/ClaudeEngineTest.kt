@@ -123,7 +123,7 @@ class ClaudeEngineTest {
     fun feedbackUsesStructuredOutputAndParsesKotlinClass() = runBlocking {
         server.enqueue(
             jsonMessage(
-                """{"rating":"GOOD","corrected":"A latte, please.","natural":"Can I get a latte, please?",
+                """{"rating":"GOOD","heard":"A latte, please.","corrected":"A latte, please.","natural":"Can I get a latte, please?",
                 "explanationJa":"Can I get ...? がカフェの定番です。","mistakes":[],"completedMissions":["drink"]}""",
             ),
         )
@@ -132,6 +132,7 @@ class ClaudeEngineTest {
         assertEquals(Rating.GOOD, fb.rating)
         assertEquals("Can I get a latte, please?", fb.natural)
         assertEquals(listOf("drink"), fb.completedMissions)
+        assertEquals("A latte, please.", fb.heard)
 
         val body = server.takeRequest().bodyJson()
         assertFalse(body.has("stream") && body["stream"].asBoolean())
@@ -140,7 +141,7 @@ class ClaudeEngineTest {
         assertEquals("json_schema", outputConfig["format"]["type"].asText())
         val schema = outputConfig["format"]["schema"]
         val props = schema["properties"]
-        for (name in listOf("rating", "corrected", "natural", "explanationJa", "mistakes", "completedMissions")) {
+        for (name in listOf("rating", "heard", "corrected", "natural", "explanationJa", "mistakes", "completedMissions")) {
             assertTrue("スキーマに $name がない: $schema", props.has(name))
         }
         assertEquals(listOf("GREAT", "GOOD", "FIX"), props["rating"]["enum"].map { it.asText() })
