@@ -9,6 +9,9 @@ import androidx.compose.runtime.setValue
 import io.github.twatanabe1436.hanaso.core.AiEngine
 import io.github.twatanabe1436.hanaso.core.ClaudeEngine
 import io.github.twatanabe1436.hanaso.core.EngineMode
+import io.github.twatanabe1436.hanaso.core.FirebaseLeague
+import io.github.twatanabe1436.hanaso.core.LeagueEntry
+import io.github.twatanabe1436.hanaso.core.LeagueService
 import io.github.twatanabe1436.hanaso.core.Level
 import io.github.twatanabe1436.hanaso.core.Scenario
 import io.github.twatanabe1436.hanaso.core.ScriptEngine
@@ -23,6 +26,8 @@ import io.github.twatanabe1436.hanaso.ui.talk.FinishedSession
 import io.github.twatanabe1436.hanaso.ui.talk.TalkSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
@@ -32,6 +37,7 @@ sealed interface Screen {
     data object Scenarios : Screen
     data object Phrases : Screen
     data object Settings : Screen
+    data object League : Screen
     data class Talk(val scenarioId: String) : Screen
     data object Summary : Screen
 }
@@ -81,6 +87,18 @@ class HanasoApp : Application() {
     /** 台本モード (AI なし) */
     val scriptEngine = ScriptEngine()
 
+    /** テスト用: 設定するとこのリーグを使う */
+    var leagueOverride: LeagueService? by mutableStateOf(null)
+
+    private val firebaseLeague: LeagueService? by lazy {
+        if (LeagueConfig.configured) FirebaseLeague(LeagueConfig.PROJECT_ID, LeagueConfig.WEB_API_KEY, store.leagueTokens) else null
+    }
+
+    /** オンラインのリーグ (接続先が設定されていなければ null) */
+    fun league(): LeagueService? = leagueOverride ?: firebaseLeague
+
+    private var leagueSyncJob: Job? = null
+
     val nav = Navigator()
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
@@ -120,6 +138,35 @@ class HanasoApp : Application() {
     /** 会話を始めたときに使われる相手の種類 (画面の案内用) */
     fun modeFor(apiKey: String, settings: Settings): EngineMode = engineOverride?.mode
         ?: if (apiKey.isNotBlank() && settings.aiConversation) EngineMode.AI else EngineMode.SCRIPT
+
+    /** 練習で XP をもらう。リーグに参加していれば、少しまとめてからサーバーにも送る */
+    fun awardXp(points: Int) {
+        if (points <= 0) return
+        store.addXp(points)
+        val settings = store.settings.value
+        if (league() == null || !settings.leagueJoined || settings.nickname.isBlank()) return
+        leagueSyncJob?.cancel()
+        leagueSyncJob = scope.launch {
+            delay(3_000)
+            runCatching { submitLeague() }
+        }
+    }
+
+    /** 今週の自分の XP をリーグに送る */
+    suspend fun submitLeague() {
+        val league = league() ?: return
+        val settings = store.settings.value
+        if (!settings.leagueJoined || settings.nickname.isBlank()) return
+        val xp = store.currentXp()
+        league.submit(xp.week, settings.nickname, xp.weekXp, settings.level)
+    }
+
+    /** 自分の XP を送ってから、今週の順位を読む */
+    suspend fun refreshLeague(): List<LeagueEntry> {
+        val league = league() ?: return emptyList()
+        submitLeague()
+        return league.top(store.currentXp().week)
+    }
 
     fun startTalk(scenario: Scenario, level: Level) {
         talk?.close()

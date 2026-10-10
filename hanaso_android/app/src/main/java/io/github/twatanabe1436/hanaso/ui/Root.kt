@@ -36,6 +36,7 @@ private val TABS = listOf(
     Tab(Screen.Home, "ホーム", Icons.Filled.Home),
     Tab(Screen.Scenarios, "会話", AppIcons.Forum),
     Tab(Screen.Phrases, "フレーズ帳", AppIcons.Book),
+    Tab(Screen.League, "リーグ", AppIcons.Trophy),
     Tab(Screen.Settings, "設定", Icons.Filled.Settings),
 )
 
@@ -47,6 +48,8 @@ fun HanasoRoot(app: HanasoApp) {
     val apiKey by app.store.apiKey.collectAsStateWithLifecycle()
     val sessions by app.store.sessions.collectAsStateWithLifecycle()
     val phrases by app.store.phrases.collectAsStateWithLifecycle()
+    val savedXp by app.store.xp.collectAsStateWithLifecycle()
+    val xp = remember(savedXp) { app.store.currentXp() }
     var intro by remember { mutableStateOf<Scenario?>(null) }
 
     CompositionLocalProvider(LocalApp provides app) {
@@ -110,6 +113,7 @@ fun HanasoRoot(app: HanasoApp) {
                         Screen.Scenarios -> ScenariosScreen(onOpen = { intro = it })
                         Screen.Phrases -> PhrasesScreen(onStartTalk = { nav.tab(Screen.Scenarios) })
                         Screen.Settings -> SettingsScreen()
+                        Screen.League -> LeagueScreen()
                         else -> HomeScreen(
                             level = settings.level,
                             mode = app.modeFor(apiKey, settings),
@@ -118,6 +122,8 @@ fun HanasoRoot(app: HanasoApp) {
                             onOpen = { intro = it },
                             onOpenSettings = { nav.tab(Screen.Settings) },
                             onSeeAll = { nav.tab(Screen.Scenarios) },
+                            weekXp = xp.weekXp,
+                            onOpenLeague = { nav.tab(Screen.League) },
                         )
                     }
                 }

@@ -48,6 +48,7 @@ import io.github.twatanabe1436.hanaso.HanasoApp
 import io.github.twatanabe1436.hanaso.core.Level
 import io.github.twatanabe1436.hanaso.core.SpeechScore
 import io.github.twatanabe1436.hanaso.core.SpeechScorer
+import io.github.twatanabe1436.hanaso.core.Xp
 import io.github.twatanabe1436.hanaso.speech.SpeechInput
 
 val LocalApp = staticCompositionLocalOf<HanasoApp> { error("HanasoApp が提供されていません") }
@@ -240,6 +241,7 @@ fun PracticeButton(
                 live = ""
                 val r = SpeechScorer.score(target, text)
                 result = r to text
+                app.awardXp(Xp.forPractice(r.score))
                 onResult(r)
             }
 

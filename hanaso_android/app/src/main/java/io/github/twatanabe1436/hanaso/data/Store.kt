@@ -2,8 +2,10 @@ package io.github.twatanabe1436.hanaso.data
 
 import android.content.Context
 import io.github.twatanabe1436.hanaso.core.ClaudeEngine
+import io.github.twatanabe1436.hanaso.core.LeagueTokenStore
 import io.github.twatanabe1436.hanaso.core.Level
 import io.github.twatanabe1436.hanaso.core.Stats
+import io.github.twatanabe1436.hanaso.core.Xp
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,7 +35,14 @@ data class Settings(
     val model: String = ClaudeEngine.DEFAULT_MODEL,
     /** API キーがあるとき AI と会話する (オフ、またはキーがなければ台本モード) */
     val aiConversation: Boolean = true,
+    /** リーグに出すニックネーム */
+    val nickname: String = "",
+    /** オンラインのリーグに参加している (ニックネームと今週の XP・レベルを送る) */
+    val leagueJoined: Boolean = false,
 )
+
+/** 練習でためた XP。week は週の ID (Xp.weekId)、weekXp はその週の分 */
+data class XpState(val week: String, val weekXp: Int, val totalXp: Int)
 
 data class SavedPhrase(
     val id: String,
@@ -97,6 +106,8 @@ class Store(context: Context) {
             put("silenceMs", s.silenceMs)
             put("model", s.model)
             put("aiConversation", s.aiConversation)
+            put("nickname", s.nickname)
+            put("leagueJoined", s.leagueJoined)
         }.toString()).apply()
     }
 
@@ -115,7 +126,50 @@ class Store(context: Context) {
             silenceMs = o.optLong("silenceMs", d.silenceMs),
             model = o.optString("model", d.model).ifBlank { d.model },
             aiConversation = o.optBoolean("aiConversation", d.aiConversation),
+            nickname = o.optString("nickname", d.nickname),
+            leagueJoined = o.optBoolean("leagueJoined", d.leagueJoined),
         )
+    }
+
+    // ---- XP (週ごとのリーグ用) ----
+
+    private val _xp = MutableStateFlow(loadXp())
+    val xp: StateFlow<XpState> = _xp.asStateFlow()
+
+    /** 今の週の XP (週が変わっていれば今週の分は 0) */
+    fun currentXp(now: Long = System.currentTimeMillis()): XpState {
+        val week = Xp.weekId(now)
+        val saved = _xp.value
+        return if (saved.week == week) saved else saved.copy(week = week, weekXp = 0)
+    }
+
+    fun addXp(points: Int, now: Long = System.currentTimeMillis()): XpState {
+        val current = currentXp(now)
+        val next = current.copy(
+            weekXp = (current.weekXp + points).coerceAtMost(Xp.WEEKLY_CAP),
+            totalXp = current.totalXp + points,
+        )
+        _xp.value = next
+        prefs.edit().putString(KEY_XP, JSONObject().apply {
+            put("week", next.week)
+            put("weekXp", next.weekXp)
+            put("totalXp", next.totalXp)
+        }.toString()).apply()
+        return next
+    }
+
+    private fun loadXp(): XpState {
+        val o = prefs.getString(KEY_XP, null)?.let { runCatching { JSONObject(it) }.getOrNull() }
+        return XpState(o?.optString("week").orEmpty(), o?.optInt("weekXp") ?: 0, o?.optInt("totalXp") ?: 0)
+    }
+
+    /** オンラインのリーグの匿名ログイン (更新用トークン)。暗号化して保存する */
+    val leagueTokens = object : LeagueTokenStore {
+        override fun load(): String? = prefs.getString(KEY_LEAGUE_TOKEN, null)?.let { SecretBox.decrypt(it) }?.takeIf { it.isNotBlank() }
+
+        override fun save(refreshToken: String) {
+            prefs.edit().putString(KEY_LEAGUE_TOKEN, SecretBox.encrypt(refreshToken)).apply()
+        }
     }
 
     // ---- API キー ----
@@ -231,12 +285,13 @@ class Store(context: Context) {
         )
     }
 
-    /** 会話の記録・フレーズ帳・設定を消す (API キーは残す) */
+    /** 会話の記録・フレーズ帳・設定・XP を消す (API キーは残す) */
     fun resetAll() {
-        prefs.edit().remove(KEY_SETTINGS).remove(KEY_PHRASES).remove(KEY_SESSIONS).apply()
+        prefs.edit().remove(KEY_SETTINGS).remove(KEY_PHRASES).remove(KEY_SESSIONS).remove(KEY_XP).remove(KEY_LEAGUE_TOKEN).apply()
         _settings.value = Settings()
         _phrases.value = emptyList()
         _sessions.value = emptyList()
+        _xp.value = XpState("", 0, 0)
     }
 
     private fun <T> readArray(key: String, parse: (JSONObject) -> T): List<T> {
@@ -252,6 +307,8 @@ class Store(context: Context) {
         const val KEY_PHRASES = "phrases"
         const val KEY_SESSIONS = "sessions"
         const val KEY_API = "api_key"
+        const val KEY_XP = "xp"
+        const val KEY_LEAGUE_TOKEN = "league_token"
         const val MAX_SESSIONS = 100
     }
 }

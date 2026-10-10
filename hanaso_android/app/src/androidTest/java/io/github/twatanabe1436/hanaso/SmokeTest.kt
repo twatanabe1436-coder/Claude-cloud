@@ -22,6 +22,8 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import io.github.twatanabe1436.hanaso.core.LeagueEntry
+import io.github.twatanabe1436.hanaso.core.Level
 import io.github.twatanabe1436.hanaso.core.MockEngine
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -60,6 +62,7 @@ class SmokeTest {
             app.store.resetAll()
             app.store.setApiKey("")
             app.engineOverride = MockEngine(delayMs = 5)
+            app.leagueOverride = null
             app.speechInput = input
             app.speaker = speaker
             app.nav.tab(Screen.Home)
@@ -236,6 +239,7 @@ class SmokeTest {
         compose.onNodeWithContentDescription("話し終わる").performClick()
         waitForText("Sure! Would you like regular milk, or would you prefer oat or almond milk?")
         waitForText("Great!")
+        waitForText("+10 XP")
         waitForText("2 / 5")
         waitForText("1 / 3")
         waitUntil("返事が読み上げられない") { speaker.spoken.any { it.contains("oat or almond milk") } }
@@ -284,7 +288,43 @@ class SmokeTest {
         compose.onNode(hasScrollAction()).performScrollToNode(hasText("ホームへ"))
         compose.onNodeWithText("ホームへ").performClick()
         waitForText("📖 台本モード（AI なし・無料）")
+        // XP: Great 10 + もう一度 3 + ヒントのまま 2 + Great 10 + Great 10 + OK 7 + 台本クリア 20
+        compose.onNodeWithTag("home_list").performScrollToNode(hasText("今週 62 XP"))
+        assertEquals(62, app.store.currentXp().weekXp)
         screenshot("16_script_home")
+    }
+
+    @Test
+    fun leagueJoinAndRanking() {
+        val league = FakeLeague(
+            listOf(
+                LeagueEntry("a", "Aki", 120, Level.B1),
+                LeagueEntry("b", "Ben", 15, Level.A2),
+            ),
+        )
+        onMain {
+            app.leagueOverride = league
+            app.awardXp(40)
+        }
+        compose.onNodeWithTag("home_list").performScrollToNode(hasText("今週 40 XP"))
+
+        // ニックネームを決めて参加 → 自分の XP を送って順位を読む
+        compose.onNodeWithText("リーグ").performClick()
+        waitForText("🏆 リーグに参加する")
+        compose.onNode(hasSetTextAction()).performTextInput("Ken")
+        compose.onNodeWithText("参加する").performClick()
+        waitForText("Ken（あなた）")
+        waitForText("Aki")
+        waitForText("Ben")
+        assertEquals(FakeLeague.Submit(app.store.currentXp().week, "Ken", 40, Level.DEFAULT), league.submitted.last())
+        screenshot("17_league")
+
+        // XP をもらうと、少しまとめてからリーグにも送る
+        onMain { app.awardXp(100) }
+        waitUntil("XP がリーグに送られない", 8_000) { league.submitted.lastOrNull()?.xp == 140 }
+        compose.onNodeWithText("更新").performClick()
+        waitForText("140 XP")
+        waitForText("今週 140 XP")
     }
 
     /** マイクで話して、もう一度押して確定する (既定の「マイクをもう一度押すまで聞き続ける」) */

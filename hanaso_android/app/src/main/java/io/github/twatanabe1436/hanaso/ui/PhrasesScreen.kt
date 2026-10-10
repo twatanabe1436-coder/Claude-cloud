@@ -49,6 +49,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.twatanabe1436.hanaso.core.SpeechScore
 import io.github.twatanabe1436.hanaso.core.SpeechScorer
+import io.github.twatanabe1436.hanaso.core.Xp
 import io.github.twatanabe1436.hanaso.data.SavedPhrase
 import io.github.twatanabe1436.hanaso.speech.SpeechInput
 
@@ -174,6 +175,7 @@ private fun FlashcardsDialog(deck: List<SavedPhrase>, onResult: (SavedPhrase, In
                 val r = SpeechScorer.score(card.en, text)
                 result = r to text
                 revealed = true
+                app.awardXp(Xp.forPractice(r.score))
                 onResult(card, r.score)
                 app.speaker.say(card.en)
             }

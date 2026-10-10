@@ -2,6 +2,9 @@ package io.github.twatanabe1436.hanaso
 
 import android.os.Handler
 import android.os.Looper
+import io.github.twatanabe1436.hanaso.core.LeagueEntry
+import io.github.twatanabe1436.hanaso.core.LeagueService
+import io.github.twatanabe1436.hanaso.core.Level
 import io.github.twatanabe1436.hanaso.speech.SpeechInput
 import io.github.twatanabe1436.hanaso.speech.SpeechOutput
 import io.github.twatanabe1436.hanaso.speech.VoiceStatus
@@ -100,5 +103,22 @@ class FakeSpeaker : SpeechOutput {
 
     override fun whenIdle(callback: () -> Unit) {
         if (pending == 0) callback() else callbacks += callback
+    }
+}
+
+/** テスト用のリーグ: ほかのプレイヤーは決まった XP、自分の分は送られた値 */
+class FakeLeague(private val others: List<LeagueEntry>) : LeagueService {
+    data class Submit(val week: String, val name: String, val xp: Int, val level: Level)
+
+    val submitted = CopyOnWriteArrayList<Submit>()
+    override val uid: String = "me"
+
+    override suspend fun submit(week: String, name: String, xp: Int, level: Level) {
+        submitted += Submit(week, name, xp, level)
+    }
+
+    override suspend fun top(week: String, limit: Int): List<LeagueEntry> {
+        val me = submitted.lastOrNull()?.let { LeagueEntry(uid, it.name, it.xp, it.level) }
+        return (others + listOfNotNull(me)).sortedByDescending { it.xp }.take(limit)
     }
 }

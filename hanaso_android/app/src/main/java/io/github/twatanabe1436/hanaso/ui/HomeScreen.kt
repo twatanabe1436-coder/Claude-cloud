@@ -54,6 +54,8 @@ fun HomeScreen(
     onOpen: (Scenario) -> Unit,
     onOpenSettings: () -> Unit,
     onSeeAll: () -> Unit,
+    weekXp: Int,
+    onOpenLeague: () -> Unit,
 ) {
     val pick = Stats.todaysPick(level)
     // 自分のレベルに近い順 (同じ距離なら、やさしいほうが先)
@@ -82,6 +84,7 @@ fun HomeScreen(
                 StatTile("⭐ ${totals.phrases}", "フレーズ", Modifier.weight(1f))
             }
         }
+        item { LeagueCard(weekXp, onOpenLeague) }
         item { TodayCard(pick) { onOpen(pick) } }
         item {
             Column {
@@ -125,6 +128,25 @@ private fun ModeCard(mode: EngineMode, onOpenSettings: () -> Unit) {
             if (mode == EngineMode.SCRIPT) {
                 OutlinedButton(onClick = onOpenSettings) { Text("会話モードの設定") }
             }
+        }
+    }
+}
+
+/** 今週の XP (タップでリーグへ) */
+@Composable
+private fun LeagueCard(weekXp: Int, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        tonalElevation = 1.dp,
+    ) {
+        Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(AppIcons.Trophy, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(10.dp))
+            Text("今週 $weekXp XP", fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text("リーグ ›", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         }
     }
 }

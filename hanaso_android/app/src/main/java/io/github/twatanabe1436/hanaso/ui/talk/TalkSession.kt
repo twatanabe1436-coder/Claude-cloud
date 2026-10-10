@@ -27,6 +27,7 @@ import io.github.twatanabe1436.hanaso.core.SentenceChunker
 import io.github.twatanabe1436.hanaso.core.Speaker
 import io.github.twatanabe1436.hanaso.core.Summary
 import io.github.twatanabe1436.hanaso.core.Translation
+import io.github.twatanabe1436.hanaso.core.Xp
 import io.github.twatanabe1436.hanaso.core.hasJapanese
 import io.github.twatanabe1436.hanaso.data.SessionRecord
 import io.github.twatanabe1436.hanaso.speech.SpeechInput
@@ -63,6 +64,9 @@ class AiMessage(override val id: Long, val snapshot: List<Line>) : ChatItem {
 class LearnerMessage(override val id: Long, val text: String) : ChatItem {
     var feedback by mutableStateOf<LoadState<Feedback>>(LoadState.Loading)
     var expanded by mutableStateOf(false)
+
+    /** この発話でもらった XP */
+    var xp by mutableIntStateOf(0)
 }
 
 /** 会話の最初に出す、場面の説明 */
@@ -204,6 +208,7 @@ class TalkSession(
         if (next.finished && !celebrated) {
             celebrated = true
             items += Celebration(nextId++, scriptDone = true)
+            app.awardXp(Xp.SCRIPT_CLEAR)
         }
     }
 
@@ -310,7 +315,8 @@ class TalkSession(
 
     // ---- 送信 → 添削 & AI の返事 ----
 
-    fun send(text: String) {
+    /** @param fromHint ヒントをそのまま送った (XP は少なめ) */
+    fun send(text: String, fromHint: Boolean = false) {
         if (busy || closed) return
         if (text.hasJapanese()) {
             openHint(text)
@@ -330,6 +336,8 @@ class TalkSession(
                 val fb = engine.feedback(Conversation(scenario, level, snapshot))
                 turn.feedback = fb
                 message.feedback = LoadState.Ready(fb)
+                message.xp = if (fromHint) HINT_XP else Xp.forUtterance(fb.rating)
+                app.awardXp(message.xp)
                 // 修正があるときは自動で開いて気づけるようにする
                 if (fb.rating == Rating.FIX) message.expanded = true
                 val valid = scenario.missions.map { it.id }.toSet()
@@ -353,6 +361,7 @@ class TalkSession(
         if (completed.containsAll(scenario.missions.map { it.id })) {
             celebrated = true
             items += Celebration(nextId++)
+            app.awardXp(Xp.ALL_MISSIONS)
         }
     }
 
@@ -470,7 +479,7 @@ class TalkSession(
 
     fun sendHint(suggestion: HintSuggestion) {
         closeHint()
-        send(suggestion.en)
+        send(suggestion.en, fromHint = true)
     }
 
     fun dismissCue() {
@@ -529,3 +538,6 @@ class TalkSession(
         speaker.stop()
     }
 }
+
+/** ヒントをそのまま送ったときの XP (自分で言ったときより少なめ) */
+private const val HINT_XP = 2

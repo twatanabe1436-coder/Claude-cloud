@@ -467,11 +467,22 @@ private fun LearnerBubble(m: LearnerMessage, session: TalkSession, isSaved: (Str
                     Rating.GOOD -> (if (scripted) "OK!" else "もっと自然に") to AppIcons.Lightbulb
                     Rating.FIX -> (if (scripted) "もう一度" else "修正あり") to Icons.Filled.Edit
                 }
-                Surface(onClick = { m.expanded = !m.expanded }, shape = CircleShape, color = bg, contentColor = fg) {
-                    Row(Modifier.padding(horizontal = 12.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(icon, contentDescription = null, modifier = Modifier.size(15.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (m.xp > 0) {
+                        Text(
+                            "+${m.xp} XP",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = scheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(end = 6.dp),
+                        )
+                    }
+                    Surface(onClick = { m.expanded = !m.expanded }, shape = CircleShape, color = bg, contentColor = fg) {
+                        Row(Modifier.padding(horizontal = 12.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(icon, contentDescription = null, modifier = Modifier.size(15.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
                 if (m.expanded) {
