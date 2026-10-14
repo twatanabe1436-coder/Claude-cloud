@@ -6,8 +6,8 @@ package io.github.twatanabe1436.hanaso
  * 空のあいだは、XP はこの端末にだけ記録する。
  */
 object LeagueConfig {
-    const val PROJECT_ID = ""
-    const val WEB_API_KEY = ""
+    const val PROJECT_ID = "hanaso-league"
+    const val WEB_API_KEY = "AIzaSyAbxvMQJz49KZZbx-y_XzUA9EWCa-3tNEU"
 
     val configured: Boolean get() = PROJECT_ID.isNotBlank() && WEB_API_KEY.isNotBlank()
 }

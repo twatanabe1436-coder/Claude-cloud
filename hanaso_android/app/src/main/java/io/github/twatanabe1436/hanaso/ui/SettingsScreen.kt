@@ -274,7 +274,7 @@ fun SettingsScreen() {
         }
 
         Text(
-            "Hanaso v0.4.0・${if (app.modeFor(apiKey, settings) == EngineMode.AI) "AI: ${settings.model}" else "台本モード"}",
+            "Hanaso v0.4.1・${if (app.modeFor(apiKey, settings) == EngineMode.AI) "AI: ${settings.model}" else "台本モード"}",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
