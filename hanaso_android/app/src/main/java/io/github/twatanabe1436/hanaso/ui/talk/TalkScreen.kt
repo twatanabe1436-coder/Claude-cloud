@@ -155,7 +155,9 @@ fun TalkScreen(session: TalkSession, onQuit: () -> Unit, onFinish: () -> Unit) {
             onFinish = onFinish,
         )
         // 場面と相手のイラスト。履歴を見ているときと文字で入力しているときは、会話の場所を空けるため出さない
-        if (!session.showHistory && !session.showKeyboard && hasArt(session.scenario.id)) {
+        // (台本を終えたら入力欄は消えるので、最後に文字で答えていても笑顔を出す)
+        val typing = session.showKeyboard && !session.scriptDone
+        if (!session.showHistory && !typing && hasArt(session.scenario.id)) {
             val height = (LocalConfiguration.current.screenHeightDp * 0.18f).coerceIn(100f, 160f).dp
             SceneIllustration(session.scenario.id, mood, Modifier.fillMaxWidth().height(height), focusY = 0.6f)
         }
