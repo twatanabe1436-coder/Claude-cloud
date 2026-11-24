@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- art/build.py で生成。手で直さない -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="360dp"
+    android:height="160dp"
+    android:viewportWidth="720"
+    android:viewportHeight="320">
+    <path android:pathData="M280 214H440A10 10 0 0 1 450 224V310A10 10 0 0 1 440 320H280A10 10 0 0 1 270 310V224A10 10 0 0 1 280 214Z" android:fillColor="#FFD166"/>
+    <path android:pathData="M277 214H443A7 7 0 0 1 450 221V221A7 7 0 0 1 443 228H277A7 7 0 0 1 270 221V221A7 7 0 0 1 277 214Z" android:fillColor="#FFE29A"/>
+    <path android:pathData="M120 246H260A10 10 0 0 1 270 256V310A10 10 0 0 1 260 320H120A10 10 0 0 1 110 310V256A10 10 0 0 1 120 246Z" android:fillColor="#E3E8EE"/>
+    <path android:pathData="M116 246H264A6 6 0 0 1 270 252V252A6 6 0 0 1 264 258H116A6 6 0 0 1 110 252V252A6 6 0 0 1 116 246Z" android:fillColor="#F5F7FA"/>
+    <path android:pathData="M460 268H600A10 10 0 0 1 610 278V310A10 10 0 0 1 600 320H460A10 10 0 0 1 450 310V278A10 10 0 0 1 460 268Z" android:fillColor="#F0B37E"/>
+    <path android:pathData="M456 268H604A6 6 0 0 1 610 274V274A6 6 0 0 1 604 280H456A6 6 0 0 1 450 274V274A6 6 0 0 1 456 268Z" android:fillColor="#F7CDA6"/>
+    <path android:pathData="M378 266A18 18 0 1 1 342 266A18 18 0 1 1 378 266Z" android:fillColor="#F2A541"/>
+    <path android:pathData="M350 246L360 258L370 246Z" android:fillColor="#E4572E"/>
+    <path android:pathData="M205 286A15 15 0 1 1 175 286A15 15 0 1 1 205 286Z" android:fillColor="#C9D3E6"/>
+    <path android:pathData="M543 296A13 13 0 1 1 517 296A13 13 0 1 1 543 296Z" android:fillColor="#C98A4B"/>
+</vector>

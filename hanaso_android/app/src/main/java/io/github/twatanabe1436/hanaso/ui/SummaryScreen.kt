@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
@@ -48,6 +49,10 @@ import io.github.twatanabe1436.hanaso.core.EngineMode
 import io.github.twatanabe1436.hanaso.core.Rating
 import io.github.twatanabe1436.hanaso.core.ScriptEngine
 import io.github.twatanabe1436.hanaso.core.Stats
+import io.github.twatanabe1436.hanaso.R
+import io.github.twatanabe1436.hanaso.ui.art.Mood
+import io.github.twatanabe1436.hanaso.ui.art.SceneIllustration
+import io.github.twatanabe1436.hanaso.ui.art.hasArt
 import io.github.twatanabe1436.hanaso.ui.talk.FinishedSession
 import io.github.twatanabe1436.hanaso.ui.talk.LoadState
 import io.github.twatanabe1436.hanaso.ui.talk.errorText
@@ -95,7 +100,19 @@ fun SummaryScreen(result: FinishedSession, onAgain: () -> Unit, onHome: () -> Un
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                Emoji(scenario.emoji, size = 40)
+                if (hasArt(scenario.id)) {
+                    // 相手が喜んでいる場面に紙吹雪を重ねる
+                    SceneIllustration(
+                        scenario.id,
+                        Mood.HAPPY,
+                        Modifier.fillMaxWidth().height(170.dp).clip(RoundedCornerShape(20.dp)),
+                        focusY = 0.6f,
+                        overlay = R.drawable.art_confetti,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                } else {
+                    Emoji(scenario.emoji, size = 40)
+                }
                 Text("おつかれさまでした！", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                 Text("${scenario.titleJa}・${result.level.displayJa}", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }

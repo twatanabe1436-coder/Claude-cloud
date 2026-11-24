@@ -31,6 +31,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,6 +41,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.twatanabe1436.hanaso.core.LeagueEntry
 import io.github.twatanabe1436.hanaso.core.LeagueException
 import io.github.twatanabe1436.hanaso.core.Xp
+import io.github.twatanabe1436.hanaso.ui.art.LeagueIllustration
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -94,6 +96,8 @@ fun LeagueScreen() {
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Text("リーグ", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+
+        LeagueIllustration(Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(20.dp)))
 
         Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.primaryContainer, modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {

@@ -40,6 +40,11 @@ import io.github.twatanabe1436.hanaso.core.Scenario
 import io.github.twatanabe1436.hanaso.core.Stats
 import io.github.twatanabe1436.hanaso.data.SessionRecord
 import io.github.twatanabe1436.hanaso.data.Totals
+import io.github.twatanabe1436.hanaso.ui.art.FREE_TALK_ART
+import io.github.twatanabe1436.hanaso.ui.art.Mood
+import io.github.twatanabe1436.hanaso.ui.art.PartnerAvatar
+import io.github.twatanabe1436.hanaso.ui.art.ScenarioPicture
+import io.github.twatanabe1436.hanaso.ui.art.hasArt
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -88,7 +93,11 @@ fun HomeScreen(
         item { TodayCard(pick) { onOpen(pick) } }
         item {
             Column {
-                SectionTitle("フリートーク", if (mode == EngineMode.AI) "AI の Alex と自由に話そう" else "Alex と自分のことを話そう")
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    PartnerAvatar(FREE_TALK_ART, Mood.NORMAL, size = 36.dp, modifier = Modifier.padding(bottom = 8.dp))
+                    Spacer(Modifier.width(8.dp))
+                    SectionTitle("フリートーク", if (mode == EngineMode.AI) "AI の Alex と自由に話そう" else "Alex と自分のことを話そう")
+                }
                 FreeTalkGrid(onOpen)
             }
         }
@@ -184,9 +193,16 @@ private fun TodayCard(s: Scenario, onClick: () -> Unit) {
     ) {
         Text("今日のおすすめ", color = Color.White.copy(alpha = 0.85f), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(6.dp))
+        val art = hasArt(s.id)
+        if (art) {
+            ScenarioPicture(s.id, s.emoji, Modifier.fillMaxWidth().height(130.dp), corner = 14.dp)
+            Spacer(Modifier.height(10.dp))
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Emoji(s.emoji, size = 34)
-            Spacer(Modifier.width(12.dp))
+            if (!art) {
+                Emoji(s.emoji, size = 34)
+                Spacer(Modifier.width(12.dp))
+            }
             Column {
                 Text(s.titleJa, color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(s.titleEn, color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.bodySmall)
@@ -214,9 +230,9 @@ private fun MiniCard(s: Scenario, onClick: () -> Unit) {
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
         tonalElevation = 1.dp,
     ) {
-        Column(Modifier.padding(14.dp)) {
-            Emoji(s.emoji, size = 30)
-            Spacer(Modifier.height(6.dp))
+        Column(Modifier.padding(10.dp)) {
+            ScenarioPicture(s.id, s.emoji, Modifier.fillMaxWidth().height(70.dp), corner = 10.dp)
+            Spacer(Modifier.height(8.dp))
             Text(s.titleJa, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, minLines = 2, maxLines = 2)
             Spacer(Modifier.height(6.dp))
             s.level?.let { LevelBadge(it) }
@@ -235,7 +251,7 @@ private fun RecentRow(r: SessionRecord, onClick: () -> Unit) {
         tonalElevation = 1.dp,
     ) {
         Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Emoji(r.emoji, size = 22)
+            if (hasArt(r.scenarioId)) PartnerAvatar(r.scenarioId, Mood.NORMAL, size = 36.dp) else Emoji(r.emoji, size = 22)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(r.titleJa, style = MaterialTheme.typography.bodyLarge)

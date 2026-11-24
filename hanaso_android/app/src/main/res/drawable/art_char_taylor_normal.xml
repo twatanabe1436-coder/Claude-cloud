@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- art/build.py で生成。手で直さない -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <group android:translateX="-176" android:translateY="-73.47" android:scaleX="0.77" android:scaleY="0.77">
+        <path android:pathData="M292 210C288 150 326 128 360 128C394 128 432 150 428 210L430 306C418 318 404 312 402 300L318 300C316 312 302 318 290 306Z" android:fillColor="#1F1A17"/>
+        <path android:pathData="M356 248H364A10 10 0 0 1 374 258V280A10 10 0 0 1 364 290H356A10 10 0 0 1 346 280V258A10 10 0 0 1 356 248Z" android:fillColor="#774A30"/>
+        <path android:pathData="M270 360C274 306 308 282 360 282C412 282 446 306 450 360Z" android:fillColor="#B9A6F0"/>
+        <path android:pathData="M314 286C324 266 396 266 406 286C396 302 324 302 314 286Z" android:fillColor="#9F89E0"/>
+        <path android:pathData="M350 297L347 332M370 297L373 332" android:strokeColor="#FFFFFF" android:strokeWidth="3" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+        <path android:pathData="M350 334A3 3 0 1 1 344 334A3 3 0 1 1 350 334Z" android:fillColor="#FFFFFF"/>
+        <path android:pathData="M376 334A3 3 0 1 1 370 334A3 3 0 1 1 376 334Z" android:fillColor="#FFFFFF"/>
+        <path android:pathData="M298 220C290 256 292 296 300 318C310 322 320 312 320 300C316 274 314 246 312 228Z" android:fillColor="#1F1A17"/>
+        <path android:pathData="M422 220C430 256 428 296 420 318C410 322 400 312 400 300C404 274 406 246 408 228Z" android:fillColor="#1F1A17"/>
+        <path android:pathData="M420 208A60 60 0 1 1 300 208A60 60 0 1 1 420 208Z" android:fillColor="#8D5B3D"/>
+        <path android:pathData="M300 214C298 160 330 140 360 140C390 140 422 160 420 214C412 186 394 168 362 164C330 168 308 186 300 214Z" android:fillColor="#1F1A17"/>
+        <path android:pathData="M330 156Q348 148 362 150" android:strokeColor="#46423F" android:strokeWidth="4" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+        <path android:pathData="M334 234A10 6 0 1 1 314 234A10 6 0 1 1 334 234Z" android:fillColor="#C4604F" android:fillAlpha="0.5"/>
+        <path android:pathData="M406 234A10 6 0 1 1 386 234A10 6 0 1 1 406 234Z" android:fillColor="#C4604F" android:fillAlpha="0.5"/>
+        <path android:pathData="M358 222Q360 228 364 224" android:strokeColor="#5C3823" android:strokeWidth="3" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+        <path android:pathData="M330 196Q338 191 346 195M374 195Q382 191 390 196" android:strokeColor="#4A3326" android:strokeWidth="4" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+        <path android:pathData="M344 214A6 8 0 1 1 332 214A6 8 0 1 1 344 214Z" android:fillColor="#2D2A32"/>
+        <path android:pathData="M388 214A6 8 0 1 1 376 214A6 8 0 1 1 388 214Z" android:fillColor="#2D2A32"/>
+        <path android:pathData="M342.2 211A2.2 2.2 0 1 1 337.8 211A2.2 2.2 0 1 1 342.2 211Z" android:fillColor="#FFFFFF"/>
+        <path android:pathData="M386.2 211A2.2 2.2 0 1 1 381.8 211A2.2 2.2 0 1 1 386.2 211Z" android:fillColor="#FFFFFF"/>
+        <path android:pathData="M348 241Q360 250 372 241" android:strokeColor="#A9403F" android:strokeWidth="4" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+        <path android:pathData="M434 360C442 322 446 292 432 266" android:strokeColor="#B9A6F0" android:strokeWidth="24" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+        <path android:pathData="M418 194H427A5 5 0 0 1 432 199V231A5 5 0 0 1 427 236H418A5 5 0 0 1 413 231V199A5 5 0 0 1 418 194Z" android:fillColor="#2D2F3A"/>
+        <path android:pathData="M419 199H426A3 3 0 0 1 429 202V228A3 3 0 0 1 426 231H419A3 3 0 0 1 416 228V202A3 3 0 0 1 419 199Z" android:fillColor="#5B6375"/>
+        <path android:pathData="M440 251A15 15 0 1 1 410 251A15 15 0 1 1 440 251Z" android:fillColor="#8D5B3D"/>
+    </group>
+</vector>

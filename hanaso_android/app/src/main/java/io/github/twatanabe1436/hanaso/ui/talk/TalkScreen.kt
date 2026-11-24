@@ -65,6 +65,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -90,6 +91,10 @@ import io.github.twatanabe1436.hanaso.core.SpeechScorer
 import io.github.twatanabe1436.hanaso.core.Stats
 import io.github.twatanabe1436.hanaso.core.Transcript
 import io.github.twatanabe1436.hanaso.ui.AppIcons
+import io.github.twatanabe1436.hanaso.ui.art.Mood
+import io.github.twatanabe1436.hanaso.ui.art.PartnerAvatar
+import io.github.twatanabe1436.hanaso.ui.art.SceneIllustration
+import io.github.twatanabe1436.hanaso.ui.art.hasArt
 import io.github.twatanabe1436.hanaso.ui.Emoji
 import io.github.twatanabe1436.hanaso.ui.LevelBadge
 import io.github.twatanabe1436.hanaso.ui.LocalApp
@@ -141,12 +146,19 @@ fun TalkScreen(session: TalkSession, onQuit: () -> Unit, onFinish: () -> Unit) {
         }
     }
 
+    val mood = partnerMood(session)
+
     Column(Modifier.fillMaxSize()) {
         Header(
             session = session,
             onQuit = { if (session.learnerTurns > 0) confirmQuit = true else onQuit() },
             onFinish = onFinish,
         )
+        // 場面と相手のイラスト。履歴を見ているときと文字で入力しているときは、会話の場所を空けるため出さない
+        if (!session.showHistory && !session.showKeyboard && hasArt(session.scenario.id)) {
+            val height = (LocalConfiguration.current.screenHeightDp * 0.18f).coerceIn(100f, 160f).dp
+            SceneIllustration(session.scenario.id, mood, Modifier.fillMaxWidth().height(height), focusY = 0.6f)
+        }
         if (session.scenario.missions.isNotEmpty()) MissionPanel(session, compact = session.mode == EngineMode.SCRIPT)
         if (session.mode == EngineMode.DEMO) {
             Text(
@@ -171,7 +183,7 @@ fun TalkScreen(session: TalkSession, onQuit: () -> Unit, onFinish: () -> Unit) {
             items(session.visibleItems.asReversed(), key = { it.id }) { item ->
                 when (item) {
                     is Scene -> SceneCard(session)
-                    is AiMessage -> AiBubble(item, session, settings.showText, isSaved, large = focus)
+                    is AiMessage -> AiBubble(item, session, settings.showText, isSaved, large = focus, mood = if (focus) mood else Mood.NORMAL)
                     is LearnerMessage -> LearnerBubble(item, session, isSaved)
                     is Celebration -> CelebrationCard(item, onFinish)
                 }
@@ -202,6 +214,18 @@ fun TalkScreen(session: TalkSession, onQuit: () -> Unit, onFinish: () -> Unit) {
             },
             dismissButton = { TextButton(onClick = { confirmQuit = false }) { Text("続ける") } },
         )
+    }
+}
+
+/** 相手の表情: 直前の発話の判定に合わせる (台本モードで言い直しになったときは聞き返す顔) */
+private fun partnerMood(session: TalkSession): Mood {
+    if (session.scriptDone || session.items.any { it is Celebration }) return Mood.HAPPY
+    val last = session.items.lastOrNull { it is LearnerMessage } as LearnerMessage? ?: return Mood.NORMAL
+    val feedback = (last.feedback as? LoadState.Ready<Feedback>)?.value ?: return Mood.NORMAL
+    return when (feedback.rating) {
+        Rating.GREAT -> Mood.HAPPY
+        Rating.GOOD -> Mood.NORMAL
+        Rating.FIX -> if (session.mode == EngineMode.SCRIPT) Mood.PUZZLED else Mood.NORMAL
     }
 }
 
@@ -352,26 +376,26 @@ private fun TaskBody(session: TalkSession, task: ScriptTask) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun AiBubble(m: AiMessage, session: TalkSession, showText: Boolean, isSaved: (String) -> Boolean, large: Boolean = false) {
+private fun AiBubble(
+    m: AiMessage,
+    session: TalkSession,
+    showText: Boolean,
+    isSaved: (String) -> Boolean,
+    large: Boolean = false,
+    mood: Mood = Mood.NORMAL,
+) {
     val scheme = MaterialTheme.colorScheme
     val type = MaterialTheme.typography
     // いまのやりとり (フォーカス表示) では、相手のセリフと訳を大きく出す
     val lineStyle = if (large) type.titleLarge else type.bodyLarge
     val translationStyle = if (large) type.bodyLarge else type.bodyMedium
     Row(verticalAlignment = Alignment.Top) {
-        Box(
-            Modifier
-                .size(34.dp)
-                .clip(CircleShape)
-                .background(scheme.primaryContainer),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                session.scenario.aiName.removePrefix("Dr. ").removePrefix("Ms. ").removePrefix("Officer ").take(1),
-                color = scheme.onPrimaryContainer,
-                fontWeight = FontWeight.ExtraBold,
-            )
-        }
+        PartnerAvatar(
+            session.scenario.id,
+            mood,
+            size = 34.dp,
+            fallback = session.scenario.aiName.removePrefix("Dr. ").removePrefix("Ms. ").removePrefix("Officer ").take(1),
+        )
         Spacer(Modifier.width(8.dp))
         Surface(
             modifier = Modifier.weight(1f, fill = false),

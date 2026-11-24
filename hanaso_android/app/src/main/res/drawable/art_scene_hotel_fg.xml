@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- art/build.py で生成。手で直さない -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="360dp"
+    android:height="200dp"
+    android:viewportWidth="720"
+    android:viewportHeight="400">
+    <path android:pathData="M0 310H720V330H0Z" android:fillColor="#F5F0E8"/>
+    <path android:pathData="M60 316L120 324M300 314L340 326M560 318L640 322" android:strokeColor="#D9D2C7" android:strokeWidth="2" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+    <path android:pathData="M0 330H720V400H0Z" android:fillColor="#8B5E3C"/>
+    <path android:pathData="M30 330V400M66 330V400M102 330V400M138 330V400M174 330V400M210 330V400M246 330V400M282 330V400M318 330V400M354 330V400M390 330V400M426 330V400M462 330V400M498 330V400M534 330V400M570 330V400M606 330V400M642 330V400M678 330V400M714 330V400" android:strokeColor="#7A5032" android:strokeWidth="3" android:strokeLineCap="butt" android:strokeLineJoin="round"/>
+    <path android:pathData="M240 308A26 5 0 1 1 188 308A26 5 0 1 1 240 308Z" android:fillColor="#B08D2A"/>
+    <path android:pathData="M192 306A22 20 0 0 1 236 306Z" android:fillColor="#E8C547"/>
+    <path android:pathData="M218 284A4 4 0 1 1 210 284A4 4 0 1 1 218 284Z" android:fillColor="#B08D2A"/>
+    <path android:pathData="M524 290H556A4 4 0 0 1 560 294V306A4 4 0 0 1 556 310H524A4 4 0 0 1 520 306V294A4 4 0 0 1 524 290Z" android:fillColor="#3B4452"/>
+    <path android:pathData="M528 280H552A2 2 0 0 1 554 282V290A2 2 0 0 1 552 292H528A2 2 0 0 1 526 290V282A2 2 0 0 1 528 280Z" android:fillColor="#FFFFFF"/>
+    <path android:pathData="M606 310L630 310L626 270L610 270Z" android:fillColor="#7FB6D5" android:fillAlpha="0.7"/>
+    <path android:pathData="M618 270C614 246 620 236 618 226M618 256C628 246 632 238 640 236" android:strokeColor="#4FA36F" android:strokeWidth="3" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+    <path android:pathData="M627 222A9 9 0 1 1 609 222A9 9 0 1 1 627 222Z" android:fillColor="#FF7AA2"/>
+    <path android:pathData="M648 233A7 7 0 1 1 634 233A7 7 0 1 1 648 233Z" android:fillColor="#FFD166"/>
+</vector>

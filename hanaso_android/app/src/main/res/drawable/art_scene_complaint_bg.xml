@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- art/build.py で生成。手で直さない -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="360dp"
+    android:height="200dp"
+    android:viewportWidth="720"
+    android:viewportHeight="400">
+    <path android:pathData="M0 0H720V400H0Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="0" android:startY="0" android:endX="0" android:endY="400">
+                <item android:offset="0" android:color="#F3E8DD"/>
+                <item android:offset="1" android:color="#E6D5C4"/>
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M50 54H190A16 16 0 0 1 206 70V190A16 16 0 0 1 190 206H50A16 16 0 0 1 34 190V70A16 16 0 0 1 50 54Z" android:fillColor="#FFFFFF"/>
+    <group>
+        <clip-path android:pathData="M51 60H189A11 11 0 0 1 200 71V189A11 11 0 0 1 189 200H51A11 11 0 0 1 40 189V71A11 11 0 0 1 51 60Z"/>
+        <path android:pathData="M40 60H200V200H40Z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear" android:startX="0" android:startY="60" android:endX="0" android:endY="200">
+                    <item android:offset="0" android:color="#BFE3FA"/>
+                    <item android:offset="1" android:color="#EAF6FF"/>
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path android:pathData="M114 100A24 11.2 0 1 1 66 100A24 11.2 0 1 1 114 100Z" android:fillColor="#FFFFFF" android:fillAlpha="0.9"/>
+        <path android:pathData="M125.2 93.6A17.6 11.2 0 1 1 90 93.6A17.6 11.2 0 1 1 125.2 93.6Z" android:fillColor="#FFFFFF" android:fillAlpha="0.9"/>
+        <path android:pathData="M86.8 96.8A12.8 8 0 1 1 61.2 96.8A12.8 8 0 1 1 86.8 96.8Z" android:fillColor="#FFFFFF" android:fillAlpha="0.9"/>
+        <path android:pathData="M40 172H200V202H40Z" android:fillColor="#9CC48B"/>
+    </group>
+    <path android:pathData="M120.0 60V200M40 130.0H200" android:strokeColor="#FFFFFF" android:strokeWidth="6" android:strokeLineCap="butt" android:strokeLineJoin="round"/>
+    <path android:pathData="M544 210H686A4 4 0 0 1 690 214V316A4 4 0 0 1 686 320H544A4 4 0 0 1 540 316V214A4 4 0 0 1 544 210Z" android:fillColor="#C9A06B"/>
+    <path android:pathData="M564 140H666A4 4 0 0 1 670 144V208A4 4 0 0 1 666 212H564A4 4 0 0 1 560 208V144A4 4 0 0 1 564 140Z" android:fillColor="#D4AD78"/>
+    <path android:pathData="M540 240H690M560 166H670" android:strokeColor="#E8C18A" android:strokeWidth="8" android:strokeLineCap="butt" android:strokeLineJoin="round"/>
+    <path android:pathData="M600 268L612 252L624 268Z" android:fillColor="#8A6A45"/>
+    <path android:pathData="M612 268V290" android:strokeColor="#8A6A45" android:strokeWidth="4" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+    <path android:pathData="M474 96H512A4 4 0 0 1 516 100V152A4 4 0 0 1 512 156H474A4 4 0 0 1 470 152V100A4 4 0 0 1 474 96Z" android:fillColor="#9B7350"/>
+    <path android:pathData="M478 102H508A2 2 0 0 1 510 104V148A2 2 0 0 1 508 150H478A2 2 0 0 1 476 148V104A2 2 0 0 1 478 102Z" android:fillColor="#E9F1F7"/>
+    <path android:pathData="M501 120A8 8 0 1 1 485 120A8 8 0 1 1 501 120Z" android:fillColor="#FFB3C7"/>
+</vector>

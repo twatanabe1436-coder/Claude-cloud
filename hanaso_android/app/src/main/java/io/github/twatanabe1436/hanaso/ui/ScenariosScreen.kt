@@ -47,6 +47,11 @@ import io.github.twatanabe1436.hanaso.core.Category
 import io.github.twatanabe1436.hanaso.core.EngineMode
 import io.github.twatanabe1436.hanaso.core.Level
 import io.github.twatanabe1436.hanaso.core.Scenario
+import io.github.twatanabe1436.hanaso.ui.art.FREE_TALK_ART
+import io.github.twatanabe1436.hanaso.ui.art.Mood
+import io.github.twatanabe1436.hanaso.ui.art.PartnerAvatar
+import io.github.twatanabe1436.hanaso.ui.art.ScenarioPicture
+import io.github.twatanabe1436.hanaso.ui.art.hasArt
 import io.github.twatanabe1436.hanaso.core.Scripts
 
 /** CEFR レベル (A1〜C2) を選ぶ。選んだレベルの目安も表示する */
@@ -109,9 +114,9 @@ fun ScenarioCard(s: Scenario, onClick: () -> Unit) {
         color = MaterialTheme.colorScheme.surfaceContainerLowest,
         tonalElevation = 1.dp,
     ) {
-        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Emoji(s.emoji, size = 30)
-            Spacer(Modifier.width(14.dp))
+        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            ScenarioPicture(s.id, s.emoji, Modifier.size(68.dp))
+            Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(s.titleJa, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -149,7 +154,11 @@ fun ScenariosScreen(onOpen: (Scenario) -> Unit) {
         }
         item {
             Column {
-                Text("フリートーク", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp, bottom = 8.dp))
+                Row(Modifier.padding(top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    PartnerAvatar(FREE_TALK_ART, Mood.NORMAL, size = 36.dp)
+                    Spacer(Modifier.width(8.dp))
+                    Text("フリートーク", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                }
                 FreeTalkGrid(onOpen)
             }
         }
@@ -201,9 +210,16 @@ fun ScenarioIntroSheet(
                 .navigationBarsPadding()
                 .padding(bottom = 16.dp),
         ) {
+            val art = hasArt(scenario.id)
+            if (art) {
+                ScenarioPicture(scenario.id, scenario.emoji, Modifier.fillMaxWidth().height(150.dp), corner = 16.dp)
+                Spacer(Modifier.height(12.dp))
+            }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Emoji(scenario.emoji, size = 44)
-                Spacer(Modifier.width(14.dp))
+                if (!art) {
+                    Emoji(scenario.emoji, size = 44)
+                    Spacer(Modifier.width(14.dp))
+                }
                 Column {
                     Text(scenario.titleJa, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Row(verticalAlignment = Alignment.CenterVertically) {

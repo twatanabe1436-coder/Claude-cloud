@@ -23,6 +23,7 @@ Claude Code で続きの作業をするときに読むメモです。アプリ�
 | `app/` | Android アプリ (Jetpack Compose)。ビルドには Android SDK が必要。SDK がなければ CI に任せる。 |
 | `app/src/androidTest/.../SmokeTest.kt` | エミュレータで画面を操作するテスト。音声認識・読み上げ・リーグは `Fakes.kt` の偽物。**画面の文言を変えたら、ここの文字列も直す。** |
 | `firebase/` | オンラインのリーグ用の Firestore ルールと準備手順。 |
+| `art/` | イラスト (会話の相手 17 人 × 表情 3 種、場面 17 か所、リーグ) の元になる Python。下の「イラスト」を参照。 |
 | `signing/` | 公開用の署名鍵 (`hanaso-release.p12`) と証明書の SHA-256。 |
 
 主なファイル:
@@ -32,6 +33,15 @@ Claude Code で続きの作業をするときに読むメモです。アプリ�
 - `core/.../Transcript.kt`: 音声認識の聞き間違いの修正。直すのは**いまのお題の語にとても近い語だけ**。文法の違い (語形変化・冠詞・よく使う語) は直さない。自由回答のお題では直さない。
 - `core/.../Xp.kt`, `League.kt`: XP と週ごとのリーグ (Firebase の REST API。SDK は使わない)。
 - `app/.../ui/talk/TalkSession.kt`, `TalkScreen.kt`: 会話画面。ふだんは「いまのやりとり」だけ表示し、ヘッダーの履歴ボタンで全体を表示する。
+
+## イラスト
+
+- 絵はすべて Claude が描いたオリジナル (外部の素材は使っていない)。フラットな絵柄で、人物は `art/people.py`、場面は `art/scenes.py` に図形として書いてある。
+- `python art/build.py` で `app/src/main/res/drawable/art_*.xml` (VectorDrawable) と `ui/art/ArtResources.kt` (対応表) を作り直す。どちらも生成物なので手で直さない。Python 3 だけで動く。
+- 確認用に `python art/build.py --preview <DIR>` で SVG の一覧を書ける。Windows では Edge のヘッドレス (`msedge --headless --screenshot=out.png --window-size=W,H file:///...svg`) で PNG にして見られる。
+- 場面は 720x400 で、背景・人物・前景 (カウンターや机) を重ねる。人物は (230, 96) に 260x260 で置く。重ねるのは `ui/art/Illustrations.kt` の `SceneIllustration` (会話画面・一覧・振り返り) と `PartnerAvatar` (発言の横の顔)。
+- 相手の表情は直前の判定で変わる: Great → 笑顔、台本モードの言い直し → 聞き返す顔、ほかはふつう。
+- シナリオを足したら、`scenes.py` の `SCENES` に場面と相手を足す。足さなければ、その場面は絵文字のまま表示される。
 
 ## CI (`.github/workflows/hanaso-android.yml`)
 
