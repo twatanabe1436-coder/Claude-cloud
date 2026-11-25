@@ -1,4 +1,4 @@
-"""会話の場面 (17 か所) の背景と前景。
+"""会話の場面 (29 か所) の背景と前景。
 
 場面は 720x400。人物は (230, 96) から 260x260 の大きさで、背景と前景のあいだに置く。
 人物の体の下端 (y=356) が見えないよう、前景 (カウンター・机・ビデオ通話の操作バーなど) は y=332 より上から始める。
@@ -698,6 +698,495 @@ def free():
     return bg, fg
 
 
+# ---- v0.6.0 で足した B1・B2 の場面 ----
+
+def _plane(cx, cy, s=1.0, body=WHITE, accent="#3A6EA5"):
+    return G(
+        P(ellipse(0, 0, 46, 8), body),
+        P(poly((-6, -2), (12, -2), (-8, -26), (-18, -26)), accent),
+        P(poly((-4, 4), (14, 4), (-6, 22), (-16, 22)), body),
+        P(poly((-40, -4), (-30, -4), (-40, -20), (-46, -20)), accent),
+        P("M-26 -2H30", None, "#9DB8CF", 2),
+        tx=cx, ty=cy, s=s, rot=-6,
+    )
+
+
+def airport_hall(storm=False):
+    sky = ("#4E5A72", "#7D8BA3") if storm else ("#9ED0F0", "#E3F3FC")
+    view = [P(rect(36, 172, 214, 40), "#8C9BAD"), P("M36 190H250", None, "#F2C14E", 3)]
+    if storm:
+        view += [P(circle(x, y, 3), WHITE, alpha=0.9) for x, y in ((56, 70), (90, 110), (120, 80), (150, 130), (186, 66), (214, 104), (236, 140), (70, 150), (104, 176), (200, 170))]
+        view.append(P(rect(36, 196, 214, 16), WHITE, alpha=0.85))
+    else:
+        view += [cloud(90, 80, 0.7), _plane(170, 110, 0.9)]
+    rows = []
+    for i in range(5):
+        y = 92 + i * 20
+        bad = storm and i in (0, 2, 3)
+        rows += [
+            P(rect(484, y, 26, 8, 2), "#FFD166"),
+            P(rect(518, y, 84, 8, 2), WHITE, alpha=0.85),
+            P(rect(612, y, 60, 8, 2), "#E5484D" if bad else "#46C37B"),
+        ]
+    bg = [
+        wall("#EEF2F7", "#D9E1EC"),
+        window(42, 56, 202, 150, sky, view, frame="#C9D2DC", cross=False),
+        [P(rect(x, 56, 4, 150), "#C9D2DC") for x in (108, 176)],
+        P(rect(470, 52, 216, 152, 10), "#1E2533"),
+        P(rect(470, 52, 216, 28, 10), "#2E3A52"),
+        P(rect(484, 62, 60, 8, 3), WHITE, alpha=0.9),
+        G(P(ellipse(0, 0, 13, 3), WHITE), P(poly((-2, -1), (5, -1), (-4, -9)), WHITE), P(poly((-2, 1), (5, 1), (-4, 9)), WHITE), tx=660, ty=66),
+        rows,
+        P(rect(298, 50, 124, 36, 10), "#D64545" if storm else "#1F3B73"),
+        _plane(360, 68, 0.38, WHITE, WHITE),
+        P(rect(476, 230, 8, 102), "#9AA5B1"),
+        P(rect(640, 230, 8, 102), "#9AA5B1"),
+        P("M484 244H640", None, "#3A6EA5", 6),
+    ]
+    fg = [
+        counter(surface="#E3E8EE", lip="#F5F7FA", front="#2E4A7D", line="#26406C"),
+        P(rect(0, 334, W, 6), "#D64545" if storm else "#F2C14E"),
+        P(rect(96, 240, 84, 104, 14), "#E07A5F"),
+        P(rect(96, 240, 84, 104, 14), None, "#C4624A", 3),
+        P("M124 240V226H152V240", None, "#4A4F5C", 5),
+        P("M112 262V326M164 262V326", None, "#C4624A", 4),
+        P(circle(112, 348, 7), "#2F2F38"),
+        P(circle(164, 348, 7), "#2F2F38"),
+        P(rect(196, 290, 46, 26, 4), "#3B4452"),
+        P(rect(202, 296, 34, 12, 2), "#9BE3C4"),
+        P(rect(530, 262, 86, 56, 6), "#3B4452"),
+        P(rect(538, 270, 70, 30, 3), "#7FB6D5"),
+        P(rect(546, 304, 54, 6, 2), WHITE),
+    ]
+    return bg, fg
+
+
+def airport():
+    return airport_hall(False)
+
+
+def flight():
+    return airport_hall(True)
+
+
+def lostfound():
+    tiles = P("".join(f"M0 {y}H{W}" for y in range(20, 230, 22)) + "".join(f"M{x} 0V230" for x in range(36, W, 44)), None, "#C9D6D0", 1.5, cap="butt")
+    items = [
+        P(rect(500, 74, 176, 6, 2), "#8C9BAD"),
+        P(rect(500, 154, 176, 6, 2), "#8C9BAD"),
+        P(rect(500, 234, 176, 6, 2), "#8C9BAD"),
+        P(rect(510, 34, 44, 40, 10), "#E07A5F"),
+        P(rect(566, 44, 34, 30, 6), "#F2C14E"),
+        P(rect(612, 30, 52, 44, 12), "#7B68EE"),
+        P("M520 154V110M540 154V104M560 154V112", None, "#3D5A99", 4),
+        P("M520 110A8 8 0 0 0 504 110M540 104A8 8 0 0 0 524 104M560 112A8 8 0 0 0 544 112", None, "#3D5A99", 4),
+        P(rect(586, 112, 40, 42, 8), "#4FA36F"),
+        P(ellipse(650, 146, 22, 8), "#5C4A3A"),
+        P(ellipse(650, 136, 14, 12), "#5C4A3A"),
+        P(rect(512, 196, 50, 38, 8), "#9AA5B1"),
+        P(rect(576, 186, 60, 48, 10), "#E4572E"),
+        P(rect(646, 202, 30, 32, 6), "#3D5A99"),
+    ]
+    bg = [
+        wall("#F2F6F4", "#E2EAE6"),
+        tiles,
+        P(rect(0, 230, W, 16), "#2E9C5C"),
+        P(rect(0, 246, W, 6), "#1E7A45"),
+        P(rect(36, 60, 200, 58, 8), "#1E2230"),
+        P(circle(68, 89, 18), "#2E9C5C"),
+        P("M74 80H62V98H74V89H68", None, WHITE, 4),
+        P(rect(98, 78, 110, 8, 3), WHITE, alpha=0.9),
+        P(rect(98, 94, 74, 6, 3), WHITE, alpha=0.6),
+        P(rect(298, 48, 124, 38, 10), "#F2C14E"),
+        P(circle(346, 66, 9), None, "#2F2F38", 3.5),
+        P("M352 72L362 82", None, "#2F2F38", 4),
+        P(rect(368, 62, 40, 6, 3), "#2F2F38", alpha=0.7),
+        P(rect(488, 20, 200, 300, 8), "#D5DEE5"),
+        items,
+    ]
+    fg = [
+        counter(surface="#C9D2DC", lip="#E3E8EE", front="#5B6B7A", line="#4C5A68"),
+        P(rect(120, 286, 66, 32, 3), WHITE),
+        [P(rect(128, y, 48, 3, 1), "#C7D6DF") for y in (293, 300, 307)],
+        P(rect(144, 280, 18, 8, 2), "#9AA5B1"),
+        P(rect(514, 246, 84, 76, 16), "#2F2F38"),
+        P(rect(526, 278, 60, 38, 10), "#3B3F4A"),
+        P("M536 250C536 230 576 230 576 250", None, "#2F2F38", 6),
+        P(rect(548, 288, 16, 4, 2), "#7FB6D5"),
+        P(ellipse(640, 316, 16, 4), "#B8C4D2"),
+        P("M628 314A12 12 0 0 1 652 314Z", "#E3B341"),
+    ]
+    return bg, fg
+
+
+def reservation():
+    bottles = []
+    for y in (100, 160, 220):
+        for i in range(5):
+            x = 512 + i * 34
+            c = "#5B2333" if (i + y // 60) % 2 else "#2F5D3A"
+            bottles += [P(circle(x + 10, y, 11), c), P(circle(x + 10, y, 4), "#C9A227")]
+    bg = [
+        wall("#F3E2CF", "#E7CDB0"),
+        P(rect(0, 236, W, 164), "#8B5E3C"),
+        P(rect(0, 236, W, 6), "#A36F49"),
+        window(40, 56, 176, 150, ("#BFE3FA", "#EAF6FF"), [
+            skyline(206, 40, 216, "#C99A7A", seed=9),
+            P(rect(40, 186, 176, 24), "#8C9BAD"),
+            P(circle(186, 86, 14), "#FFE7A8"),
+        ], frame="#F7EBDD"),
+        P(rect(496, 52, 186, 196, 8), "#6B4226"),
+        [P(rect(496, y, 186, 6), "#4E2F1A") for y in (112, 172, 232)],
+        bottles,
+        lamp(276, 46, shade="#7A4B32", rim="#5E3825"), lamp(444, 46, shade="#7A4B32", rim="#5E3825"),
+    ]
+    fg = [
+        counter(surface="#5E3825", lip="#7A4B32", front="#4A2C1C", line="#3B2316"),
+        P(rect(110, 290, 66, 28, 3), "#FFF6E8"),
+        P(rect(178, 290, 66, 28, 3), "#FFF6E8"),
+        P("M177 290V318", None, "#D9C2A2", 2),
+        [P(rect(118, y, 50, 2.5, 1), "#C9B49A") for y in (298, 304, 310)],
+        [P(rect(186, y, 50, 2.5, 1), "#C9B49A") for y in (298, 304)],
+        P(rect(196, 306, 30, 3, 1.5), "#D64545"),
+        P("M232 316L254 292", None, "#2F2F38", 3),
+        P(poly((592, 318), (618, 318), (614, 272), (596, 272)), "#7FB6D5", alpha=0.7),
+        P("M605 272C600 252 606 240 604 230M605 262C614 250 620 244 628 242M605 258C596 248 590 244 584 244", None, "#4FA36F", 3),
+        P(circle(604, 226, 9), "#FF7AA2"),
+        P(circle(629, 240, 7), "#FFD166"),
+        P(circle(583, 241, 7), "#FF7AA2"),
+    ]
+    return bg, fg
+
+
+def hallway(kind):
+    moving = kind == "moving"
+    wood, line = ("#8B5E3C", "#6B4226") if moving else ("#3D5A99", "#30497D")
+    door = [
+        P(rect(34, 66, 152, 270, 6), "#D9C2A2"),
+        P(rect(46, 76, 128, 260, 4), wood),
+        P(rect(60, 94, 100, 90, 4), None, line, 3),
+        P(rect(60, 200, 100, 110, 4), None, line, 3),
+        P(circle(158, 214, 7), "#E3B341"),
+        P(rect(92, 52, 36, 18, 4), "#E3B341"),
+        P(circle(110, 120, 4), "#2F2F38"),
+    ]
+    extra = []
+    if moving:
+        extra += [
+            P(circle(250, 106, 26), "#FFE9A8", alpha=0.45),
+            P(rect(242, 96, 16, 22, 6), "#F7E3B5"),
+            plant(470, 318, 0.9),
+        ]
+    else:
+        extra += [
+            P(rect(206, 90, 54, 76, 3), "#2F2F38"),
+            P(circle(233, 118, 14), "#E4572E"),
+            P(rect(214, 144, 38, 6, 2), "#FFD166"),
+            P("M572 140V108L596 102V134", None, "#7B68EE", 3),
+            P(ellipse(568, 141, 6, 4.5, -20), "#7B68EE"),
+            P(ellipse(592, 135, 6, 4.5, -20), "#7B68EE"),
+            P("M462 196V170", None, "#E4572E", 3),
+            P(ellipse(458, 197, 6, 4.5, -20), "#E4572E"),
+        ]
+    bg = [
+        wall("#F1E6D6", "#E4D3BC"),
+        P(rect(0, 318, W, 14), "#C9A27A"),
+        door,
+        window(516, 60, 160, 170, ("#BFE3FA", "#EAF6FF") if moving else ("#FFC48A", "#FFE7C2"), [
+            P(circle(560, 200, 40), "#7ACB78"),
+            P(circle(624, 210, 34), "#6BBF6B"),
+            P(rect(516, 214, 160, 16), "#8CC7A1"),
+        ], frame="#F7EBDD"),
+        extra,
+    ]
+    fg = [
+        P(rect(0, 330, W, 70), "#B8875F"),
+        P("".join(f"M{x} 330V400" for x in range(40, W, 80)), None, "#A3764F", 3, cap="butt"),
+        P(rect(0, 330, W, 4), "#9C6E48"),
+    ]
+    if moving:
+        tape = "#E8C18A"
+        fg += [
+            P(rect(30, 260, 92, 80, 4), "#C9A06B"),
+            P(rect(130, 276, 80, 64, 4), "#D4AD78"),
+            P(rect(46, 206, 70, 56, 4), "#D4AD78"),
+            P("M30 290H122M130 300H210M46 228H116", None, tape, 7, cap="butt"),
+            P(rect(574, 316, 86, 20, 6), "#8C5A3C"),
+            P(rect(584, 300, 30, 16, 6), "#E07A5F"),
+            P(rect(620, 304, 30, 12, 6), "#3D5A99"),
+        ]
+    else:
+        fg += [
+            G(
+                P(ellipse(0, 40, 34, 40), "#C0392B"),
+                P(ellipse(0, -10, 26, 30), "#C0392B"),
+                P(circle(0, 18, 10), "#2F2F38"),
+                P(rect(-5, -110, 10, 90, 2), "#5C3A24"),
+                P(rect(-9, -128, 18, 22, 4), "#2F2F38"),
+                P(rect(-14, 58, 28, 6, 2), "#2F2F38"),
+                tx=590, ty=270, rot=12,
+            ),
+            P(rect(104, 300, 110, 30, 6), "#2F2F38"),
+            P(rect(112, 306, 94, 14, 3), "#4A4F5C"),
+            P(circle(130, 313, 5), "#9AA5B1"),
+            P(circle(150, 313, 5), "#9AA5B1"),
+        ]
+    return bg, fg
+
+
+def neighbor():
+    return hallway("moving")
+
+
+def noise():
+    return hallway("music")
+
+
+def homestay():
+    stripes = [P(rect(x, 0, 14, 318), "#EAD7BC", alpha=0.6) for x in range(10, W, 44)]
+    bg = [
+        wall("#F6EBD9", "#EEDDC4"),
+        stripes,
+        window(40, 62, 176, 150, ("#F6A97A", "#8E7CC3"), [
+            P("M40 212C80 170 120 180 150 196C176 176 200 170 216 176V212Z", "#4C6B4F"),
+            P("M40 212C70 196 110 190 140 202C170 196 196 200 216 206V212Z", "#3E5A41"),
+            P(circle(170, 120, 14), "#FFE7A8"),
+        ], frame=WHITE),
+        lamp(360, 30, shade="#E07A5F", rim="#C4624A"),
+        picture(510, 70, 76, 56, frame="#9B7350", sky=("#FFD9A8", "#FFF1DA")),
+        picture(604, 92, 64, 82, frame="#9B7350", sky=("#BFE3FA", "#EAF6FF"), hills=("#F2C14E", "#E0A030")),
+        picture(520, 150, 56, 46, frame="#9B7350", sky=("#F7B6C6", "#FFE4EC"), hills=("#B39DFF", "#8E77F0")),
+        P(rect(470, 226, 220, 100, 6), "#9B7350"),
+        P(rect(480, 236, 200, 36, 3), "#B8875F"),
+        P(rect(480, 280, 200, 36, 3), "#B8875F"),
+        P(circle(580, 254, 4), "#E3B341"),
+        P(circle(580, 298, 4), "#E3B341"),
+    ]
+    fg = [
+        P(rect(0, 316, W, 84), "#FFF6E8"),
+        P(rect(0, 316, W, 4), "#F3E3CF"),
+        P(rect(0, 346, W, 24), "#8CC7A1", alpha=0.6),
+        P(ellipse(160, 318, 76, 16), WHITE, "#E5D5C3", 2),
+        P(ellipse(112, 308, 16, 9, 30), "#B8682F"),
+        P(ellipse(208, 308, 16, 9, -30), "#B8682F"),
+        P(ellipse(160, 300, 52, 26), "#C8783E"),
+        P(ellipse(148, 290, 26, 10, -12), "#E09A5A", alpha=0.8),
+        P(circle(97, 316, 5), "#FFF6E8"),
+        P(circle(223, 316, 5), "#FFF6E8"),
+        [P(circle(x, y, 7), c) for x, y, c in ((128, 322, "#4FA36F"), (192, 322, "#E4572E"))],
+        P("M520 300H612C610 322 590 332 566 332C542 332 522 322 520 300Z", "#F3F1EC", "#D9D2C7", 2),
+        [P(circle(x, y, 10), c) for x, y, c in ((544, 298, "#5BB57C"), (566, 292, "#4FA36F"), (588, 298, "#8CC7A1"), (556, 302, "#E4572E"), (580, 304, "#F2C14E"))],
+        P(poly((640, 268), (668, 268), (664, 322), (644, 322)), "#BFE3FA", "#9DB8CF", 2, alpha=0.6, stroke_alpha=1),
+        P(poly((642, 290), (666, 290), (664, 322), (644, 322)), "#7FC8F8", alpha=0.6),
+    ]
+    return bg, fg
+
+
+def favor():
+    bars = [P(rect(124 + i * 24, 290 - hgt, 16, hgt, 2), c) for i, (hgt, c) in enumerate(((22, "#4ECDC4"), (34, "#7B68EE"), (18, "#4ECDC4"), (40, "#E4572E"), (28, "#7B68EE")))]
+    bg = [
+        wall("#F2F5F9", "#E1E7EF"),
+        window(36, 54, 226, 150, ("#9ED0F0", "#E3F3FC"), [
+            skyline(204, 36, 262, "#B8CDE0", seed=4),
+            P(rect(80, 120, 18, 84), "#8DAFCB"),
+            P(rect(110, 116, 18, 88), "#8DAFCB"),
+            P(rect(140, 120, 18, 84), "#8DAFCB"),
+            P(rect(70, 108, 98, 10, 4), "#7A9DBC"),
+            P(circle(214, 150, 24), "#8CC7A1"),
+            P(rect(210, 160, 8, 44), "#6FB38A"),
+        ], frame="#C9D2DC", cross=False),
+        P(circle(586, 104, 30), WHITE, "#8C9BAD", 4),
+        P("M586 104V84M586 104L602 112", None, "#2F3B4C", 3.5),
+        P("M660 40V92", None, "#8C9BAD", 2),
+        P(ellipse(648, 126, 8, 18, 20), "#4FA36F"),
+        P(ellipse(672, 128, 8, 20, -20), "#3E8F5E"),
+        P(poly((640, 92), (680, 92), (674, 118), (646, 118)), "#E07A5F"),
+        P(rect(470, 226, 250, 94, 6), "#C9D2DC"),
+        P(rect(470, 226, 250, 8, 4), "#B8C4D2"),
+        P(rect(504, 196, 60, 34, 4), "#3B4452"),
+        P(rect(620, 202, 50, 28, 4), "#3B4452"),
+    ]
+    fg = [
+        counter(surface="#EDE6DA", lip="#F7F2EA", front="#C9B79C", line="#B8A585", planks=False),
+        P(rect(100, 214, 150, 96, 8), "#2F2F38"),
+        P(rect(108, 222, 134, 78, 4), WHITE),
+        P(rect(108, 222, 134, 12, 2), "#2E9C5C"),
+        [P(rect(112, y, 126, 1.5), "#E3E8EE") for y in range(244, 300, 10)],
+        bars,
+        P(rect(164, 308, 22, 10), "#2F2F38"),
+        P(rect(138, 316, 74, 4, 2), "#2F2F38"),
+        mug(520, 318, WHITE, "#E07A5F"),
+        P("M526 280C522 272 530 266 526 258M538 280C534 272 542 266 538 258", None, "#C9D2DC", 3),
+        P(poly((610, 318), (640, 318), (636, 296), (614, 296)), "#E3B341"),
+        P(rect(616, 260, 18, 38, 9), "#5BB57C"),
+        P(rect(604, 272, 12, 16, 6), "#5BB57C"),
+        P(rect(634, 266, 12, 18, 6), "#5BB57C"),
+    ]
+    return bg, fg
+
+
+def deadline():
+    days = []
+    for r in range(4):
+        for c in range(5):
+            x, y = 58 + c * 26, 112 + r * 22
+            days.append(P(rect(x, y, 20, 16, 2), "#EEF2F6"))
+    bg = [
+        wall("#EEE7DD", "#DED2C2"),
+        P(rect(44, 70, 152, 144, 6), WHITE, "#C9B79C", 3),
+        P(rect(44, 70, 152, 30, 6), "#C0392B"),
+        P("M80 64V80M160 64V80", None, "#5C4A3A", 5),
+        days,
+        P(circle(68 + 4 * 26, 120 + 22, 15), None, "#E5484D", 3.5),
+        P(rect(210, 230, 52, 70, 3), "#9B7350"),
+        P(rect(216, 236, 40, 58, 2), "#FFF6E8"),
+        P(circle(236, 256, 8), "#E3B341"),
+        window(486, 50, 200, 176, ("#9AA8B8", "#C9D3DE"), [
+            skyline(226, 486, 686, "#7D8B9C", seed=7),
+            P(rect(612, 92, 26, 134), "#6B7888"),
+            P(poly((608, 94), (625, 60), (642, 94)), "#6B7888"),
+            P(circle(625, 114, 9), "#E3E8EE"),
+            P("M625 114V108M625 114L630 116", None, "#6B7888", 2),
+            [P(f"M{x} {y}l-6 14", None, WHITE, 1.5, alpha=0.7) for x, y in ((510, 70), (540, 110), (570, 80), (660, 100), (680, 150), (530, 160), (590, 60))],
+        ], frame="#F7EBDD"),
+    ]
+    fg = [
+        counter(surface="#6B4226", lip="#8B5E3C", front="#5A361F", line="#4A2C1A"),
+        P(poly((112, 236), (232, 236), (240, 314), (104, 314)), "#9AA5B1"),
+        P(poly((118, 242), (226, 242), (232, 308), (112, 308)), "#B8C4D2"),
+        P(circle(172, 274, 7), WHITE, alpha=0.8),
+        P(rect(92, 312, 160, 8, 3), "#8C9BAD"),
+        [P(rect(520 - i * 2, 304 - i * 6, 90, 6, 1), WHITE if i % 2 else "#F4F1EA", "#D9D2C7", 1) for i in range(5)],
+        P(rect(626, 268, 30, 50, 4), "#2F3B4C"),
+        P("M634 268L630 244M642 268L646 240M650 268L656 248", None, "#E4572E", 3),
+    ]
+    return bg, fg
+
+
+def feedback():
+    bullets = []
+    for i in range(6):
+        y = 98 + i * 16
+        bullets += [P(circle(60, y + 3, 3), "#7B68EE"), P(rect(70, y, 150 - (i * 23) % 60, 6, 3), "#9AA5B1")]
+    bg = [
+        wall("#EEF1F7", "#DCE2EE"),
+        P(rect(36, 50, 214, 160, 6), WHITE, "#B8C4D2", 4),
+        P(rect(36, 50, 214, 34, 6), "#7B68EE"),
+        P(rect(50, 62, 110, 10, 4), WHITE, alpha=0.9),
+        bullets,
+        P(rect(226, 182, 16, 20, 3), "#E5484D", alpha=0.9),
+        P(rect(482, 44, 220, 280, 6), "#D6E9F5", alpha=0.7),
+        P(rect(482, 44, 220, 280, 6), None, "#B8C4D2", 4),
+        P(rect(482, 150, 220, 34), WHITE, alpha=0.6),
+        P("M592 44V324", None, "#B8C4D2", 4),
+        plant(536, 300, 0.8),
+        plant(650, 300, 0.9, pot="#7FB6D5"),
+        P(rect(500, 160, 24, 24, 3), "#FFE27A"),
+        P(rect(530, 164, 24, 24, 3), "#FFB3C7"),
+    ]
+    fg = [
+        counter(surface="#F4F6F9", lip=WHITE, front="#B8C4D2", line="#A6B3C2", planks=False),
+        P(poly((112, 244), (222, 244), (228, 314), (106, 314)), "#9AA5B1"),
+        P(rect(96, 312, 142, 7, 3), "#8C9BAD"),
+        P(circle(167, 278, 6), WHITE, alpha=0.8),
+        mug(250, 318, WHITE, "#7B68EE"),
+        P(rect(520, 290, 96, 28, 3), "#3D5A99"),
+        P(rect(526, 294, 84, 20, 2), WHITE),
+        [P(rect(532, y, 60, 2.5, 1), "#C7D6DF") for y in (299, 305)],
+        P("M596 314L640 286", None, "#2F2F38", 3),
+        mug(650, 318, "#FFD166"),
+    ]
+    return bg, fg
+
+
+def fraud():
+    bg = [
+        wall("#E8F0F7", "#D3E1EE"),
+        P(rect(36, 60, 210, 140, 10), "#1E2A44"),
+        P(rect(44, 68, 194, 124, 6), "#25345A"),
+        P("M141 84L170 96V122C170 140 157 152 141 160C125 152 112 140 112 122V96Z", "#46C37B"),
+        P("M128 120L138 130L156 108", None, WHITE, 5),
+        [P(rect(60, y, 40, 6, 3), "#7FB6D5", alpha=0.6) for y in (170, 180)],
+        [P(rect(182, y, 40, 6, 3), "#7FB6D5", alpha=0.6) for y in (170, 180)],
+        P(poly((326, 70), (360, 52), (394, 70)), "#3D5A99"),
+        [P(rect(x, 74, 8, 22), "#3D5A99") for x in (332, 356, 380)],
+        P(rect(322, 98, 76, 6, 2), "#3D5A99"),
+        window(484, 54, 200, 164, ("#9ED0F0", "#E3F3FC"), [
+            P(rect(484, 176, 200, 50), "#5E86B8"),
+            P("M530 178C536 150 552 140 568 140L562 178ZM556 178C566 144 586 132 604 134L590 178ZM584 178C596 150 616 142 632 146L616 178Z", WHITE),
+            P(rect(520, 176, 130, 6), "#E3E8EE"),
+            P("M484 120C540 108 600 116 684 104", None, "#8C9BAD", 3),
+        ], frame="#C9D2DC"),
+    ]
+    fg = [
+        counter(surface="#E3E8EE", lip="#F5F7FA", front="#3D5A99", line="#30497D", planks=False),
+        P(rect(98, 222, 156, 96, 8), "#2F2F38"),
+        P(rect(106, 230, 140, 72, 4), "#F5F7FA"),
+        P(rect(126, 244, 74, 46, 6), "#7B68EE"),
+        P(rect(126, 254, 74, 8), "#2F2F38"),
+        P(rect(134, 270, 24, 6, 2), "#FFD166"),
+        P(poly((222, 244), (238, 272), (206, 272)), "#E5484D"),
+        P("M222 252V262", None, WHITE, 3),
+        P(rect(166, 300, 20, 14), "#2F2F38"),
+        P(rect(500, 296, 110, 22, 4), "#4A4F5C"),
+        P(rect(506, 300, 98, 6, 2), "#6D7383"),
+        P(rect(632, 284, 46, 34, 6), "#2F2F38"),
+        P(rect(638, 290, 34, 10, 2), "#46C37B"),
+    ]
+    return bg, fg
+
+
+def movie():
+    bulbs = []
+    for x0, y0, w0, h0 in ((40, 52, 150, 214), (530, 52, 150, 214)):
+        for i in range(8):
+            bulbs.append(P(circle(x0 + 8 + i * (w0 - 16) / 7, y0 - 8, 4.5), "#FFD166"))
+            bulbs.append(P(circle(x0 + 8 + i * (w0 - 16) / 7, y0 + h0 + 8, 4.5), "#FFD166"))
+    bg = [
+        wall("#2E2648", "#43386A"),
+        P(rect(40, 52, 150, 214, 4), "#1B1436"),
+        G(
+            P(rect(48, 60, 134, 198), vgrad(60, 258, "#3B2E7E", "#E07A5F")),
+            P(circle(116, 150, 44), "#F2A541"),
+            P(ellipse(116, 150, 70, 12, -16), None, "#FFE7A8", 4),
+            [P(circle(x, y, 2), WHITE) for x, y in ((64, 80), (160, 90), (80, 200), (170, 220), (140, 76))],
+            P(rect(60, 230, 110, 10, 4), WHITE, alpha=0.9),
+            clip=rect(48, 60, 134, 198),
+        ),
+        P(rect(530, 52, 150, 214, 4), "#1B1436"),
+        G(
+            P(rect(538, 60, 134, 198), vgrad(60, 258, "#0F2A44", "#4ECDC4")),
+            P(circle(640, 96, 18), "#FFE7A8"),
+            P(circle(574, 120, 10), "#F7B6C6"),
+            P("M538 258V200L566 176L592 196L618 168L646 192L672 180V258Z", "#1B2340"),
+            G(P(rect(-6, -26, 12, 40, 6), WHITE), P(poly((-6, -18), (-14, 8), (-6, 6)), "#E4572E"), P(poly((6, -18), (14, 8), (6, 6)), "#E4572E"), P(poly((-4, 14), (4, 14), (0, 28)), "#FFD166"), tx=600, ty=150, rot=20),
+            P(rect(550, 230, 110, 10, 4), WHITE, alpha=0.9),
+            clip=rect(538, 60, 134, 198),
+        ),
+        bulbs,
+        P(rect(298, 44, 124, 40, 20), "#E4572E", alpha=0.9),
+        P(rect(298, 44, 124, 40, 20), None, "#FF9A7A", 3),
+        P(circle(326, 64, 10), None, WHITE, 3),
+        P(rect(344, 60, 60, 8, 4), WHITE, alpha=0.9),
+    ]
+    fg = [
+        P(rect(0, 320, W, 80), "#5A3A28"),
+        P(rect(0, 320, W, 5), "#7A5238"),
+        [P(circle(124 + i * 7, 254 - (i % 3) * 5, 8), "#FFF3C4") for i in range(7)],
+        P(poly((120, 254), (166, 254), (160, 322), (126, 322)), WHITE),
+        G([P(rect(x, 254, 8, 70), "#E4572E") for x in range(118, 170, 16)], clip=poly((120, 254), (166, 254), (160, 322), (126, 322))),
+        P(poly((206, 270), (236, 270), (232, 322), (210, 322)), WHITE, "#BFD3E6", 2, alpha=0.8, stroke_alpha=1),
+        P(poly((208, 288), (234, 288), (232, 322), (210, 322)), "#8B5E3C"),
+        P("M226 270L232 244", None, "#4ECDC4", 3),
+        G(P(rect(0, 0, 50, 22, 3), "#FFD166"), P("M36 0V22", None, "#E0A030", 2, cap="butt"), tx=520, ty=300, rot=-10),
+        G(P(rect(0, 0, 50, 22, 3), "#FFD166"), P("M36 0V22", None, "#E0A030", 2, cap="butt"), tx=556, ty=296, rot=8),
+        P(ellipse(650, 318, 34, 8), WHITE),
+        P(circle(650, 310, 12), "#C8783E"),
+        [P(circle(x, y, 2), "#5A3A28") for x, y in ((646, 306), (654, 312), (650, 304))],
+    ]
+    return bg, fg
+
+
 # シナリオ id → (場面を作る関数, 相手の人物)
 SCENES = {
     "cafe": (cafe, "jamie"),
@@ -716,6 +1205,18 @@ SCENES = {
     "complaint": (complaint, "casey"),
     "debate": (debate, "riley"),
     "qanda": (qanda, "patel"),
+    "airport": (airport, "nina"),
+    "lostfound": (lostfound, "greg"),
+    "reservation": (reservation, "lucy"),
+    "neighbor": (neighbor, "helen"),
+    "homestay": (homestay, "linda"),
+    "favor": (favor, "ben"),
+    "deadline": (deadline, "karen"),
+    "feedback": (feedback, "leo"),
+    "flight": (flight, "grace"),
+    "fraud": (fraud, "kevin"),
+    "noise": (noise, "jake"),
+    "movie": (movie, "mia"),
     "free": (free, "alex"),
 }
 

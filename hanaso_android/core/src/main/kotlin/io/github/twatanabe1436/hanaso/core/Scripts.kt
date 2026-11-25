@@ -1527,7 +1527,7 @@ object Scripts {
                 ),
             ),
         ),
-    ).associateBy { it.scenarioId }
+    ).plus(intermediateScripts).associateBy { it.scenarioId }
 
     /** シナリオの台本 (万一ない場合はフリートークの台本) */
     fun forScenario(scenario: Scenario): Script = all[scenario.id] ?: all.getValue("free:free")

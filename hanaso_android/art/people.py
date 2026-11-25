@@ -1,4 +1,4 @@
-"""会話の相手 (17 人) と、表情 3 種 (normal / happy / puzzled)。
+"""会話の相手 (29 人) と、表情 3 種 (normal / happy / puzzled)。
 
 人物は「頭の中心 (360, 208)、半径 60」の座標で描き、200x200 の画像に縮めて書き出す。
 肩から下は画像の下端 (この座標で y=356) までなので、場面ではカウンターや机で隠す。
@@ -59,6 +59,19 @@ PEOPLE = [
     Person("riley", "fair", "messy", "#22201E", "sweater", {"main": "#2F7F86", "shade": "#246469"}, ("glasses",)),
     Person("patel", "brown", "short", "#1E1A18", "blazer", {"main": "#3D4250", "lapel": "#2F333F", "inner": "#E8EEF6"}, ("beard", "glasses", "mic")),
     Person("alex", "tan", "curly", "#6A4A32", "jacket", {"main": "#5E7D4A", "shade": "#4D6A3C", "tee": "#F3EDE2", "tee_shade": "#DED5C6", "scarf": "#E07A3F"}, ("scarf",)),
+    # v0.6.0 で足した B1・B2 のロールプレイの相手
+    Person("nina", "dark", "bob", "#1A1716", "blazer", {"main": "#1F3B73", "lapel": "#172E5A", "inner": "#FFFFFF", "scarf": "#D64545"}, ("nametag",)),
+    Person("greg", "light", "buzz", "#A8A8A8", "uniform", {"main": "#3F5E4F", "shade": "#314A3E"}, ("glasses", "mustache")),
+    Person("lucy", "fair", "long", "#B5652E", "blazer", {"main": "#2F2F38", "lapel": "#24242B", "inner": "#FFFFFF"}, ("phone", "earrings")),
+    Person("helen", "light", "curly", "#D9D4CF", "cardigan", {"main": "#C77DA8", "shade": "#A8638C", "inner": "#FFF6E8"}, ("glasses", "mug")),
+    Person("linda", "fair", "bun", "#8C5A3C", "apron", {"main": "#F4E3C3", "apron": "#E07A5F"}, ("earrings",)),
+    Person("ben", "tan", "short", "#1E1A18", "striped", {"main": "#FFFFFF", "stripe": "#7FB6D5", "lanyard": "#2E9C76"}, ("glasses",)),
+    Person("karen", "brown", "long", "#2B2321", "blazer", {"main": "#2E6F6A", "lapel": "#24585A", "inner": "#F4F1EA"}, ("earrings",)),
+    Person("leo", "tan", "messy", "#2A1E18", "cardigan", {"main": "#4A6FA5", "shade": "#3B5A88", "inner": "#FFFFFF"}, ()),
+    Person("grace", "fair", "ponytail", "#6B4226", "uniform", {"main": "#7A2E3A", "shade": "#5E2230"}, ("nametag", "earrings")),
+    Person("kevin", "dark", "buzz", "#1A1716", "blazer", {"main": "#3D5A99", "lapel": "#30497D", "inner": "#FFFFFF"}, ("headset", "beard")),
+    Person("jake", "light", "long", "#C9A063", "hoodie", {"main": "#E4572E", "shade": "#C8461F"}, ("earring",)),
+    Person("mia", "tan", "bob", "#3A2418", "jacket", {"main": "#D9A441", "shade": "#BF8C2E", "tee": "#FFFFFF", "tee_shade": "#E6E6E6"}, ("drink", "earrings")),
 ]
 
 
@@ -283,6 +296,17 @@ def glasses():
     ]
 
 
+def headset():
+    dark = "#2F2F38"
+    return [
+        P("M300 214C300 124 420 124 420 214", None, dark, 7),
+        P(rect(289, 198, 18, 32, 8), dark),
+        P(rect(413, 198, 18, 32, 8), dark),
+        P("M300 228C304 250 320 258 338 254", None, dark, 4),
+        P(circle(340, 253, 6), "#4A4F5C"),
+    ]
+
+
 def beard(color):
     return P("M304 214C306 262 334 290 360 290C386 290 414 262 416 214C410 236 400 248 384 254C376 246 344 246 336 254C320 248 310 236 304 214Z", color)
 
@@ -365,6 +389,8 @@ def character(p, mood):
     nodes += face(p, mood)
     if "glasses" in p.acc:
         nodes += glasses()
+    if "headset" in p.acc:
+        nodes += headset()
     nodes += props(p)
     if mood == "happy":
         nodes += [P(star4(300, 146, 14), GOLD), P(star4(436, 156, 10), GOLD)]

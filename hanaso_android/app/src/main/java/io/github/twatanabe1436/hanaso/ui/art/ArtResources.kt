@@ -24,6 +24,18 @@ internal object ArtResources {
         "complaint" to "casey",
         "debate" to "riley",
         "qanda" to "patel",
+        "airport" to "nina",
+        "lostfound" to "greg",
+        "reservation" to "lucy",
+        "neighbor" to "helen",
+        "homestay" to "linda",
+        "favor" to "ben",
+        "deadline" to "karen",
+        "feedback" to "leo",
+        "flight" to "grace",
+        "fraud" to "kevin",
+        "noise" to "jake",
+        "movie" to "mia",
         "free" to "alex",
     )
 
@@ -121,6 +133,66 @@ internal object ArtResources {
             Mood.HAPPY -> R.drawable.art_char_alex_happy
             Mood.PUZZLED -> R.drawable.art_char_alex_puzzled
         }
+        "nina" -> when (mood) {
+            Mood.NORMAL -> R.drawable.art_char_nina_normal
+            Mood.HAPPY -> R.drawable.art_char_nina_happy
+            Mood.PUZZLED -> R.drawable.art_char_nina_puzzled
+        }
+        "greg" -> when (mood) {
+            Mood.NORMAL -> R.drawable.art_char_greg_normal
+            Mood.HAPPY -> R.drawable.art_char_greg_happy
+            Mood.PUZZLED -> R.drawable.art_char_greg_puzzled
+        }
+        "lucy" -> when (mood) {
+            Mood.NORMAL -> R.drawable.art_char_lucy_normal
+            Mood.HAPPY -> R.drawable.art_char_lucy_happy
+            Mood.PUZZLED -> R.drawable.art_char_lucy_puzzled
+        }
+        "helen" -> when (mood) {
+            Mood.NORMAL -> R.drawable.art_char_helen_normal
+            Mood.HAPPY -> R.drawable.art_char_helen_happy
+            Mood.PUZZLED -> R.drawable.art_char_helen_puzzled
+        }
+        "linda" -> when (mood) {
+            Mood.NORMAL -> R.drawable.art_char_linda_normal
+            Mood.HAPPY -> R.drawable.art_char_linda_happy
+            Mood.PUZZLED -> R.drawable.art_char_linda_puzzled
+        }
+        "ben" -> when (mood) {
+            Mood.NORMAL -> R.drawable.art_char_ben_normal
+            Mood.HAPPY -> R.drawable.art_char_ben_happy
+            Mood.PUZZLED -> R.drawable.art_char_ben_puzzled
+        }
+        "karen" -> when (mood) {
+            Mood.NORMAL -> R.drawable.art_char_karen_normal
+            Mood.HAPPY -> R.drawable.art_char_karen_happy
+            Mood.PUZZLED -> R.drawable.art_char_karen_puzzled
+        }
+        "leo" -> when (mood) {
+            Mood.NORMAL -> R.drawable.art_char_leo_normal
+            Mood.HAPPY -> R.drawable.art_char_leo_happy
+            Mood.PUZZLED -> R.drawable.art_char_leo_puzzled
+        }
+        "grace" -> when (mood) {
+            Mood.NORMAL -> R.drawable.art_char_grace_normal
+            Mood.HAPPY -> R.drawable.art_char_grace_happy
+            Mood.PUZZLED -> R.drawable.art_char_grace_puzzled
+        }
+        "kevin" -> when (mood) {
+            Mood.NORMAL -> R.drawable.art_char_kevin_normal
+            Mood.HAPPY -> R.drawable.art_char_kevin_happy
+            Mood.PUZZLED -> R.drawable.art_char_kevin_puzzled
+        }
+        "jake" -> when (mood) {
+            Mood.NORMAL -> R.drawable.art_char_jake_normal
+            Mood.HAPPY -> R.drawable.art_char_jake_happy
+            Mood.PUZZLED -> R.drawable.art_char_jake_puzzled
+        }
+        "mia" -> when (mood) {
+            Mood.NORMAL -> R.drawable.art_char_mia_normal
+            Mood.HAPPY -> R.drawable.art_char_mia_happy
+            Mood.PUZZLED -> R.drawable.art_char_mia_puzzled
+        }
         else -> null
     }
 
@@ -142,6 +214,18 @@ internal object ArtResources {
         "complaint" -> R.drawable.art_scene_complaint_bg
         "debate" -> R.drawable.art_scene_debate_bg
         "qanda" -> R.drawable.art_scene_qanda_bg
+        "airport" -> R.drawable.art_scene_airport_bg
+        "lostfound" -> R.drawable.art_scene_lostfound_bg
+        "reservation" -> R.drawable.art_scene_reservation_bg
+        "neighbor" -> R.drawable.art_scene_neighbor_bg
+        "homestay" -> R.drawable.art_scene_homestay_bg
+        "favor" -> R.drawable.art_scene_favor_bg
+        "deadline" -> R.drawable.art_scene_deadline_bg
+        "feedback" -> R.drawable.art_scene_feedback_bg
+        "flight" -> R.drawable.art_scene_flight_bg
+        "fraud" -> R.drawable.art_scene_fraud_bg
+        "noise" -> R.drawable.art_scene_noise_bg
+        "movie" -> R.drawable.art_scene_movie_bg
         "free" -> R.drawable.art_scene_free_bg
         else -> null
     }
@@ -164,6 +248,18 @@ internal object ArtResources {
         "complaint" -> R.drawable.art_scene_complaint_fg
         "debate" -> R.drawable.art_scene_debate_fg
         "qanda" -> R.drawable.art_scene_qanda_fg
+        "airport" -> R.drawable.art_scene_airport_fg
+        "lostfound" -> R.drawable.art_scene_lostfound_fg
+        "reservation" -> R.drawable.art_scene_reservation_fg
+        "neighbor" -> R.drawable.art_scene_neighbor_fg
+        "homestay" -> R.drawable.art_scene_homestay_fg
+        "favor" -> R.drawable.art_scene_favor_fg
+        "deadline" -> R.drawable.art_scene_deadline_fg
+        "feedback" -> R.drawable.art_scene_feedback_fg
+        "flight" -> R.drawable.art_scene_flight_fg
+        "fraud" -> R.drawable.art_scene_fraud_fg
+        "noise" -> R.drawable.art_scene_noise_fg
+        "movie" -> R.drawable.art_scene_movie_fg
         "free" -> R.drawable.art_scene_free_fg
         else -> null
     }

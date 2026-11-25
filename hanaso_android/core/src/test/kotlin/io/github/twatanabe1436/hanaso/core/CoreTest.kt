@@ -12,7 +12,7 @@ import org.junit.Test
 class CatalogTest {
     @Test
     fun scenariosAreComplete() {
-        assertEquals(16, Catalog.scenarios.size)
+        assertEquals(28, Catalog.scenarios.size)
         assertEquals(Catalog.scenarios.size, Catalog.scenarios.map { it.id }.toSet().size)
         for (s in Catalog.scenarios) {
             assertNotNull(s.id, s.level)

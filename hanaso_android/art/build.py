@@ -89,7 +89,8 @@ def composite(sid, mood="normal", extra=()):
 def previews(out_dir):
     out_dir.mkdir(parents=True, exist_ok=True)
     ids = list(SCENES)
-    for name, chunk in (("scenes_a", ids[:10]), ("scenes_b", ids[10:])):
+    for n, start in enumerate(range(0, len(ids), 10)):
+        name, chunk = f"scenes_{'abcdefgh'[n]}", ids[start:start + 10]
         nodes = []
         for i, sid in enumerate(chunk):
             x, y = (i % 2) * 362, (i // 2) * 202
